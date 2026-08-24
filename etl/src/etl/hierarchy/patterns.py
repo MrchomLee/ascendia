@@ -97,7 +97,7 @@ _TITULO_RE = re.compile(
     rf"""
     ^\s*
     T[ÍI]TULO\s+
-    (?P<ordinal>{_SPANISH_ORDINALS})
+    (?P<ordinal>[IVXLCDM]+|\d+|{_SPANISH_ORDINALS})
     (?:\s+(?P<title>.+?))?      # optional trailing title on same line
     \s*$
     """,

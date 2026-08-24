@@ -175,7 +175,6 @@ _LEY_ORGANICA_PROFILE = DocumentProfile(
     kind_to_depth={
         KIND_TITULO: 0,
         KIND_CAPITULO: 1,
-        KIND_ARTICULO: 2,
     },
     drop_text_patterns=_CODIGO_LEGAL_PROFILE.drop_text_patterns + [
         re.compile(r".*DOF.*", re.IGNORECASE),
