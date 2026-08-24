@@ -1,0 +1,35 @@
+[project]
+name = "question_generator"
+version = "0.1.0"
+description = "Generates exam questions from ingested manuals using Gemini (immediate or batch + explicit cache)."
+requires-python = ">=3.12,<3.15"
+dependencies = [
+    "etl",
+    "pydantic>=2.7",
+    "sqlalchemy>=2.0",
+    "google-genai>=2.3.0",
+    "typer>=0.12",
+    "python-dotenv>=1.0",
+    "rich>=13.0",
+]
+
+[project.scripts]
+qgen-generate = "qgen.cli.generate:app"
+qgen-export = "qgen.cli.export:app"
+qgen-batch-status = "qgen.cli.batch_status:app"
+qgen-inspect = "qgen.cli.inspect:app"
+qgen-stats = "qgen.cli.stats:app"
+
+[tool.uv.sources]
+etl = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/qgen"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

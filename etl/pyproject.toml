@@ -1,0 +1,40 @@
+[project]
+name = "etl"
+version = "0.1.0"
+description = "ETL pipeline for military PDF manuals: extract -> hierarchy -> chunks -> SQLite"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+    "docling>=2.59",
+    "pymupdf>=1.24",
+    "pydantic>=2.7",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "google-genai>=0.3",
+    "typer>=0.12",
+    "python-dotenv>=1.0",
+    "rich>=13.0",
+    "torch>=2.4",
+    "torchvision>=0.19",
+    "psycopg[binary]>=3.2",
+]
+
+[project.optional-dependencies]
+unstructured = [
+    "unstructured[pdf]>=0.15",
+]
+
+[project.scripts]
+etl-ingest = "etl.cli.ingest:app"
+etl-bakeoff = "etl.cli.bakeoff:app"
+etl-inspect = "etl.cli.inspect:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/etl"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
