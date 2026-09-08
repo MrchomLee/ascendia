@@ -79,10 +79,46 @@ _LEY_ORGANICA_RULES = DocumentRules(
 )
 
 
+# Reglas por defecto para el perfil de Álgebra de Baldor
+_BALDOR_RULES = DocumentRules(
+    name="algebra_baldor",
+    preferred_topics=(
+        "leyes de signos",
+        "leyes de exponentes y coeficientes",
+        "operaciones con monomios y polinomios (suma, resta, multiplicación, división)",
+        "productos y cocientes notables",
+        "casos y métodos de factorización",
+        "máximo común divisor y mínimo común múltiplo",
+        "fracciones algebraicas y su reducción",
+        "resolución de ecuaciones lineales y sistemas de ecuaciones simultáneas",
+        "números complejos y cantidades imaginarias",
+        "ejercicios y problemas prácticos resueltos",
+    ),
+    forbidden_topics=(
+        "biografías históricas detalladas de matemáticos",
+        "fechas o lugares de nacimiento de autores",
+        "números de página de la edición impresa",
+        "notas editoriales no matemáticas",
+    ),
+    style_guide=(
+        "Lenguaje matemático claro, preciso y riguroso en español. "
+        "Uso de notación algebraica estándar (ej. x^2, paréntesis, signos de operación). "
+        "Preguntas directas tanto conceptuales (definiciones, teoremas, leyes) como operativas (procedimientos y resultados de ejercicios)."
+    ),
+    extra_instructions=(
+        "Cuando el bloque contenga un ejercicio o problema resuelto, formula preguntas tipo: "
+        "'Al resolver [expresión], ¿cuál es el resultado correcto?' o '¿Cuál es la descomposición factorial de [expresión]?'. "
+        "Los distractores u opciones incorrectas deben basarse en errores algebraicos típicos "
+        "(error de signos, error al sumar exponentes en vez de multiplicarlos, omitir el doble producto en binomios al cuadrado, etc.)."
+    ),
+)
+
+
 PROFILE_RULES: dict[str, DocumentRules] = {
     "manual": _MANUAL_RULES,
     "codigo_legal": _CODIGO_LEGAL_RULES,
     "ley_organica": _LEY_ORGANICA_RULES,
+    "algebra_baldor": _BALDOR_RULES,
 }
 
 

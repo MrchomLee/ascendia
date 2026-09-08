@@ -38,19 +38,39 @@ from etl.hierarchy.patterns import (
     match_seccion,
     match_subseccion,
     match_titulo,
+    KIND_EJERCICIO,
+    match_ejercicio,
+    KIND_MISCELANEA,
+    match_miscelanea,
+    KIND_RESPUESTAS,
+    match_respuestas,
+    KIND_BALDOR_TEMA,
+    match_baldor_capitulo,
+    match_baldor_caso,
+    match_baldor_inciso,
+    match_baldor_subseccion_romana,
+    match_baldor_tema_mayusculas,
 )
 
 
-# Order matters: more specific (multi-word, anchored) first.
+# El orden importa: los patrones más específicos primero.
 _ALL_MATCHERS: list[tuple[str, Callable[[str], HeadingCandidate | None]]] = [
+    (KIND_SUBSECCION, match_baldor_inciso),
     (KIND_SUBSECCION, match_subseccion),
     (KIND_ARTICULO, match_articulo),
+    (KIND_PARTE, match_parte),
+    (KIND_LIBRO, match_libro),
+    (KIND_SECCION, match_baldor_caso),
+    (KIND_SECCION, match_baldor_subseccion_romana),
     (KIND_SECCION, match_seccion),
     (KIND_CAPITULO, match_capitulo),
+    (KIND_CAPITULO, match_baldor_capitulo),
+    (KIND_BALDOR_TEMA, match_baldor_tema_mayusculas),
     (KIND_TITULO, match_titulo),
-    (KIND_LIBRO, match_libro),
-    (KIND_PARTE, match_parte),
     (KIND_ANEXO, match_anexo),
+    (KIND_EJERCICIO, match_ejercicio),
+    (KIND_MISCELANEA, match_miscelanea),
+    (KIND_RESPUESTAS, match_respuestas),
 ]
 
 
@@ -142,6 +162,7 @@ _MANUAL_PROFILE = DocumentProfile(
         KIND_CAPITULO: 1,
         KIND_SECCION: 2,
         KIND_SUBSECCION: 3,
+        KIND_ANEXO: 0,
     },
 )
 
@@ -152,11 +173,13 @@ _CODIGO_LEGAL_PROFILE = DocumentProfile(
         KIND_LIBRO: 0,
         KIND_TITULO: 1,
         KIND_CAPITULO: 2,
+        KIND_ARTICULO: 3,
     },
     drop_text_patterns=[
         re.compile(r"C[ÁA]MARA\s+DE\s+DIPUTADOS\s+DEL\s+H\.?\s+CONGRESO", re.IGNORECASE),
         re.compile(r"Secretar[íi]a\s+(?:General|de\s+Servicios\s+Parlamentarios)", re.IGNORECASE),
         re.compile(r"^\s*\d+\s+de\s+\d+\s*$"),
+        re.compile(r".*Reforma DOF.*", re.IGNORECASE),
     ],
     clean_text_patterns=[],
     metadata_extractors={
@@ -175,6 +198,7 @@ _LEY_ORGANICA_PROFILE = DocumentProfile(
     kind_to_depth={
         KIND_TITULO: 0,
         KIND_CAPITULO: 1,
+        KIND_ARTICULO: 2,
     },
     drop_text_patterns=_CODIGO_LEGAL_PROFILE.drop_text_patterns + [
         re.compile(r".*DOF.*", re.IGNORECASE),
@@ -185,10 +209,35 @@ _LEY_ORGANICA_PROFILE = DocumentProfile(
 )
 
 
+_LIBRO_TEXTO_PROFILE = DocumentProfile(
+    name="libro_texto",
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+        KIND_EJERCICIO: 1,
+    },
+)
+
+
+_BALDOR_PROFILE = DocumentProfile(
+    name="algebra_baldor",
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+        KIND_TITULO: 0,
+    },
+    drop_text_patterns=[
+        re.compile(r"^\s*Álgebra\s*$", re.IGNORECASE),
+        re.compile(r"^\s*Aurelio Baldor\s*$", re.IGNORECASE),
+    ],
+)
+
+
+
 PROFILES: dict[str, DocumentProfile] = {
     "manual": _MANUAL_PROFILE,
     "codigo_legal": _CODIGO_LEGAL_PROFILE,
     "ley_organica": _LEY_ORGANICA_PROFILE,
+    "libro_texto": _LIBRO_TEXTO_PROFILE,
+    "algebra_baldor": _BALDOR_PROFILE,
 }
 
 
@@ -229,7 +278,17 @@ def auto_detect_profile(elements: list, *, sample_chars: int = 4000) -> str:
     has_codigo = "código de" in sample or "codigo de" in sample
     has_parte = bool(re.search(r"\b(primera|segunda|tercera)\s+parte\b", sample))
     has_manual = "manual de" in sample
+    has_ejercicio = "ejercicio" in sample
+    has_baldor = "baldor" in sample
+    has_algebra = (
+        ("álgebra" in sample or "algebra" in sample)
+        and any(w in sample for w in ("monomio", "polinomio", "factoriz", "ecuaci", "descomposici"))
+    )
 
+    if has_baldor or has_algebra:
+        return "algebra_baldor"
+    if has_ejercicio and not has_articulo:
+        return "libro_texto"
     if has_libro and (has_titulo or has_articulo or has_codigo):
         return "codigo_legal"
     if has_titulo and has_articulo and not has_libro and not has_parte:

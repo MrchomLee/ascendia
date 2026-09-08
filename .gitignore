@@ -32,3 +32,7 @@ data/manuals.sqlite-shm
 
 bakeoff_report.md
 *.log
+
+# --- Binarios y temporales ---
+*.exe
+err.txt

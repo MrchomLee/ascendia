@@ -3,31 +3,34 @@
 from __future__ import annotations
 
 import json
-import requests
+import logging
+import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from pathlib import Path
 
 from etl.models.schema import Chunk, Manual, Node
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from dotenv import load_dotenv
 
-load_dotenv()
-
-from qgen.cost import CostEstimate, doc_token_estimate
+from qgen.cost import CostEstimate, actual_cost_usd, doc_token_estimate
 from qgen.db.persistence import (
     create_run,
     finalize_run,
     persist_question,
     remove_existing_questions_for_nodes,
 )
-
-# Importamos las herramientas de tu proyecto
+from qgen.gemini.cache import build_or_get_cache, delete_cache
+from qgen.gemini.generate import generate_one, generate_draft_questions
 from qgen.models.schema import GenerationRun, Question
+from qgen.prompts.creator import build_creator_instruction
 from qgen.prompts.render import build_variable_prompt
 from qgen.prompts.system import SYSTEM_VERSION, build_system_instruction
-from qgen.prompts.creator import build_creator_instruction
 from qgen.rules.base import DocumentRules, RulesOverride, merge_rules, rules_to_dict
 from qgen.rules.defaults import get_default_rules
+
+# Módulo de logging en lugar de print() directo
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -44,13 +47,6 @@ class RunSummary:
     batch_job_id: str | None = None
     cache_name: str | None = None
 
-
-from qgen.gemini.cache import build_or_get_cache, delete_cache
-from qgen.gemini.generate import generate_one, generate_draft_questions
-from qgen.prompts.system import SYSTEM_VERSION, build_system_instruction
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import re
-from pathlib import Path
 
 # ---- Selección ------------------------------------------------------------
 
@@ -150,14 +146,15 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
         )
         cache_name = cache.name
     except Exception as e:
-        print(f"Error creando cache: {e}")
+        logger.warning("Error creando cache: %s", e)
         cache = None
         cache_name = "none"
 
     run.cache_name = cache_name
     session.commit()
     
-    # Pre-fetch todo para no cruzar objetos SQLAlchemy entre hilos
+    # 2. Pre-fetch: extraer datos puros (no ORM objects) para thread safety.
+    #    Los hilos solo reciben strings y enteros, nunca objetos SQLAlchemy.
     node_jobs = []
     for node in nodes:
         chunks = _chunks_for(session, node.id)
@@ -167,10 +164,16 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
             "id": node.id,
             "prompt": prompt,
             "text_chunk": text_chunk,
-            "node_obj": node # Para el callback, pero cuidado con el lazy loading
+            # Datos serializados del nodo para el callback (sin objeto ORM)
+            "node_title": node.title,
+            "node_breadcrumb": node.breadcrumb,
         })
     
+    # Referencia local al modelo para los hilos (string, thread-safe)
+    run_model = run.model
+
     def process_node(node_idx, job):
+        """Función ejecutada en hilo worker. No toca la sesión de SQLAlchemy."""
         node_completed = 0
         node_failed = 0
         node_in = 0
@@ -179,35 +182,32 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
         
         prompt = job["prompt"]
         text_chunk = job["text_chunk"]
-        node_obj = job["node_obj"]
         
         preguntas_sugeridas = generate_draft_questions(
             cache=cache,
-            model=run.model,
+            model=run_model,
             variable_prompt=prompt, 
             system_instruction=creator_instruction
         )
             
         if not preguntas_sugeridas:
             node_failed += 1
-            if progress_cb: progress_cb(node_idx, len(nodes), node_obj, None, "Error extrayendo preguntas")
             return (node_completed, node_failed, node_in, node_out, node_cached, [])
 
         results = []
         for pregunta in preguntas_sugeridas:
-            pregunta_limpia = re.split(r'\b[A-D][\.\)]\s', pregunta, maxsplit=1, flags=re.IGNORECASE)[0].strip()
+            pregunta_limpia = re.split(r'\b[A-D][\.\\)]\s', pregunta, maxsplit=1, flags=re.IGNORECASE)[0].strip()
             system_instruction = build_system_instruction(rules, target_question=pregunta_limpia)
             
             outcome = generate_one(
                 cache=cache,
-                model=run.model,
+                model=run_model,
                 variable_prompt=prompt, 
                 system_instruction=system_instruction
             )
 
             if outcome.question is None:
                 node_failed += 1
-                if progress_cb: progress_cb(node_idx, len(nodes), node_obj, None, outcome.error)
                 continue
 
             # Validación Algorítmica (Python)
@@ -245,24 +245,31 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
             node_out += outcome.output_tokens
             node_cached += outcome.cached_tokens
             
-            if progress_cb: progress_cb(node_idx, len(nodes), node_obj, outcome.question, None)
-            
         return (node_completed, node_failed, node_in, node_out, node_cached, results)
 
     # 3. Ejecutar peticiones concurrentemente
-    max_workers = 15 if cache else 2 # Si no hay cache, asumimos Free Tier / límite restrictivo
+    max_workers = 15 if cache else 2  # Sin cache → Free Tier / límite restrictivo
     order = 0
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(process_node, idx, job): job for idx, job in enumerate(node_jobs)}
+        futures = {executor.submit(process_node, idx, job): (idx, job) for idx, job in enumerate(node_jobs)}
         
         for future in as_completed(futures):
+            idx, job = futures[future]
             c, f, i, o, ca, res = future.result()
             completed += c
             failed += f
             total_in += i
             total_out += o
             total_cached += ca
+
+            # Callback de progreso con datos serializados (hilo principal)
+            if progress_cb:
+                for r in res:
+                    progress_cb(idx, len(nodes), job, r["payload"], None)
+                if f > 0 and not res:
+                    progress_cb(idx, len(nodes), job, None, "Error extrayendo preguntas")
             
+            # Persistencia en el hilo principal (thread-safe)
             for r in res:
                 persist_question(
                     session, run=run, node_id=r["node_id"], manual_id=manual.id, generation_order=order, payload=r["payload"], raw_response=r["raw_response"],
@@ -276,13 +283,36 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
     if cache:
         delete_cache(cache)
 
-    actual_cost = 0.0 # TODO: use actual_cost_usd logic
-    finalize_run(session, run=run, nodes_completed=completed, nodes_failed=failed, cost_input_tokens=total_in, cost_output_tokens=total_out, cost_cached_tokens=total_cached, cost_estimate_usd=actual_cost, status="succeeded" if failed == 0 else "partial")
+    # Cálculo del costo real usando los tokens observados
+    computed_cost = actual_cost_usd(
+        model=run.model,
+        mode=run.mode,
+        input_tokens=total_in,
+        output_tokens=total_out,
+        cached_tokens=total_cached,
+    )
+    finalize_run(session, run=run, nodes_completed=completed, nodes_failed=failed, cost_input_tokens=total_in, cost_output_tokens=total_out, cost_cached_tokens=total_cached, cost_estimate_usd=computed_cost, status="succeeded" if failed == 0 else "partial")
     session.commit()
 
-    return RunSummary(run_id=run.id, mode=run.mode, model=run.model, profile=run.profile_used, nodes_total=len(nodes), nodes_completed=completed, nodes_failed=failed, cost_estimate_usd=0.0, actual_cost_usd=actual_cost, cache_name=cache_name)
+    return RunSummary(run_id=run.id, mode=run.mode, model=run.model, profile=run.profile_used, nodes_total=len(nodes), nodes_completed=completed, nodes_failed=failed, cost_estimate_usd=0.0, actual_cost_usd=computed_cost, cache_name=cache_name)
 
 # ---- Batch desactivado ----
 def _run_batch_submit(*args, **kwargs): raise NotImplementedError("No compatible con Ollama local.")
 def finalize_batch_run(*args, **kwargs): raise NotImplementedError("No compatible con Ollama local.")
-def _run_summary_from_db(run: GenerationRun) -> RunSummary: pass
+
+
+def _run_summary_from_db(run: GenerationRun) -> RunSummary:
+    """Construye un RunSummary a partir de una corrida persistida en la base de datos."""
+    return RunSummary(
+        run_id=run.id,
+        mode=run.mode,
+        model=run.model,
+        profile=run.profile_used,
+        nodes_total=run.nodes_total,
+        nodes_completed=run.nodes_completed,
+        nodes_failed=run.nodes_failed,
+        cost_estimate_usd=run.cost_estimate_usd,
+        actual_cost_usd=run.cost_estimate_usd,
+        batch_job_id=run.batch_job_id,
+        cache_name=run.cache_name,
+    )

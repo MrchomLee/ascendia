@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from dataclasses import dataclass
-
-from pydantic import ValidationError
 
 from pydantic import ValidationError
 
 from qgen.gemini.cache import DocumentCache
 from qgen.gemini.client import GeminiClient, default_client
 from qgen.prompts.schemas import GeneratedQuestion
+
+logger = logging.getLogger(__name__)
 
 def _generate_with_retry(raw_client, **kwargs):
     import random
@@ -201,9 +202,8 @@ def generate_draft_questions(
             config=types.GenerateContentConfig(**config_kwargs),
         )
         text = getattr(response, "text", "")
-        import json
         json_dict = json.loads(text)
         return json_dict.get("questions", [])
     except Exception as exc:
-        print(f"Error en draft Gemini: {exc}")
+        logger.warning("Error en draft Gemini: %s", exc)
         return []
