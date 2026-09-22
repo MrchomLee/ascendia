@@ -220,9 +220,10 @@ _LIBRO_TEXTO_PROFILE = DocumentProfile(
 
 _BALDOR_PROFILE = DocumentProfile(
     name="algebra_baldor",
+    # Un nodo por capítulo ("I. Suma" … "XXXII. Números complejos"). Casos,
+    # temas y reglas quedan en el cuerpo de su capítulo.
     kind_to_depth={
         KIND_CAPITULO: 0,
-        KIND_TITULO: 0,
     },
     drop_text_patterns=[
         re.compile(r"^\s*Álgebra\s*$", re.IGNORECASE),

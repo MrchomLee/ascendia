@@ -141,3 +141,13 @@ def test_perfil_algebra_baldor_clasificacion():
     assert profile.classify("REGLA GENERAL PARA SUMAR") is None
     assert profile.classify("a) Factor común monomio.") is None
 
+
+
+def test_perfil_algebra_baldor_solo_tiene_capitulos():
+    """En Álgebra de Baldor los únicos nodos son los 16 capítulos ('I. Suma' …
+    'XXXII. Números complejos'); ningún otro encabezado abre un nodo."""
+    profile = get_profile("algebra_baldor")
+
+    assert profile.classify("XXXII. Números complejos").level_label == "Capítulo"
+    assert profile.classify("TÍTULO PRIMERO") is None
+    assert profile.classify("TITULO II De las ecuaciones") is None
