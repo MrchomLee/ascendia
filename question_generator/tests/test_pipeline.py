@@ -247,3 +247,137 @@ def test_dry_run_with_nothing_to_generate_costs_nothing(monkeypatch):
 
     assert n_nodes == 0
     assert estimate.total_usd == 0
+
+
+# ─── Por qué falló ─────────────────────────────────────────────────────────
+
+
+def _node_id(manual_id: int) -> int:
+    with session_scope() as session:
+        return session.execute(select(Node.id).where(Node.manual_id == manual_id)).scalar_one()
+
+
+def test_el_motivo_de_una_opcion_fallida_queda_en_la_corrida_y_se_avisa(monkeypatch):
+    manual_id = _seed(n_nodes=1)
+    fake = FakeGemini(monkeypatch)
+    fake.drafts = ["¿Primera?", "¿Segunda?"]
+    outcomes = iter([
+        GenerationOutcome(question=_question("A"), raw_response={}),
+        GenerationOutcome(question=None, raw_response={}, error="validation error: Role mismatch for 'correct'"),
+    ])
+    fake.one = lambda: next(outcomes)
+    avisos: list[str | None] = []
+
+    with session_scope() as session:
+        pipeline.run_generation(
+            session, manual_id=manual_id,
+            progress_cb=lambda idx, total, job, question, error: avisos.append(error),
+        )
+
+    [run] = _runs()
+    assert run.metadata_json["failures"] == [
+        {"node_id": _node_id(manual_id), "error": "validation error: Role mismatch for 'correct'"},
+    ]
+    assert "validation error: Role mismatch for 'correct'" in avisos
+
+
+def test_el_motivo_de_un_creador_fallido_queda_en_la_corrida(monkeypatch):
+    manual_id = _seed(n_nodes=1)
+    FakeGemini(monkeypatch)
+    monkeypatch.setattr(pipeline, "generate_draft_questions", lambda **_: DraftOutcome(
+        questions=[], error="ClientError: 400 INVALID_ARGUMENT",
+    ))
+
+    with session_scope() as session:
+        pipeline.run_generation(session, manual_id=manual_id)
+
+    [run] = _runs()
+    assert run.status == "partial"
+    assert run.metadata_json["failures"] == [
+        {"node_id": _node_id(manual_id), "error": "ClientError: 400 INVALID_ARGUMENT"},
+    ]
+
+
+class _FakeClient:
+    """Cliente de Gemini mínimo: `generate_content` falla o devuelve `response`."""
+
+    def __init__(self, *, raises: Exception | None = None, response=None) -> None:
+        self.raises, self.response = raises, response
+        self.models = self
+
+    def get(self):
+        return self
+
+    def generate_content(self, **_):
+        if self.raises:
+            raise self.raises
+        return self.response
+
+
+def test_el_creador_devuelve_el_motivo_si_la_api_rechaza_la_llamada():
+    from qgen.gemini.generate import generate_draft_questions
+
+    client = _FakeClient(raises=RuntimeError("400 INVALID_ARGUMENT: request not supported"))
+    draft = generate_draft_questions(
+        model=MODEL_FLASH, variable_prompt="texto", system_instruction="instrucciones", client=client,
+    )
+
+    assert draft.questions == []
+    assert "400 INVALID_ARGUMENT" in draft.error
+
+
+def test_el_creador_devuelve_el_motivo_si_la_respuesta_no_es_json():
+    from types import SimpleNamespace
+
+    from qgen.gemini.generate import generate_draft_questions
+
+    response = SimpleNamespace(text="esto no es json", usage_metadata=SimpleNamespace(
+        prompt_token_count=12, candidates_token_count=3, cached_content_token_count=0,
+    ))
+    draft = generate_draft_questions(
+        model=MODEL_FLASH, variable_prompt="texto", system_instruction="instrucciones",
+        client=_FakeClient(response=response),
+    )
+
+    assert draft.questions == []
+    assert draft.error is not None
+    assert (draft.input_tokens, draft.output_tokens) == (12, 3)  # se pagaron igual
+
+
+# ─── Respuestas reales de Gemini 3 ─────────────────────────────────────────
+
+
+def test_una_respuesta_con_thought_signature_se_guarda(monkeypatch):
+    """Gemini 3 firma sus partes con `thought_signature` (bytes no UTF-8). La
+    respuesta cruda se guarda como JSON: en metadata y en raw_response_json."""
+    import json
+
+    from google.genai import types
+
+    import qgen.gemini.generate as gemini_generate
+
+    manual_id = _seed(n_nodes=1)
+    FakeGemini(monkeypatch)
+    monkeypatch.setattr(pipeline, "generate_one", gemini_generate.generate_one)
+    response = types.GenerateContentResponse(
+        candidates=[types.Candidate(content=types.Content(role="model", parts=[types.Part(
+            text=_question("R").model_dump_json(),
+            thought_signature=b"\x12\x8e'\n\x8b'\x01i\x14}\x13\xbe",  # tal cual en el log real
+        )]))],
+        usage_metadata=types.GenerateContentResponseUsageMetadata(
+            prompt_token_count=100, candidates_token_count=50,
+        ),
+    )
+    monkeypatch.setattr(gemini_generate, "default_client", lambda: _FakeClient(response=response))
+
+    with session_scope() as session:
+        pipeline.run_generation(session, manual_id=manual_id)
+
+    [run] = _runs()
+    assert run.status == "succeeded"
+    with session_scope() as session:
+        [question] = session.execute(select(Question)).scalars().all()
+        stored = question.raw_response_json
+    part = stored["candidates"][0]["content"]["parts"][0]
+    assert isinstance(part["thought_signature"], str)
+    json.dumps(stored)

@@ -64,9 +64,13 @@ def _extract_usage(response) -> tuple[int, int, int]:
 
 
 def _response_to_dict(response) -> dict:
-    """Best-effort serialization of the response for audit trail."""
+    """Best-effort serialization of the response for audit trail.
+
+    Modo JSON: Gemini 3 devuelve `thought_signature` en bytes, y la respuesta
+    se guarda en columnas JSON. El SDK los serializa en base64.
+    """
     try:
-        return response.model_dump()
+        return response.model_dump(mode="json")
     except Exception:
         try:
             return {"text": getattr(response, "text", None)}
@@ -176,6 +180,7 @@ class DraftOutcome:
     input_tokens: int = 0
     output_tokens: int = 0
     cached_tokens: int = 0
+    error: str | None = None
 
 
 def generate_draft_questions(
@@ -212,19 +217,20 @@ def generate_draft_questions(
             config=types.GenerateContentConfig(**config_kwargs),
         )
     except Exception as exc:
-        logger.warning("Error en draft Gemini: %s", exc)
-        return DraftOutcome(questions=[])
+        return DraftOutcome(questions=[], error=f"{type(exc).__name__}: {exc}")
 
     # Los tokens se cobran aunque la respuesta no se pueda parsear.
     in_tok, out_tok, cached_tok = _extract_usage(response)
+    error = None
     try:
         questions = json.loads(getattr(response, "text", "") or "").get("questions", [])
     except Exception as exc:
-        logger.warning("Respuesta de draft ilegible: %s", exc)
         questions = []
+        error = f"respuesta del creador ilegible: {type(exc).__name__}: {exc}"
     return DraftOutcome(
         questions=questions,
         input_tokens=in_tok,
         output_tokens=out_tok,
         cached_tokens=cached_tok,
+        error=error,
     )

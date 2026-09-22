@@ -146,6 +146,7 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
     cache_name = "none"
     cache_started = time.monotonic()
     executor: ThreadPoolExecutor | None = None
+    failures: list[dict] = []  # por qué falló cada llamada: una corrida `partial` ya se pagó
 
     def finalize(status: str) -> float:
         """Cierra la corrida con lo gastado hasta ahora, incluida la creación y el almacenamiento del cache."""
@@ -160,7 +161,7 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
             cache_create_tokens=cache_tokens,
             cache_storage_token_hours=cache_tokens * cache_hours,
         )
-        run.metadata_json = {**(run.metadata_json or {}), "cache_tokens": cache_tokens, "cache_hours": round(cache_hours, 4)}
+        run.metadata_json = {**(run.metadata_json or {}), "cache_tokens": cache_tokens, "cache_hours": round(cache_hours, 4), "failures": failures}
         finalize_run(session, run=run, nodes_completed=completed, nodes_failed=failed, cost_input_tokens=total_in, cost_output_tokens=total_out, cost_cached_tokens=total_cached, cost_estimate_usd=cost, status=status)
         session.commit()
         return cost
@@ -210,6 +211,7 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
             """Función ejecutada en hilo worker. No toca la sesión de SQLAlchemy."""
             node_completed = 0
             node_failed = 0
+            errors: list[str] = []
 
             prompt = job["prompt"]
             text_chunk = job["text_chunk"]
@@ -226,7 +228,8 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
 
             if not draft.questions:
                 node_failed += 1
-                return (node_completed, node_failed, node_in, node_out, node_cached, [])
+                errors.append(draft.error or "el creador no devolvió enunciados")
+                return (node_completed, node_failed, node_in, node_out, node_cached, [], errors)
 
             results = []
             for pregunta in draft.questions:
@@ -246,6 +249,7 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
 
                 if outcome.question is None:
                     node_failed += 1
+                    errors.append(outcome.error or "respuesta vacía")
                     continue
 
                 # Validación Algorítmica (Python)
@@ -280,7 +284,7 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
 
                 node_completed += 1
 
-            return (node_completed, node_failed, node_in, node_out, node_cached, results)
+            return (node_completed, node_failed, node_in, node_out, node_cached, results, errors)
 
         # 3. Ejecutar peticiones concurrentemente. Sin `with`: al salir de un
         #    `with` el executor espera a TODOS los nodos encolados, así que un
@@ -292,7 +296,7 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
 
         for future in as_completed(futures):
             idx, job = futures[future]
-            c, f, i, o, ca, res = future.result()
+            c, f, i, o, ca, res, errs = future.result()
             completed += c
             failed += f
             total_in += i
@@ -309,12 +313,16 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
                 order += 1
             session.commit()
 
+            for err in errs:
+                logger.warning("%s: %s", job["node_label"], err)
+                failures.append({"node_id": job["id"], "error": err})
+
             # Callback de progreso con datos serializados (hilo principal)
             if progress_cb:
                 for r in res:
                     progress_cb(idx, len(nodes), job, r["payload"], None)
-                if f > 0 and not res:
-                    progress_cb(idx, len(nodes), job, None, "Error extrayendo preguntas")
+                for err in errs:
+                    progress_cb(idx, len(nodes), job, None, err)
 
         computed_cost = finalize("succeeded" if failed == 0 else "partial")
     except BaseException as exc:
