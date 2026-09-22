@@ -19,6 +19,7 @@ qgen-export = "qgen.cli.export:app"
 qgen-batch-status = "qgen.cli.batch_status:app"
 qgen-inspect = "qgen.cli.inspect:app"
 qgen-stats = "qgen.cli.stats:app"
+qgen-import-examples = "qgen.cli.import_examples:app"
 
 [tool.uv.sources]
 etl = { workspace = true }

@@ -1,7 +1,8 @@
-"""Prompt templates for the Question Creator agent."""
+"""Plantillas de prompt para el agente Creador de Preguntas."""
 
 from __future__ import annotations
 
+from typing import Sequence
 from qgen.rules.base import DocumentRules
 
 
@@ -22,17 +23,37 @@ Estilo y restricciones de este documento ({rules_name}):
 - Temas preferentes: {preferred_topics_str}
 - Temas a EVITAR (no generes preguntas sobre estos): {forbidden_topics_str}
 
-EJEMPLOS DE PREGUNTAS BIEN FORMULADAS:
-- ¿Qué es la teoría de la guerra según el manual?
-- Para México, la guerra se conceptúa como:
-- En su obra "De la guerra", Karl Von Clausewitz menciona que:
+EJEMPLOS DE PREGUNTAS BIEN FORMULADAS DE REFERENCIA:
+{exemplars_str}
 
 Salida: devuelve UN único objeto JSON con una lista de strings llamada "questions". No agregues comentarios.
 """
 
-def build_creator_instruction(rules: DocumentRules) -> str:
+_DEFAULT_EXEMPLARS = [
+    "- ¿Qué es la teoría de la guerra según el manual?",
+    "- Para México, la guerra se conceptúa como:",
+    "- En su obra 'De la guerra', Karl Von Clausewitz menciona que:",
+]
+
+
+def build_creator_instruction(rules: DocumentRules, exemplars: Sequence[str] | None = None) -> str:
+    """Construye las instrucciones del sistema para el generador de preguntas.
+
+    Args:
+        rules: Reglas configuradas para el perfil o manual actual.
+        exemplars: Lista opcional de textos de preguntas de ejemplo de referencia.
+
+    Returns:
+        String formateado con el prompt del creador.
+    """
+    if exemplars:
+        formatted_exemplars = "\n".join(f"- {ex}" if not ex.startswith("-") else ex for ex in exemplars)
+    else:
+        formatted_exemplars = "\n".join(_DEFAULT_EXEMPLARS)
+
     return _CREATOR_TEMPLATE.format(
         rules_name=rules.name,
         preferred_topics_str=", ".join(rules.preferred_topics) if rules.preferred_topics else "(ninguno)",
         forbidden_topics_str=", ".join(rules.forbidden_topics) if rules.forbidden_topics else "(ninguno)",
+        exemplars_str=formatted_exemplars,
     )

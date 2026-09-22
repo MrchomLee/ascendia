@@ -26,6 +26,7 @@ from qgen.models.schema import GenerationRun, Question
 from qgen.prompts.creator import build_creator_instruction
 from qgen.prompts.render import build_variable_prompt
 from qgen.prompts.system import SYSTEM_VERSION, build_system_instruction
+from qgen.reference.repository import get_reference_exemplars
 from qgen.rules.base import DocumentRules, RulesOverride, merge_rules, rules_to_dict
 from qgen.rules.defaults import get_default_rules
 
@@ -116,16 +117,18 @@ def run_generation(session: Session, *, manual_id: int, model_name: str = "deeps
         finalize_run(session, run=run, nodes_completed=0, nodes_failed=0, cost_input_tokens=0, cost_output_tokens=0, cost_cached_tokens=0, cost_estimate_usd=0.0, status="succeeded")
         return RunSummary(run_id=run.id, mode=mode, model=run.model, profile=profile, nodes_total=0, nodes_completed=0, nodes_failed=0, cost_estimate_usd=0.0, actual_cost_usd=0.0)
 
-    creator_instruction = build_creator_instruction(rules)
+    exemplars = get_reference_exemplars(session, profile=profile, manual_code=manual.code, limit=5)
+    creator_exemplars = [e["question_text"] for e in exemplars] if exemplars else None
+    creator_instruction = build_creator_instruction(rules, exemplars=creator_exemplars)
 
     run = create_run(session, manual_id=manual_id, model=model_name, mode=mode, profile_used=profile, rules_snapshot=rules_to_dict(rules), nodes_total=len(nodes), cache_name="none", metadata_json={"system_version": SYSTEM_VERSION, "limit": limit, "only_node_id": only_node_id, "regenerate": regenerate})
 
-    return _run_immediate(session, run, manual, nodes, rules, creator_instruction, progress_cb)
+    return _run_immediate(session, run, manual, nodes, rules, creator_instruction, progress_cb, exemplars=exemplars)
 
 
 # ---- Controlador de Ejecución Inmediata -----------------------------------
 
-def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: list[Node], rules: DocumentRules, creator_instruction: str, progress_cb) -> RunSummary:
+def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: list[Node], rules: DocumentRules, creator_instruction: str, progress_cb, exemplars: list[dict] | None = None) -> RunSummary:
     completed = 0
     failed = 0
     total_in = 0
@@ -197,7 +200,7 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
         results = []
         for pregunta in preguntas_sugeridas:
             pregunta_limpia = re.split(r'\b[A-D][\.\\)]\s', pregunta, maxsplit=1, flags=re.IGNORECASE)[0].strip()
-            system_instruction = build_system_instruction(rules, target_question=pregunta_limpia)
+            system_instruction = build_system_instruction(rules, target_question=pregunta_limpia, exemplars=exemplars)
             
             outcome = generate_one(
                 cache=cache,
