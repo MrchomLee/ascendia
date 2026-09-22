@@ -302,18 +302,24 @@ with tab_exportar:
             )
             file_bytes = json_str.encode("utf-8")
 
-            if reporte_val.is_valid:
+            if reporte_val.ok:
                 st.success("✅ Bundle validado con éxito contra el contrato v1.")
+                st.download_button(
+                    label=f"📥 Descargar {filename} ({len(file_bytes) / 1024:.1f} KB)",
+                    data=file_bytes,
+                    file_name=filename,
+                    mime="application/json",
+                    use_container_width=True,
+                )
             else:
-                st.warning("⚠️ El bundle contiene observaciones o advertencias de validación.")
-
-            st.download_button(
-                label=f"📥 Descargar {filename} ({len(file_bytes) / 1024:.1f} KB)",
-                data=file_bytes,
-                file_name=filename,
-                mime="application/json",
-                use_container_width=True,
-            )
+                # Igual que `qgen-export`: los errores bloquean la entrega; el
+                # importador de la webapp rechazaría el fichero.
+                st.error(
+                    f"El bundle no cumple el contrato ({len(reporte_val.errors)} error(es)); "
+                    "no se puede entregar:"
+                )
+                for err in reporte_val.errors:
+                    st.error(err)
         except Exception as exc:
             st.error(f"Error al generar bundle: {exc}")
             json_str = "{}"
