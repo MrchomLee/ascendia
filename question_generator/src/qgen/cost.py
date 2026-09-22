@@ -33,6 +33,8 @@ class CostEstimate:
     cache_storage_usd: float
     per_question_usd: float
     total_usd: float
+    draft_calls: int = 0
+    per_draft_usd: float = 0.0
 
 
 def estimate_run(
@@ -44,7 +46,11 @@ def estimate_run(
     avg_variable_input_tokens: int = 1100,
     avg_output_tokens: int = 600,
     cache_storage_hours: float = 1.0,
+    draft_calls: int = 0,
+    avg_draft_output_tokens: int = 150,
 ) -> CostEstimate:
+    """`draft_calls` son las llamadas del creador (una por nodo): leen el mismo
+    documento cacheado que las de opciones, pero solo devuelven enunciados."""
     if model not in _PRICING:
         raise ValueError(f"No pricing entry for {model!r}")
     in_p, cached_p, out_p, store_p = _PRICING[model]
@@ -58,7 +64,8 @@ def estimate_run(
     out_per_q = (avg_output_tokens * out_p * discount) / 1_000_000
 
     per_q = cached_in_per_q + var_in_per_q + out_per_q
-    total = cache_create + cache_storage + per_q * n_questions
+    per_draft = cached_in_per_q + var_in_per_q + (avg_draft_output_tokens * out_p * discount) / 1_000_000
+    total = cache_create + cache_storage + per_q * n_questions + per_draft * draft_calls
 
     return CostEstimate(
         model=model,
@@ -71,6 +78,8 @@ def estimate_run(
         cache_storage_usd=round(cache_storage, 4),
         per_question_usd=round(per_q, 6),
         total_usd=round(total, 4),
+        draft_calls=draft_calls,
+        per_draft_usd=round(per_draft, 6),
     )
 
 
@@ -81,9 +90,14 @@ def actual_cost_usd(
     input_tokens: int,
     output_tokens: int,
     cached_tokens: int,
+    cache_create_tokens: int = 0,
     cache_storage_token_hours: float = 0.0,
 ) -> float:
-    """Compute actual cost from observed usage_metadata totals."""
+    """Compute actual cost from observed usage_metadata totals.
+
+    `cache_create_tokens` se cobra una vez a precio de input, igual que asume
+    `estimate_run`; el batch no lo abarata.
+    """
     if model not in _PRICING:
         return 0.0
     in_p, cached_p, out_p, store_p = _PRICING[model]
@@ -93,6 +107,7 @@ def actual_cost_usd(
         (in_uncached * in_p * discount) / 1_000_000
         + (cached_tokens * cached_p) / 1_000_000
         + (output_tokens * out_p * discount) / 1_000_000
+        + (cache_create_tokens * in_p) / 1_000_000
         + (cache_storage_token_hours * store_p) / 1_000_000
     )
     return round(cost, 6)

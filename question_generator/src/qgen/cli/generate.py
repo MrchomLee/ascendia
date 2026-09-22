@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.table import Table
 
 from qgen.db.migration import init_question_tables
-from qgen.gemini.client import MODEL_FLASH
+from qgen.gemini.client import MODEL_FLASH, resolve_model
 from qgen.pipeline import estimate_only, run_generation
 
 load_dotenv()
@@ -15,10 +15,17 @@ app = typer.Typer(help="Generate questions for a manual.")
 console = Console()
 
 
+def _model_option(value: str) -> str:
+    try:
+        return resolve_model(value)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
 @app.command()
 def main(
     manual_id: int = typer.Argument(..., help="Manual id (see `etl-inspect manuals`)."),
-    model: str = typer.Option(MODEL_FLASH, help="flash | pro | full model name."),
+    model: str = typer.Option(MODEL_FLASH, callback=_model_option, help="flash | pro | full model name."),
     immediate: bool = typer.Option(True, "--immediate/--batch", help="Execution mode."),
     limit: int | None = typer.Option(None, help="Process at most N nodes (dev/iteration)."),
     node_id: int | None = typer.Option(None, "--node-id", help="Generate for a single node id."),
@@ -56,8 +63,8 @@ def main(
     _print_summary(summary)
 
 
-def _progress_cb(idx: int, total: int, node, question, error) -> None:
-    n_label = f"{node.level_label} {node.ordinal}".strip()
+def _progress_cb(idx: int, total: int, job: dict, question, error) -> None:
+    n_label = job["node_label"]
     if question is None:
         console.print(f"[red][{idx + 1}/{total}] {n_label}  ERROR: {error}[/]")
     else:
@@ -70,12 +77,15 @@ def _print_estimate(estimate, n_nodes: int, mode: str) -> None:
     table.add_column("Value", justify="right")
     rows = [
         ("Nodes to process", str(n_nodes)),
+        ("Questions (est.)", str(estimate.n_questions)),
+        ("Draft calls (1 per node)", str(estimate.draft_calls)),
         ("Doc tokens (cached)", f"{estimate.cache_tokens:,}"),
         ("Tokens per Q (input variable)", str(estimate.input_tokens_per_q)),
         ("Tokens per Q (output)", str(estimate.output_tokens_per_q)),
         ("Cache create (one-off)", f"${estimate.cache_create_usd:.4f}"),
         ("Cache storage (1h)", f"${estimate.cache_storage_usd:.4f}"),
         ("Per-question", f"${estimate.per_question_usd:.6f}"),
+        ("Per-draft call", f"${estimate.per_draft_usd:.6f}"),
         ("TOTAL", f"${estimate.total_usd:.4f}"),
     ]
     for k, v in rows:

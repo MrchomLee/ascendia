@@ -168,6 +168,16 @@ def generate_one(
     )
 
 
+@dataclass
+class DraftOutcome:
+    """Enunciados propuestos por el creador, con los tokens que costó pedirlos."""
+
+    questions: list[str]
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cached_tokens: int = 0
+
+
 def generate_draft_questions(
     *,
     cache: DocumentCache | None = None,
@@ -175,7 +185,7 @@ def generate_draft_questions(
     variable_prompt: str,
     system_instruction: str,
     client: GeminiClient | None = None,
-) -> list[str]:
+) -> DraftOutcome:
     gc = client or default_client()
     raw_client = gc.get()
     
@@ -201,9 +211,20 @@ def generate_draft_questions(
             contents=variable_prompt,
             config=types.GenerateContentConfig(**config_kwargs),
         )
-        text = getattr(response, "text", "")
-        json_dict = json.loads(text)
-        return json_dict.get("questions", [])
     except Exception as exc:
         logger.warning("Error en draft Gemini: %s", exc)
-        return []
+        return DraftOutcome(questions=[])
+
+    # Los tokens se cobran aunque la respuesta no se pueda parsear.
+    in_tok, out_tok, cached_tok = _extract_usage(response)
+    try:
+        questions = json.loads(getattr(response, "text", "") or "").get("questions", [])
+    except Exception as exc:
+        logger.warning("Respuesta de draft ilegible: %s", exc)
+        questions = []
+    return DraftOutcome(
+        questions=questions,
+        input_tokens=in_tok,
+        output_tokens=out_tok,
+        cached_tokens=cached_tok,
+    )
