@@ -48,6 +48,13 @@ ROLE_LABEL: dict[str, str] = {
     "distractor": "distractor",
 }
 
+#: Tipo de pregunta (qgen v2).
+TYPE_LABEL: dict[str, str] = {
+    "teoria": "📘 Teoría",
+    "ejercicio_libro": "✏️ Ejercicio del libro",
+    "ejercicio_nuevo": "🆕 Ejercicio nuevo",
+}
+
 
 class OptionView(BaseModel):
     id: int
@@ -70,6 +77,9 @@ class QuestionView(BaseModel):
     node_title: str
     node_label: str
     node_page_start: int
+    question_type: str = "teoria"
+    source_quote: str = ""
+    motivos: list[str] = Field(default_factory=list)
     options: list[OptionView] = Field(default_factory=list)
 
     @property
@@ -267,6 +277,9 @@ def list_questions(
                 node_title=node.title,
                 node_label=f"{node.level_label} {node.ordinal}".strip(),
                 node_page_start=node.page_start,
+                question_type=q.question_type,
+                source_quote=q.source_quote,
+                motivos=list((q.metadata_json or {}).get("motivos") or []),
                 options=options_by_question.get(q.id, []),
             )
             for q, node in rows

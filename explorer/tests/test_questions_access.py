@@ -96,6 +96,9 @@ def _seed_questions_data():
             generation_order=1,
             payload=gq,
             raw_response={},
+            question_type="ejercicio_nuevo",
+            source_quote="Texto relevante del manual sobre disciplina.",
+            metadata={"motivos": ["la verificación eligió B; la clave es A"]},
         )
         finalize_run(
             session,
@@ -166,3 +169,14 @@ def test_set_validation_status():
     q_rechazada = next(q for q in list_questions(manual_id) if q.id == q_id)
     assert q_rechazada.validation_status == "rejected"
     assert q_rechazada.served is False
+
+
+def test_la_pregunta_trae_su_tipo_su_cita_y_sus_motivos():
+    st.cache_data.clear()
+    manual_id, _, _, _ = _seed_questions_data()
+
+    [q] = list_questions(manual_id)
+
+    assert q.question_type == "ejercicio_nuevo"
+    assert q.source_quote == "Texto relevante del manual sobre disciplina."
+    assert q.motivos == ["la verificación eligió B; la clave es A"]

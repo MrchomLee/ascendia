@@ -20,6 +20,7 @@ from explorer.questions_access import (
     ROLE_LABEL,
     STATUS_LABEL,
     STATUSES,
+    TYPE_LABEL,
     QuestionView,
     get_question_kpis,
     list_questions,
@@ -137,6 +138,9 @@ def _render_question(question: QuestionView) -> None:
             )
 
         st.markdown(f"**{question.question_text}**")
+        st.caption(TYPE_LABEL.get(question.question_type, question.question_type))
+        if question.motivos:
+            st.warning("A revisar: " + "; ".join(question.motivos))
 
         for option in question.options:
             color = ROLE_COLOR.get(option.role, "gray")
@@ -147,6 +151,9 @@ def _render_question(question: QuestionView) -> None:
             )
 
         st.caption(f"💡 {question.justification}")
+        if question.source_quote:
+            with st.expander("Cita del texto"):
+                st.markdown(f"> {question.source_quote}")
 
         # Lo único que este explorador escribe. Marcar no borra: una pregunta
         # rechazada sigue ahí y viaja en el bundle, solo que sin llegar a un examen.

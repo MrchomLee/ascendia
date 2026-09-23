@@ -43,6 +43,7 @@ def _seed(*, run_status: str) -> int:
         persist_question(
             session, run=run, node_id=node.id, manual_id=manual.id, generation_order=0,
             source_quote=text,
+            question_type="ejercicio_nuevo", metadata={"motivos": ["supera la dificultad del PDF"]},
             payload=GeneratedQuestion(
                 question="¿A quién corresponde la administración de la justicia militar?",
                 options=[
@@ -84,3 +85,10 @@ def test_un_bundle_con_errores_no_se_ofrece_y_se_explica_por_que():
 
     assert at.get("download_button") == []
     assert any("running" in e.value for e in at.error)
+
+
+def test_la_pregunta_muestra_su_tipo_y_sus_motivos():
+    at = _open_page(_seed(run_status="succeeded"))
+
+    assert any("Ejercicio nuevo" in c.value for c in at.caption)
+    assert any("supera la dificultad del PDF" in w.value for w in at.warning)
