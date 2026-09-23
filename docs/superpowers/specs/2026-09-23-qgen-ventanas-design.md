@@ -70,11 +70,14 @@ la ventana son `min(page_start)`–`max(page_end)` de sus chunks.
 salvo una diferencia: ya no se excluye un nodo entero por tener alguna pregunta; lo que
 se salta son sus ventanas ya procesadas (ver "Reanudar").
 
-**Reanudar.** Cada corrida guarda en `metadata_json["ventanas"]` el estado de cada
-ventana procesada (`ok` o `fallida`). Una corrida nueva **se salta** las ventanas que
-estén `ok` en cualquier corrida anterior del manual, aunque no dejaran preguntas (por
-ejemplo, porque todas se descartaron). `--regenerate` borra las preguntas de los nodos
-seleccionados, como hoy, e ignora ese historial.
+**Reanudar.** Cada corrida nace con todas sus ventanas planeadas en `pendiente` dentro
+de `metadata_json["ventanas"]` y las va marcando `ok` o `fallida`. Para cada ventana
+**gana el estado de la corrida más reciente** que la tocó. Una corrida nueva **se salta**
+las ventanas cuyo último estado es `ok` (aunque no dejaran preguntas, por ejemplo porque
+todas se descartaron) y las que tienen preguntas guardadas (cubre una corrida que murió
+sin cerrarse). `--regenerate` borra las preguntas de las ventanas que va a rehacer e
+ignora el historial; si falla o se corta, sus ventanas quedan `fallida` o `pendiente` y
+se retoman.
 
 ## 5. Familias y tipos
 
@@ -160,10 +163,12 @@ guarda con `metadata.motivos`), **descartada** (no se guarda; el motivo va a
   límites de longitud);
 - pasa de las 30 primeras preguntas de la ventana;
 - su tipo no está permitido por el perfil;
-- es duplicada: en `teoria`, enunciado normalizado con similitud ≥ 0.90
-  (`difflib.SequenceMatcher`) con otra pregunta **del mismo nodo** (de esta corrida o
-  anteriores); en ejercicios, solo si el enunciado normalizado es **idéntico** (dos
-  ejercicios del mismo tipo difieren en los datos y se parecen mucho a propósito).
+- es duplicada de otra pregunta **del mismo nodo** (de esta corrida o anteriores): en
+  `teoria`, si el núcleo del enunciado (desde el primer «¿», sin el prefijo «Conforme
+  al …, <ruta>,» que comparten todas las militares de un nodo) tiene similitud ≥ 0.90
+  en ambos sentidos (`difflib.SequenceMatcher`) **y** la respuesta correcta es la misma;
+  en ejercicios, solo si el enunciado normalizado es **idéntico** (dos ejercicios del
+  mismo tipo difieren en los datos y se parecen mucho a propósito).
 
 **Revisiones por tipo:**
 
@@ -175,8 +180,10 @@ guarda con `metadata.motivos`), **descartada** (no se guarda; el motivo va a
 
 **Normalización de texto:** Unicode NFC, espacios colapsados, comillas y guiones
 unificados (`“”«»` → `"`, `–—` → `-`), sin distinguir mayúsculas.
-**Normalización matemática** (solo ejercicios): la de texto + NFKC (𝑥 → x, ² → 2), sin
-espacios, sin `^`, `·` ni `*`, y `−` → `-`. Así `x^2 − 4` y el aplanado `x2 - 4` coinciden.
+**Normalización matemática**: la de texto + NFKC (𝑥 → x, ² → 2), sin espacios, sin `^`,
+`·`, `*` ni `×`, y `−` → `-`, `′` → `'`. Así `x^2 − 4` y el aplanado `x2 - 4` coinciden.
+Los ejercicios se comparan con ella; en `teoria` basta con que coincida la normalización
+de texto **o** la matemática (la teoría de los libros de matemáticas también trae fórmulas).
 
 **Verificación de `ejercicio_nuevo`:** una llamada aparte, temperatura 0, que recibe el
 enunciado, las 4 opciones **barajadas y sin roles** (A–D) y la cita (el ejemplo del
