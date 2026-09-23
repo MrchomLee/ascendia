@@ -360,7 +360,8 @@ def _peek_next_title(
     """Look ahead up to 3 elements for something that acts as the heading title."""
     for j in range(idx + 1, min(idx + 4, len(elements))):
         candidate = elements[j].text.strip()
-        if not candidate:
+        # Una tabla nunca es el título (hasta que llevaron texto, ni llegaban aquí)
+        if not candidate or elements[j].kind == ElementKind.TABLE:
             continue
         # If we hit another heading of any kind, stop peeking
         if profile.classify(candidate):

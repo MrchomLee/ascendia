@@ -118,43 +118,8 @@ class DoclingAdapter(ExtractorBase):
         result = converter.convert(str(pdf_path))
         doc = result.document
 
-        elements: list[RawElement] = []
+        elements = elements_from_document(doc)
         warnings: list[str] = []
-
-        for item, _level in doc.iterate_items():
-            label = getattr(item, "label", None)
-            label_str = str(label).lower() if label else "other"
-            kind = _DOCLING_LABEL_MAP.get(label_str, ElementKind.OTHER)
-
-            text = (getattr(item, "text", "") or "").strip()
-            
-            # If the item has a marker, prepend it
-            marker = getattr(item, "marker", None)
-            if marker:
-                marker_text = (getattr(marker, "text", str(marker)) or "").strip()
-                if marker_text and not text.startswith(marker_text):
-                    text = f"{marker_text} {text}".strip()
-
-            if not text and kind not in (ElementKind.TABLE, ElementKind.FIGURE):
-                continue
-
-            page_no = _first_page(item)
-            bbox = _first_bbox(item)
-
-            elements.append(
-                RawElement(
-                    page_number=page_no or 0,
-                    physical_page_index=(page_no - 1) if page_no else 0,
-                    kind=kind,
-                    text=text,
-                    level=getattr(item, "level", None),
-                    bbox=bbox,
-                    metadata={
-                        "docling_label": label_str,
-                        "self_ref": getattr(item, "self_ref", None),
-                    },
-                )
-            )
 
         elapsed = time.perf_counter() - start
         page_count = len(getattr(doc, "pages", {})) or 0
@@ -166,6 +131,59 @@ class DoclingAdapter(ExtractorBase):
             elapsed_seconds=elapsed,
             warnings=warnings,
         )
+
+
+def elements_from_document(doc) -> list[RawElement]:
+    """Normalize a DoclingDocument's items to :class:`RawElement`, in reading order."""
+    elements: list[RawElement] = []
+    table_captions: set[str] = set()
+
+    for item, _level in doc.iterate_items():
+        # El título de una tabla ya va dentro de su markdown (Docling lo entrega después).
+        if getattr(item, "self_ref", None) in table_captions:
+            continue
+
+        label = getattr(item, "label", None)
+        label_str = str(label).lower() if label else "other"
+        kind = _DOCLING_LABEL_MAP.get(label_str, ElementKind.OTHER)
+
+        text = (getattr(item, "text", "") or "").strip()
+
+        # Una tabla no trae .text: sus celdas se exportan como tabla markdown, sin
+        # líneas en blanco para que el chunker no separe el título de las filas.
+        if kind == ElementKind.TABLE and not text and hasattr(item, "export_to_markdown"):
+            markdown = item.export_to_markdown(doc=doc)
+            text = "\n".join(line for line in markdown.splitlines() if line.strip())
+            table_captions.update(ref.cref for ref in getattr(item, "captions", []))
+
+        # If the item has a marker, prepend it
+        marker = getattr(item, "marker", None)
+        if marker:
+            marker_text = (getattr(marker, "text", str(marker)) or "").strip()
+            if marker_text and not text.startswith(marker_text):
+                text = f"{marker_text} {text}".strip()
+
+        if not text and kind not in (ElementKind.TABLE, ElementKind.FIGURE):
+            continue
+
+        page_no = _first_page(item)
+        bbox = _first_bbox(item)
+
+        elements.append(
+            RawElement(
+                page_number=page_no or 0,
+                physical_page_index=(page_no - 1) if page_no else 0,
+                kind=kind,
+                text=text,
+                level=getattr(item, "level", None),
+                bbox=bbox,
+                metadata={
+                    "docling_label": label_str,
+                    "self_ref": getattr(item, "self_ref", None),
+                },
+            )
+        )
+    return elements
 
 
 def _first_page(item: object) -> int | None:
