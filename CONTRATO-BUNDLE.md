@@ -1,4 +1,4 @@
-# Contrato: bundle de contenido v1
+# Contrato: bundle de contenido v2
 
 La interfaz entre quien **genera** las preguntas (este repo) y quien **opera**
 la webapp. Un fichero JSON por manual, autocontenido, que viaja de un lado al
@@ -57,7 +57,7 @@ escriba en ninguna base.
 
 ```jsonc
 {
-  "bundle_version": 1,
+  "bundle_version": 2,
   "generated_at": "2026-08-17T10:15:00Z",
   "generator": {
     "tool": "qgen",
@@ -139,6 +139,8 @@ escriba en ninguna base.
       "generation_order": 17,
       "question_text": "¿Cuál es …?",
       "justification": "El artículo 142 establece …",
+      "question_type": "teoria",
+      "source_quote": "El artículo 142 establece que …",
       "validation_status": "valid",
       "validated_at": "2026-08-17T11:02:00Z",
       "created_at": "2026-08-17T09:41:07Z",
@@ -177,7 +179,9 @@ traer varias: cada invocación de `qgen-generate` abre la suya, y las preguntas
 que faltaban se llenan en corridas posteriores.
 
 **`questions`** — cada una apunta a su corrida y a su nodo por `ref`, con sus 4
-opciones ordenadas.
+opciones ordenadas. Desde v2 trae `question_type` (`teoria`, `ejercicio_libro` o
+`ejercicio_nuevo`) y `source_quote` (la cita del texto en que se apoya), y un nodo
+puede tener varias preguntas en la misma corrida.
 
 ---
 
@@ -192,7 +196,7 @@ Esta es la parte que hace que el bundle valga más que una copia del SQLite.
 | Nodo | `ref` | el `sort_key` que calcula el ensamblador: la ruta posicional `01.03.02` |
 | Chunk | `(node_ref, ordinal)` | por anidamiento |
 | Corrida | `ref` | `{model}--{mode}--{started_at compacto UTC}` |
-| Pregunta | `(run_ref, node_ref)` | espeja el índice único `questions_run_node_key` de Postgres |
+| Pregunta | `(run_ref, generation_order)` | desde v2; espeja el índice único de Postgres. En v1 era `(run_ref, node_ref)` |
 | Opción | `(pregunta, order_in_question)` | por anidamiento |
 
 Dos exportaciones del mismo estado producen los mismos `ref` (lo único que
@@ -218,11 +222,12 @@ Todo o nada: si algo falla, no se escribe (ni se importa) nada. Las corre tanto
 2. `bundle_version` es una versión mayor conocida.
 3. Están todos los campos requeridos, con su tipo y dentro de la longitud que
    aguanta cada columna: pregunta ≤ 1000, opción ≤ 500, justificación ≤ 2000,
-   `manual.title` ≤ 512, `node.title` ≤ 1024.
+   `manual.title` ≤ 512, `node.title` ≤ 1024, `source_quote` ≤ 2000 (v2).
 4. Los `ref` de nodo son únicos; todo `parent_ref` existe en el bundle o es
    `null`; el árbol tiene raíz y no tiene ciclos.
 5. Todo `node_ref` y `run_ref` de una pregunta existe en el bundle, y no hay dos
-   preguntas para el mismo par.
+   preguntas con la misma identidad (§4): mismo `(run_ref, generation_order)` en v2,
+   mismo `(run_ref, node_ref)` en v1.
 6. Ninguna corrida está en `status: "running"` — una generación a medias no se
    entrega. `mode` ∈ `immediate | batch`.
 7. Cada pregunta trae **exactamente 4 opciones**, con el reparto
@@ -233,6 +238,8 @@ Todo o nada: si algo falla, no se escribe (ni se importa) nada. Las corre tanto
 9. `validation_status` ∈ `pending | valid | needs_review | rejected`.
 10. Ningún campo con pinta de secreto (API keys, cadenas de conexión con
     contraseña, claves PEM) en los bloques libres.
+11. (v2) `question_type` ∈ `teoria | ejercicio_libro | ejercicio_nuevo` y
+    `source_quote` no vacío.
 
 Los errores salen con la ruta exacta dentro del fichero —
 `questions[17].options[3]: …` — para poder localizarlos sin investigar.
@@ -297,6 +304,14 @@ entregamos, porque explica por qué el contrato es como es:
   ambos lados actualizan a la vez. Este fichero existe en los dos repos: si se
   cambia aquí, hay que cambiarlo allá.
 
+### Historial
+
+- **v2 (2026-09-23)** — generación por ventanas: la identidad de una pregunta pasa a
+  `(run_ref, generation_order)`, así que un nodo puede tener varias preguntas por
+  corrida; cada pregunta trae `question_type` y `source_quote` (obligatorios). El
+  importador acepta v1 y v2. En Postgres: el índice único de `questions` cambia de
+  (corrida, nodo) a (corrida, `generation_order`) y se añaden las dos columnas.
+
 ### Pendiente conocido: importación incremental
 
 La v1 importa con granularidad de **manual**: recargar uno borra sus preguntas y,
@@ -304,7 +319,7 @@ con ellas, las respuestas que los alumnos hubieran dado. Sirve mientras el
 contenido esté en construcción y nadie haya estudiado todavía.
 
 En cuanto haya alumnos de verdad hará falta importación por pregunta: comparar
-`(run_ref, node_ref)` contra lo que ya está cargado, insertar las nuevas,
+`(run_ref, generation_order)` contra lo que ya está cargado, insertar las nuevas,
 actualizar las que cambiaron y marcar como `rejected` las que desaparecieron, sin
 borrar nunca una fila de la que cuelgue una respuesta. **El formato ya lo
 soporta** — para eso las claves del §4 son estables. Falta escribir el importador.

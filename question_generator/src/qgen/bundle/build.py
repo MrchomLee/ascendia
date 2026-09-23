@@ -65,7 +65,7 @@ def build_bundle(
     include_raw: bool = False,
     source_sha256: str | None = None,
 ) -> dict[str, Any]:
-    """Construye el bundle v1 de un manual.
+    """Construye el bundle v2 de un manual.
 
     `run_ids` limita a esas corridas (y a sus preguntas); por defecto van todas
     las del manual.
@@ -239,6 +239,8 @@ def build_bundle(
                 "generation_order": question.generation_order,
                 "question_text": question.question_text,
                 "justification": question.justification,
+                "question_type": question.question_type,
+                "source_quote": question.source_quote,
                 "validation_status": question.validation_status,
                 "validated_at": iso(question.validated_at),
                 "created_at": iso(question.created_at),

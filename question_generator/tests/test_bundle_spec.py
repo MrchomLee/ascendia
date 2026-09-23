@@ -90,6 +90,8 @@ def _bundle() -> dict:
                 "generation_order": 0,
                 "question_text": "¿Qué establece el artículo 1?",
                 "justification": "Porque el artículo 1 dice …",
+                "question_type": "teoria",
+                "source_quote": "El fuero de guerra …",
                 "validation_status": "valid",
                 "validated_at": None,
                 "created_at": "2026-08-17T09:41:07Z",
@@ -231,10 +233,51 @@ def test_pregunta_que_apunta_a_una_corrida_inexistente():
     assert any("no está en `runs`" in e for e in errors)
 
 
-def test_dos_preguntas_para_la_misma_corrida_y_nodo():
+def _v1(b):
+    b["bundle_version"] = 1
+    for q in b["questions"]:
+        q.pop("question_type")
+        q.pop("source_quote")
+
+
+def test_v2_admite_varias_preguntas_por_nodo():
     def mutate(b):
-        b["questions"].append(deepcopy(b["questions"][0]))
-        b["questions"][1]["options"] = _options("z")
+        otra = deepcopy(b["questions"][0])
+        otra.update(generation_order=1, options=_options("z"))
+        b["questions"].append(otra)
+
+    assert _errors(mutate) == []
+
+
+def test_v2_rechaza_el_mismo_orden_dos_veces_en_una_corrida():
+    def mutate(b):
+        otra = deepcopy(b["questions"][0])
+        otra["options"] = _options("z")
+        b["questions"].append(otra)
+
+    assert any("`generation_order` 0" in e and "índice único" in e for e in _errors(mutate))
+
+
+def test_v2_exige_un_tipo_de_pregunta_conocido():
+    assert any("`question_type`" in e for e in _errors(lambda b: b["questions"][0].update(question_type="examen")))
+    assert any("`question_type`" in e for e in _errors(lambda b: b["questions"][0].pop("question_type")))
+
+
+def test_v2_exige_la_cita():
+    assert any("`source_quote`" in e for e in _errors(lambda b: b["questions"][0].pop("source_quote")))
+    assert any("máximo es 2000" in e for e in _errors(lambda b: b["questions"][0].update(source_quote="x" * 2001)))
+
+
+def test_v1_sigue_siendo_valido_sin_los_campos_nuevos():
+    assert _errors(_v1) == []
+
+
+def test_v1_mantiene_una_pregunta_por_corrida_y_nodo():
+    def mutate(b):
+        _v1(b)
+        otra = deepcopy(b["questions"][0])
+        otra.update(generation_order=1, options=_options("z"))
+        b["questions"].append(otra)
 
     assert any("índice único" in e for e in _errors(mutate))
 

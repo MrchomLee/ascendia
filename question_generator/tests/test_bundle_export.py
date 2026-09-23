@@ -14,7 +14,10 @@ from qgen.bundle.build import DuplicateNodeRef, build_bundle
 from qgen.bundle.spec import validate
 from qgen.db.migration import init_question_tables
 from qgen.db.persistence import create_run, finalize_run, persist_question
+from qgen.models.schema import GenerationRun
 from qgen.prompts.schemas import GeneratedOption, GeneratedQuestion, OptionRole
+
+CITA = "El fuero de guerra subsiste para los delitos del orden militar."
 
 
 def _question(prefix: str = "T") -> GeneratedQuestion:
@@ -71,6 +74,7 @@ def _seed_with_questions(session, **kwargs) -> tuple[int, list[int], int]:
     )
     persist_question(
         session, run=run, node_id=node_ids[-1], manual_id=manual_id,
+        question_type="teoria", source_quote=CITA,
         generation_order=0, payload=_question(), raw_response={"candidates": ["…"]},
     )
     finalize_run(
@@ -167,6 +171,7 @@ def test_se_puede_exportar_una_sola_corrida():
         )
         persist_question(
             session, run=otra, node_id=node_ids[-1], manual_id=manual_id,
+            question_type="teoria", source_quote=CITA,
             generation_order=0, payload=_question("B"), raw_response={},
         )
         finalize_run(
@@ -201,3 +206,30 @@ def test_corrida_que_no_es_del_manual():
         manual_id, _, _ = _seed_with_questions(session)
         with pytest.raises(ValueError, match="no existen o no son de este manual"):
             build_bundle(session, manual_id=manual_id, run_ids=[999])
+
+
+def test_la_pregunta_viaja_con_su_tipo_y_su_cita():
+    init_question_tables()
+    with session_scope() as session:
+        manual_id, _, _ = _seed_with_questions(session)
+        bundle = build_bundle(session, manual_id=manual_id)
+
+    assert bundle["bundle_version"] == 2
+    q = bundle["questions"][0]
+    assert (q["question_type"], q["source_quote"]) == ("teoria", CITA)
+
+
+def test_varias_preguntas_del_mismo_nodo_se_exportan():
+    init_question_tables()
+    with session_scope() as session:
+        manual_id, node_ids, run_id = _seed_with_questions(session)
+        persist_question(
+            session, run=session.get(GenerationRun, run_id), node_id=node_ids[-1], manual_id=manual_id,
+            generation_order=1, payload=_question("B"), raw_response={},
+            question_type="ejercicio_nuevo", source_quote=CITA,
+        )
+        bundle = build_bundle(session, manual_id=manual_id)
+
+    report = validate(bundle)
+    assert report.ok, report.errors
+    assert [q["generation_order"] for q in bundle["questions"]] == [0, 1]

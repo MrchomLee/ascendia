@@ -42,6 +42,7 @@ def _seed(*, run_status: str) -> int:
                          profile_used="codigo_legal", rules_snapshot={}, nodes_total=1)
         persist_question(
             session, run=run, node_id=node.id, manual_id=manual.id, generation_order=0,
+            source_quote=text,
             payload=GeneratedQuestion(
                 question="¿A quién corresponde la administración de la justicia militar?",
                 options=[
