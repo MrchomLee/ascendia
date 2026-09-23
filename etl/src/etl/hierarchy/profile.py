@@ -58,7 +58,7 @@ from etl.hierarchy.patterns import (
     KIND_TEMA,
     match_tema,
 )
-from etl.hierarchy.temario import Temario, TemasPorTitulo
+from etl.hierarchy.temario import CapitulosConTemas, Temario
 
 
 # El orden importa: los patrones más específicos primero.
@@ -273,13 +273,61 @@ _HISTORIA_UNIVERSAL_PROFILE = DocumentProfile(
         KIND_CAPITULO: 0,
         KIND_TEMA: 1,
     },
-    element_selector=TemasPorTitulo(
-        temas=(
-            "La Guerra Fría",
-            "Las Grandes Organizaciones Internacionales",
-            "Principales acontecimientos de nuestros días",
-            "La llegada del Siglo XXI",
-        ),
+    element_selector=CapitulosConTemas(
+        capitulos={
+            6: (
+                "El Mundo Contemporáneo",
+                (
+                    "La Guerra Fría",
+                    "Las Grandes Organizaciones Internacionales",
+                    "Principales acontecimientos de nuestros días",
+                    "La llegada del Siglo XXI",
+                ),
+            ),
+        },
+    ).select,
+)
+
+
+# Recorte "Geografia_Moderna_de_Mexico_extraccion.pdf" de Geografía Moderna de
+# México (Tamayo, Trillas, 15a. ed. 2021): los capítulos y temas del temario;
+# Litorales e Islas entran completos. Los demás subtítulos quedan en el cuerpo.
+_GEOGRAFIA_MODERNA_MEXICO_PROFILE = DocumentProfile(
+    name="geografia_moderna_mexico",
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+        KIND_TEMA: 1,
+    },
+    element_selector=CapitulosConTemas(
+        capitulos={
+            1: (
+                "Generalidades",
+                ("Situación Geográfica", "Extensión", "División Política", "Representación Cartográfica"),
+            ),
+            3: ("Geomorfología de la República Mexicana", ("Unidades Orogénicas",)),
+            4: ("Litorales", ()),
+            5: ("Islas", ()),
+        },
+    ).select,
+)
+
+
+# Recorte "Calculo_Una_Variable_Caps_1_2_3.pdf" de Cálculo, una variable
+# (Thomas y Weir, Pearson, 13a. ed. 2015): los tres capítulos, completos. El PDF
+# no los numera ("FUNCIONES"), así que se reconocen por su título; secciones
+# ("1.1 …") y subtítulos quedan en el cuerpo del capítulo.
+_CALCULO_UNA_VARIABLE_PROFILE = DocumentProfile(
+    name="calculo_una_variable",
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+    },
+    element_selector=CapitulosConTemas(
+        capitulos={
+            1: ("Funciones", ()),
+            2: ("Límites y continuidad", ()),
+            3: ("Derivadas", ()),
+        },
+        por_titulo=True,
     ).select,
 )
 
@@ -292,6 +340,8 @@ PROFILES: dict[str, DocumentProfile] = {
     "algebra_baldor": _BALDOR_PROFILE,
     "taller_lectura_redaccion": _TALLER_LECTURA_REDACCION_PROFILE,
     "historia_universal": _HISTORIA_UNIVERSAL_PROFILE,
+    "geografia_moderna_mexico": _GEOGRAFIA_MODERNA_MEXICO_PROFILE,
+    "calculo_una_variable": _CALCULO_UNA_VARIABLE_PROFILE,
 }
 
 

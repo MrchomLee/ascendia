@@ -171,6 +171,67 @@ _HISTORIA_UNIVERSAL_RULES = DocumentRules(
 )
 
 
+_GEOGRAFIA_MODERNA_MEXICO_RULES = DocumentRules(
+    name="geografia_moderna_mexico",
+    preferred_topics=(
+        "situación geográfica de México y sus fronteras norte y sur",
+        "extensión territorial del país",
+        "división política: entidades federativas y sus capitales",
+        "representación cartográfica: mapas, escalas y proyecciones",
+        "unidades orogénicas: sierras, cordilleras, mesetas y su ubicación",
+        "litorales: costas del Pacífico, del Golfo de México y del Mar de las Antillas",
+        "islas de México y a qué estado o litoral pertenecen",
+    ),
+    forbidden_topics=(
+        "coordenadas en grados, minutos o segundos",
+        "superficie en km² de cada estado o isla (la extensión total del país sí)",
+        "longitudes exactas de costa o de frontera",
+        "referencias a notas al pie, tablas o números de página",
+    ),
+    style_guide=(
+        "Español formal y claro, de nivel bachillerato. Preguntas de localización, "
+        "identificación y relación entre rasgos geográficos."
+    ),
+    extra_instructions=(
+        "Prefiere preguntas de ubicación (¿dónde está…?, ¿qué estados recorre…?) y de "
+        "identificación (¿cuál es la capital de…?, ¿a qué litoral pertenece…?). Los distractores "
+        "deben ser rasgos reales del país (otra sierra, otra isla, otro estado), no inventados."
+    ),
+)
+
+
+_CALCULO_UNA_VARIABLE_RULES = DocumentRules(
+    name="calculo_una_variable",
+    preferred_topics=(
+        "funciones: dominio y rango, gráficas, funciones por partes, crecientes/decrecientes, pares e impares",
+        "combinación y composición de funciones; traslación, cambio de escala y reflexión de gráficas",
+        "funciones trigonométricas: radianes, periodicidad e identidades",
+        "tasas de cambio promedio e instantáneas; rectas secantes y tangentes",
+        "límites: leyes de los límites, definición formal, límites laterales y al infinito",
+        "continuidad y asíntotas",
+        "la derivada: definición, derivada en un punto y como función",
+        "reglas de derivación, derivadas de orden superior y de funciones trigonométricas",
+        "regla de la cadena, derivación implícita y tasas relacionadas",
+    ),
+    forbidden_topics=(
+        "pasos o teclas de calculadoras graficadoras o programas de cómputo",
+        "números de ejemplo, figura, ejercicio o página",
+        "notas históricas sobre matemáticos",
+    ),
+    style_guide=(
+        "Lenguaje matemático claro y preciso en español, de nivel bachillerato/ingreso a ingeniería. "
+        "Notación estándar escrita sin ambigüedad (x^2, sqrt(x), (a)/(b), lím x→c). "
+        "Preguntas conceptuales (definiciones, teoremas, reglas) y operativas (calcular un límite o una derivada)."
+    ),
+    extra_instructions=(
+        "En preguntas operativas, pide el resultado de un límite o una derivada concreta y verifica el cálculo. "
+        "Los distractores deben venir de errores típicos: olvidar la regla de la cadena, equivocar el signo "
+        "de la derivada de cos x, aplicar mal la regla del cociente o evaluar el límite sin simplificar. "
+        "Si una fórmula del texto se ve incompleta o ambigua (exponentes o fracciones aplanados), no la uses."
+    ),
+)
+
+
 PROFILE_RULES: dict[str, DocumentRules] = {
     "manual": _MANUAL_RULES,
     "codigo_legal": _CODIGO_LEGAL_RULES,
@@ -178,6 +239,8 @@ PROFILE_RULES: dict[str, DocumentRules] = {
     "algebra_baldor": _BALDOR_RULES,
     "taller_lectura_redaccion": _TALLER_LECTURA_REDACCION_RULES,
     "historia_universal": _HISTORIA_UNIVERSAL_RULES,
+    "geografia_moderna_mexico": _GEOGRAFIA_MODERNA_MEXICO_RULES,
+    "calculo_una_variable": _CALCULO_UNA_VARIABLE_RULES,
 }
 
 

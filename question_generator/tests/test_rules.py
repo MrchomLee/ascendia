@@ -62,3 +62,15 @@ def test_historia_universal_tiene_reglas_de_generacion():
     rules = get_default_rules("historia_universal")
     assert rules.name == "historia_universal"
     assert rules.preferred_topics
+
+
+def test_geografia_moderna_mexico_tiene_reglas_de_generacion():
+    rules = get_default_rules("geografia_moderna_mexico")
+    assert rules.name == "geografia_moderna_mexico"
+    assert rules.preferred_topics
+
+
+def test_calculo_una_variable_tiene_reglas_de_generacion():
+    rules = get_default_rules("calculo_una_variable")
+    assert rules.name == "calculo_una_variable"
+    assert rules.preferred_topics
