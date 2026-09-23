@@ -82,6 +82,8 @@ _LEY_ORGANICA_RULES = DocumentRules(
 # Reglas por defecto para el perfil de Álgebra de Baldor
 _BALDOR_RULES = DocumentRules(
     name="algebra_baldor",
+    familia="civil",
+    tipos=("teoria", "ejercicio"),
     preferred_topics=(
         "leyes de signos",
         "leyes de exponentes y coeficientes",
@@ -116,6 +118,8 @@ _BALDOR_RULES = DocumentRules(
 
 _TALLER_LECTURA_REDACCION_RULES = DocumentRules(
     name="taller_lectura_redaccion",
+    familia="civil",
+    tipos=("teoria", "ejercicio"),
     preferred_topics=(
         "elementos del proceso comunicativo (emisor, receptor, mensaje, código, canal, contexto, ruido, retroalimentación)",
         "tipos de lenguaje",
@@ -143,6 +147,8 @@ _TALLER_LECTURA_REDACCION_RULES = DocumentRules(
 
 _HISTORIA_UNIVERSAL_RULES = DocumentRules(
     name="historia_universal",
+    familia="civil",
+    tipos=("teoria",),
     preferred_topics=(
         "causas, desarrollo y consecuencias de la Guerra Fría",
         "conflictos regionales de la Guerra Fría (Alemania, Corea, Vietnam, Medio Oriente)",
@@ -173,6 +179,8 @@ _HISTORIA_UNIVERSAL_RULES = DocumentRules(
 
 _GEOGRAFIA_MODERNA_MEXICO_RULES = DocumentRules(
     name="geografia_moderna_mexico",
+    familia="civil",
+    tipos=("teoria",),
     preferred_topics=(
         "situación geográfica de México y sus fronteras norte y sur",
         "extensión territorial del país",
@@ -202,6 +210,8 @@ _GEOGRAFIA_MODERNA_MEXICO_RULES = DocumentRules(
 
 _CALCULO_UNA_VARIABLE_RULES = DocumentRules(
     name="calculo_una_variable",
+    familia="civil",
+    tipos=("teoria", "ejercicio"),
     preferred_topics=(
         "funciones: dominio y rango, gráficas, funciones por partes, crecientes/decrecientes, pares e impares",
         "combinación y composición de funciones; traslación, cambio de escala y reflexión de gráficas",
@@ -234,6 +244,8 @@ _CALCULO_UNA_VARIABLE_RULES = DocumentRules(
 
 _ALGEBRA_TRIGONOMETRIA_GEOMETRIA_ANALITICA_RULES = DocumentRules(
     name="algebra_trigonometria_geometria_analitica",
+    familia="civil",
+    tipos=("teoria", "ejercicio"),
     preferred_topics=(
         "plano cartesiano: distancia entre puntos, punto medio y regiones",
         "círculos: ecuación, centro y radio, completar el cuadrado; intersecciones y simetría",

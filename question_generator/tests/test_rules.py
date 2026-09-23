@@ -1,6 +1,6 @@
 import pytest
 
-from qgen.rules.base import DocumentRules, RulesOverride, merge_rules
+from qgen.rules.base import DocumentRules, RulesOverride, merge_rules, rules_from_dict, rules_to_dict
 from qgen.rules.defaults import PROFILE_RULES, get_default_rules
 
 
@@ -80,3 +80,43 @@ def test_algebra_trigonometria_geometria_analitica_tiene_reglas_de_generacion():
     rules = get_default_rules("algebra_trigonometria_geometria_analitica")
     assert rules.name == "algebra_trigonometria_geometria_analitica"
     assert rules.preferred_topics
+
+
+@pytest.mark.parametrize("perfil, familia, tipos", [
+    ("manual", "militar", ("teoria",)),
+    ("codigo_legal", "militar", ("teoria",)),
+    ("ley_organica", "militar", ("teoria",)),
+    ("historia_universal", "civil", ("teoria",)),
+    ("geografia_moderna_mexico", "civil", ("teoria",)),
+    ("algebra_baldor", "civil", ("teoria", "ejercicio")),
+    ("calculo_una_variable", "civil", ("teoria", "ejercicio")),
+    ("algebra_trigonometria_geometria_analitica", "civil", ("teoria", "ejercicio")),
+    ("taller_lectura_redaccion", "civil", ("teoria", "ejercicio")),
+])
+def test_cada_perfil_tiene_su_familia_y_sus_tipos(perfil, familia, tipos):
+    rules = get_default_rules(perfil)
+    assert (rules.familia, rules.tipos) == (familia, tipos)
+
+
+def test_familia_y_tipos_viajan_en_la_foto_de_la_corrida():
+    rules = get_default_rules("calculo_una_variable")
+    assert rules_from_dict(rules_to_dict(rules)) == rules
+
+
+def test_una_foto_antigua_sin_familia_se_lee_como_militar_de_teoria():
+    rules = rules_from_dict({"name": "manual"})
+    assert (rules.familia, rules.tipos) == ("militar", ("teoria",))
+
+
+def test_el_override_no_cambia_familia_ni_tipos():
+    merged = merge_rules(get_default_rules("calculo_una_variable"), RulesOverride(style_guide="otro"))
+    assert (merged.familia, merged.tipos) == ("civil", ("teoria", "ejercicio"))
+
+
+def test_familia_o_tipo_desconocido_se_rechaza():
+    with pytest.raises(ValueError):
+        DocumentRules(name="x", familia="naval")
+    with pytest.raises(ValueError):
+        DocumentRules(name="x", tipos=("examen",))
+    with pytest.raises(ValueError):
+        DocumentRules(name="x", tipos=())
