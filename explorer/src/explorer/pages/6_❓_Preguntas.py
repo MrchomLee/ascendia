@@ -153,7 +153,8 @@ def _render_question(question: QuestionView) -> None:
         st.caption(f"💡 {question.justification}")
         if question.source_quote:
             with st.expander("Cita del texto"):
-                st.markdown(f"> {question.source_quote}")
+                # Texto plano: en markdown, `*`, `_` o `$` de una fórmula se interpretarían.
+                st.text(question.source_quote)
 
         # Lo único que este explorador escribe. Marcar no borra: una pregunta
         # rechazada sigue ahí y viaja en el bundle, solo que sin llegar a un examen.

@@ -146,11 +146,13 @@ def _verif(opcion: str, dificultad: str = "igual") -> VerificationResult:
 
 
 def test_verification_motivos():
-    assert verification_motivos(None, "A") == ["verificación fallida"]
-    assert verification_motivos(_verif("A"), "A") == []
-    assert verification_motivos(_verif("B"), "A") == ["la verificación eligió B; la clave es A"]
-    assert verification_motivos(_verif("ninguna"), "A") == ["la verificación respondió «ninguna»"]
-    assert verification_motivos(_verif("A", "mayor"), "A") == ["supera la dificultad del PDF"]
+    # Las letras de la verificación no son las del explorador: el motivo nombra las opciones.
+    textos = ["3x^2", "x^2", "3x", "x^3/3"]
+    assert verification_motivos(None, "A", textos) == ["verificación fallida"]
+    assert verification_motivos(_verif("A"), "A", textos) == []
+    assert verification_motivos(_verif("B"), "A", textos) == ["la verificación eligió «x^2»; la clave es «3x^2»"]
+    assert verification_motivos(_verif("ninguna"), "A", textos) == ["la verificación respondió «ninguna»"]
+    assert verification_motivos(_verif("A", "mayor"), "A", textos) == ["supera la dificultad del PDF"]
 
 
 def test_verdict_with_motivos_recalcula_el_estado():
@@ -162,13 +164,51 @@ def test_verdict_with_motivos_recalcula_el_estado():
 
 def test_duplicadas_de_teoria_por_similitud_dentro_del_mismo_nodo():
     index = DuplicateIndex()
-    index.add(1, "¿Cómo se conceptúa la guerra para México?", "teoria")
-    assert index.is_duplicate(1, "¿Cómo se conceptúa la guerra, para México?", "teoria")
-    assert not index.is_duplicate(2, "¿Cómo se conceptúa la guerra, para México?", "teoria")
+    index.add(1, "¿Cómo se conceptúa la guerra para México?", "teoria", "un conflicto entre sociedades")
+    assert index.is_duplicate(1, "¿Cómo se conceptúa la guerra, para México?", "teoria", "Un conflicto entre sociedades")
+    assert not index.is_duplicate(2, "¿Cómo se conceptúa la guerra, para México?", "teoria", "un conflicto entre sociedades")
 
 
 def test_ejercicios_solo_se_descartan_si_son_identicos():
     index = DuplicateIndex()
-    index.add(1, "Deriva f(x) = 3x^2.", "ejercicio_nuevo")
-    assert not index.is_duplicate(1, "Deriva f(x) = 5x^2.", "ejercicio_nuevo")
-    assert index.is_duplicate(1, "Deriva  f(x) = 3x^2.", "ejercicio_nuevo")
+    index.add(1, "Deriva f(x) = 3x^2.", "ejercicio_nuevo", "6x")
+    assert not index.is_duplicate(1, "Deriva f(x) = 5x^2.", "ejercicio_nuevo", "10x")
+    assert index.is_duplicate(1, "Deriva  f(x) = 3x^2.", "ejercicio_nuevo", "6x")
+
+
+# ─── Arreglos de la revisión final ─────────────────────────────────────────
+
+PREFIJO = (
+    "Conforme al Manual de Logística Militar, PARTE I — Generalidades › Capítulo II — "
+    "Organización › Sección Primera — Conceptos, "
+)
+
+
+def test_preguntas_militares_distintas_con_el_mismo_prefijo_no_son_duplicadas():
+    index = DuplicateIndex()
+    index.add(1, PREFIJO + "¿qué es la logística?", "teoria", "el conjunto de actividades de apoyo")
+    assert not index.is_duplicate(1, PREFIJO + "¿qué es la táctica?", "teoria", "el empleo de las unidades en combate")
+
+
+def test_preguntas_parecidas_con_distinta_respuesta_no_son_duplicadas():
+    index = DuplicateIndex()
+    index.add(1, "¿En qué año se fundó la ONU?", "teoria", "1945")
+    assert not index.is_duplicate(1, "¿En qué año se fundó la OEA?", "teoria", "1948")
+
+
+def test_la_similitud_no_depende_del_orden():
+    a, b = "¿Cuál es la capital de Sonora?", "¿Cuál es la capital de Sinaloa?"
+    uno, otro = DuplicateIndex(), DuplicateIndex()
+    uno.add(1, a, "teoria", "Hermosillo")
+    otro.add(1, b, "teoria", "Hermosillo")
+    assert uno.is_duplicate(1, b, "teoria", "Hermosillo") == otro.is_duplicate(1, a, "teoria", "Hermosillo")
+
+
+def test_teoria_de_matematicas_no_va_a_revision_por_la_notacion():
+    ventana = "La derivada de 𝑥2 es 2𝑥, y la de x2 − 4 también."
+    q = _q("¿Cuál es la derivada de x²?", correcta="2x", cita="La derivada de x² es 2x")
+    assert review(q, ventana).status == "pending"
+
+
+def test_norm_math_ignora_el_signo_por():
+    assert norm_math("2 × 3 = 6") == norm_math("2*3=6")

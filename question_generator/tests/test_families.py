@@ -65,3 +65,15 @@ def test_el_mensaje_lleva_ruta_paginas_y_texto():
 def test_la_verificacion_presenta_opciones_con_letras():
     msg = build_verification_message("Deriva x^3.", ["3x^2", "x^2", "3x", "x^3/3"], "EJEMPLO 1 Deriva x^2: 2x")
     assert "A) 3x^2" in msg and "D) x^3/3" in msg and "EJEMPLO 1 Deriva x^2: 2x" in msg
+
+
+def test_la_respuesta_y_la_cita_copian_la_notacion_del_texto():
+    instr = build_window_instruction(get_default_rules("calculo_una_variable"), manual_title="Cálculo, una variable")
+    assert "copian la notación del texto tal cual" in instr
+
+
+def test_el_prefijo_militar_concuerda_con_el_titulo():
+    ley = build_window_instruction(get_default_rules("ley_organica"), manual_title="Ley Federal de Armas de Fuego")
+    assert "Conforme a la Ley Federal de Armas de Fuego" in ley and "Conforme al Ley" not in ley
+    manual = build_window_instruction(get_default_rules("manual"), manual_title="Manual de Operaciones Militares")
+    assert "Conforme al Manual de Operaciones Militares" in manual

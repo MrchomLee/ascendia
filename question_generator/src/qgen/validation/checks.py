@@ -45,7 +45,7 @@ def norm_text(text: str) -> str:
 def norm_math(text: str) -> str:
     """Como `norm_text`, pero además iguala la notación: 𝑥² y x^2 quedan como x2 (así llegan los PDF de Word)."""
     text = unicodedata.normalize("NFKC", text).translate(_SIGNOS)
-    return re.sub(r"[\s^·*]", "", text).casefold()
+    return re.sub(r"[\s^·*×]", "", text).casefold()
 
 
 @dataclass(frozen=True)
@@ -81,19 +81,19 @@ def tipo_permitido(question: WindowQuestion, tipos: tuple[str, ...]) -> bool:
     return ("teoria" if question.tipo == QuestionType.TEORIA else "ejercicio") in tipos
 
 
-def _correcta(question: WindowQuestion) -> str:
+def correct_answer(question: WindowQuestion) -> str:
+    """El texto de la opción correcta."""
     return next(o.texto for o in question.opciones if o.rol == OptionRole.CORRECT)
 
 
 def review(question: WindowQuestion, window_text: str) -> Verdict:
     """Revisión por tipo contra el texto de la ventana (spec §7, tabla de revisiones)."""
-    correcta = _correcta(question)
+    correcta = correct_answer(question)
     if question.tipo == QuestionType.TEORIA:
-        ventana = norm_text(window_text)
         motivos = []
-        if norm_text(question.cita) not in ventana:
+        if not _literal(question.cita, window_text):
             motivos.append("cita no encontrada")
-        if norm_text(correcta) not in ventana:
+        if not _literal(correcta, window_text):
             motivos.append("respuesta parafraseada")
         return Verdict.from_motivos(motivos)
 
@@ -104,6 +104,12 @@ def review(question: WindowQuestion, window_text: str) -> Verdict:
     if question.tipo == QuestionType.EJERCICIO_LIBRO and norm_math(correcta) not in cita:
         return Verdict.from_motivos(["el resultado no aparece en el ejemplo citado"])
     return Verdict.from_motivos([])
+
+
+def _literal(fragmento: str, texto: str) -> bool:
+    """¿Está `fragmento` literal en `texto`? Se acepta también con la notación igualada:
+    en los libros de matemáticas la teoría trae fórmulas (𝑥2, x²) que llegan aplanadas."""
+    return norm_text(fragmento) in norm_text(texto) or norm_math(fragmento) in norm_math(texto)
 
 
 def _barajadas(question: WindowQuestion, sal: str) -> list[WindowOption]:
@@ -129,40 +135,59 @@ def verification_options(question: WindowQuestion) -> tuple[list[str], str]:
     return [o.texto for o in opciones], letra
 
 
-def verification_motivos(result: VerificationResult | None, letra_correcta: str) -> list[str]:
+def verification_motivos(
+    result: VerificationResult | None, letra_correcta: str, textos: list[str]
+) -> list[str]:
+    """Motivos de revisión según la verificación. Nombra las opciones por su texto:
+    las letras son las del orden de la verificación, no las que ve quien revisa."""
     if result is None:
         return ["verificación fallida"]
     motivos = []
     if result.opcion in ("ninguna", "varias"):
         motivos.append(f"la verificación respondió «{result.opcion}»")
     elif result.opcion != letra_correcta:
-        motivos.append(f"la verificación eligió {result.opcion}; la clave es {letra_correcta}")
+        elegida = textos[LETRAS.index(result.opcion)]
+        clave = textos[LETRAS.index(letra_correcta)]
+        motivos.append(f"la verificación eligió «{elegida}»; la clave es «{clave}»")
     if result.dificultad == "mayor":
         motivos.append("supera la dificultad del PDF")
     return motivos
 
 
 class DuplicateIndex:
-    """Enunciados ya aceptados, por nodo, para descartar duplicadas (spec §7)."""
+    """Enunciados ya aceptados, por nodo, para descartar duplicadas (spec §7).
+
+    En teoría, dos preguntas son duplicadas si el núcleo del enunciado (desde el
+    primer «¿», sin el prefijo «Conforme al …» que comparten todas las de un nodo)
+    se parece al 90 % en ambos sentidos **y** tienen la misma respuesta: dos
+    preguntas parecidas con respuestas distintas («¿…la ONU?» / «¿…la OEA?») son
+    preguntas distintas. En ejercicios solo cuenta el enunciado idéntico.
+    """
 
     def __init__(self) -> None:
-        self._por_nodo: dict[int, list[tuple[str, str]]] = {}
+        self._por_nodo: dict[int, list[tuple[str, str, str]]] = {}
 
-    def add(self, node_id: int, pregunta: str, tipo: str) -> None:
-        self._por_nodo.setdefault(node_id, []).append((norm_text(pregunta), tipo))
+    def add(self, node_id: int, pregunta: str, tipo: str, correcta: str) -> None:
+        self._por_nodo.setdefault(node_id, []).append((norm_text(pregunta), tipo, norm_text(correcta)))
 
-    def is_duplicate(self, node_id: int, pregunta: str, tipo: str) -> bool:
+    def is_duplicate(self, node_id: int, pregunta: str, tipo: str, correcta: str) -> bool:
         nueva = norm_text(pregunta)
-        for otra, otro_tipo in self._por_nodo.get(node_id, ()):
+        respuesta = norm_text(correcta)
+        for otra, otro_tipo, otra_respuesta in self._por_nodo.get(node_id, ()):
             if nueva == otra:
                 return True
-            # Dos ejercicios del mismo tipo se parecen a propósito: solo cuenta si son idénticos.
-            if tipo == otro_tipo == QuestionType.TEORIA.value:
-                matcher = difflib.SequenceMatcher(None, nueva, otra)
-                if (
-                    matcher.real_quick_ratio() >= SIMILITUD_DUPLICADO
-                    and matcher.quick_ratio() >= SIMILITUD_DUPLICADO
-                    and matcher.ratio() >= SIMILITUD_DUPLICADO
-                ):
+            if tipo == otro_tipo == QuestionType.TEORIA.value and respuesta == otra_respuesta:
+                if _similitud(_nucleo(nueva), _nucleo(otra)) >= SIMILITUD_DUPLICADO:
                     return True
         return False
+
+
+def _nucleo(enunciado: str) -> str:
+    """El enunciado desde el primer «¿»: sin el prefijo común de la familia militar."""
+    i = enunciado.find("¿")
+    return enunciado[i:] if i >= 0 else enunciado
+
+
+def _similitud(a: str, b: str) -> float:
+    """Similitud simétrica: `SequenceMatcher` da valores distintos según el orden."""
+    return min(difflib.SequenceMatcher(None, a, b).ratio(), difflib.SequenceMatcher(None, b, a).ratio())

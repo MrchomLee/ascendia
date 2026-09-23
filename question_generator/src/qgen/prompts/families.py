@@ -27,7 +27,7 @@ _ROLES = {
 
 _FORMATOS = {
     "militar": (
-        'Cada enunciado empieza así: "Conforme al {manual}, <Ruta del mensaje>, ¿…?". '
+        'Cada enunciado empieza así: "{conforme}, <Ruta del mensaje>, ¿…?". '
         "Usa la Ruta tal como llega en el mensaje."
     ),
     "civil": "Enunciados directos, sin mencionar el libro ni la ubicación del texto.",
@@ -85,6 +85,7 @@ OPCIONES (exactamente 4 por pregunta)
 CITA Y JUSTIFICACIÓN
 - "cita": el fragmento LITERAL del texto en que se apoya la pregunta. En ejercicios, el ejemplo del libro (con su resultado) en que se basa.
 - "justificacion": en "teoria", por qué la correcta lo es; en ejercicios, la resolución paso a paso.
+- Notación: la "correct" de "teoria", el resultado de "ejercicio_libro" y la "cita" copian la notación del texto tal cual (no la cambies a x^2, sqrt( ) ni otra); la notación del estilo solo aplica a enunciados, distractores y ejercicios nuevos.
 
 ENUNCIADOS
 {formato}
@@ -120,13 +121,23 @@ def build_window_instruction(
         maximo=MAX_PREGUNTAS_POR_VENTANA,
         tipos=_TEORIA + "\n" + (_EJERCICIOS if con_ejercicios else _SIN_EJERCICIOS),
         opciones_ejercicios=_OPCIONES_EJERCICIOS if con_ejercicios else "",
-        formato=_FORMATOS[rules.familia].format(manual=manual_title),
+        formato=_FORMATOS[rules.familia].format(conforme=_conforme(manual_title)),
         estilo=rules.style_guide or "(sin estilo específico)",
         preferentes=", ".join(rules.preferred_topics) or "(ninguno)",
         prohibidos=", ".join(rules.forbidden_topics) or "(ninguno)",
         extra=rules.extra_instructions or "(ninguna)",
         ejemplos=_ejemplos(rules.familia, exemplars),
     )
+
+
+# Títulos femeninos frecuentes en los documentos militares ("Ley …", "Directiva …").
+_FEMENINOS = {"ley", "directiva", "doctrina", "norma", "guía", "cartilla", "constitución", "orden", "instrucción"}
+
+
+def _conforme(manual_title: str) -> str:
+    """ "Conforme al Manual …" pero "Conforme a la Ley …": el artículo concuerda con el título."""
+    primera = manual_title.split(maxsplit=1)[0].casefold() if manual_title.strip() else ""
+    return f"Conforme a la {manual_title}" if primera in _FEMENINOS else f"Conforme al {manual_title}"
 
 
 def _ejemplos(familia: str, exemplars: Sequence[dict[str, Any]] | None) -> str:

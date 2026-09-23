@@ -24,7 +24,7 @@ from qgen.db.persistence import create_run, finalize_run, persist_question, remo
 from qgen.gemini.cache import build_or_get_cache, delete_cache
 from qgen.gemini.client import MODEL_FLASH, resolve_model
 from qgen.gemini.generate import generate_window, verify_exercise
-from qgen.models.schema import GenerationRun, Question
+from qgen.models.schema import GenerationRun, Question, QuestionOption
 from qgen.prompts.families import (
     SYSTEM_VERSION,
     build_verification_instruction,
@@ -39,6 +39,7 @@ from qgen.rules.defaults import get_default_rules
 from qgen.validation.checks import (
     DuplicateIndex,
     Verdict,
+    correct_answer,
     parse_items,
     review,
     tipo_permitido,
@@ -101,13 +102,18 @@ def _chunks_for(session: Session, node_id: int) -> list[Chunk]:
 
 
 def _done_window_keys(session: Session, manual_id: int) -> set[str]:
-    """Ventanas ya procesadas: `ok` en alguna corrida anterior, o con preguntas guardadas
-    (esto último cubre una corrida que murió sin llegar a cerrarse)."""
-    done: set[str] = set()
+    """Ventanas ya procesadas: las que están `ok` según la corrida más reciente que las
+    tocó, o las que tienen preguntas guardadas (esto último cubre una corrida que murió
+    sin llegar a cerrarse). Gana el último estado: un --regenerate que falla o se corta
+    deja sus ventanas `fallida` o `pendiente`, y se retoman."""
+    estados: dict[str, str] = {}
     for meta in session.execute(
-        select(GenerationRun.metadata_json).where(GenerationRun.manual_id == manual_id)
+        select(GenerationRun.metadata_json)
+        .where(GenerationRun.manual_id == manual_id)
+        .order_by(GenerationRun.id)
     ).scalars():
-        done |= {key for key, estado in ((meta or {}).get("ventanas") or {}).items() if estado == "ok"}
+        estados.update((meta or {}).get("ventanas") or {})
+    done = {key for key, estado in estados.items() if estado == "ok"}
     done |= set(
         session.execute(
             select(Question.window_key)
@@ -231,7 +237,10 @@ def run_generation(
     run = create_run(
         session, manual_id=manual_id, model=model_name, mode=mode, profile_used=profile,
         rules_snapshot=rules_to_dict(rules), nodes_total=len(node_ids), cache_name="none",
-        metadata_json={"system_version": SYSTEM_VERSION, "limit": limit, "only_node_id": only_node_id, "regenerate": regenerate},
+        metadata_json={
+            "system_version": SYSTEM_VERSION, "limit": limit, "only_node_id": only_node_id, "regenerate": regenerate,
+            "ventanas": {job.window.key: "pendiente" for job in jobs},
+        },
     )
     return _run_immediate(session, run, manual, jobs, rules, instruction, manual_title, progress_cb)
 
@@ -269,7 +278,7 @@ def _run_immediate(
     progress_cb,
 ) -> RunSummary:
     total_in = total_out = total_cached = 0
-    ventanas: dict[str, str] = {}
+    ventanas: dict[str, str] = {job.window.key: "pendiente" for job in jobs}
     failures: list[dict] = []  # por qué falló cada ventana: una corrida `partial` ya se pagó
     descartes: list[dict] = []
     conteo: Counter[str] = Counter()
@@ -282,10 +291,13 @@ def _run_immediate(
     planned = Counter(job.node_id for job in jobs)
 
     duplicados = DuplicateIndex()
-    for node_id, texto, tipo in session.execute(
-        select(Question.node_id, Question.question_text, Question.question_type).where(Question.manual_id == manual.id)
+    for node_id, texto, tipo, correcta in session.execute(
+        select(Question.node_id, Question.question_text, Question.question_type, QuestionOption.text)
+        .join(QuestionOption, QuestionOption.question_id == Question.id)
+        .where(Question.manual_id == manual.id)
+        .where(QuestionOption.is_correct.is_(True))
     ):
-        duplicados.add(node_id, texto, tipo)
+        duplicados.add(node_id, texto, tipo, correcta)
 
     def finalize(status: str) -> float:
         """Cierra la corrida con lo gastado hasta ahora, incluida la creación y el almacenamiento del cache."""
@@ -376,7 +388,7 @@ def _run_immediate(
                     result.input_tokens += check.input_tokens
                     result.output_tokens += check.output_tokens
                     result.cached_tokens += check.cached_tokens
-                    verdict = verdict.with_motivos(verification_motivos(check.result, letra))
+                    verdict = verdict.with_motivos(verification_motivos(check.result, letra, textos))
                     verificacion = check.result.model_dump() if check.result else {"error": check.error}
                 result.accepted.append(_Accepted(question=q, verdict=verdict, verificacion=verificacion))
             return result
@@ -408,11 +420,12 @@ def _run_immediate(
             guardadas = revision = 0
             for accepted in result.accepted:
                 q = accepted.question
-                if duplicados.is_duplicate(job.node_id, q.pregunta, q.tipo.value):
+                correcta = correct_answer(q)
+                if duplicados.is_duplicate(job.node_id, q.pregunta, q.tipo.value, correcta):
                     descartes.append({"window_key": key, "motivo": "duplicada"})
                     descartadas += 1
                     continue
-                duplicados.add(job.node_id, q.pregunta, q.tipo.value)
+                duplicados.add(job.node_id, q.pregunta, q.tipo.value, correcta)
                 # 3. Persistencia en el hilo principal.
                 persist_question(
                     session, run=run, node_id=job.node_id, manual_id=manual.id, generation_order=order,

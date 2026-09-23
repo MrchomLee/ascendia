@@ -112,3 +112,14 @@ def test_regenerate_ignora_el_historial():
             rules_snapshot={}, nodes_total=2, metadata_json={"ventanas": {f"{n1}:0-0": "ok"}},
         )
     assert _keys(manual_id, regenerate=True) == [f"{n1}:0-0", f"{n2}:0-0"]
+
+
+def test_gana_el_ultimo_estado_de_cada_ventana():
+    manual_id, (n1, n2) = _seed()
+    with session_scope() as session:
+        for estado in ("ok", "fallida"):
+            create_run(
+                session, manual_id=manual_id, model="gemini-3.6-flash", mode="immediate", profile_used="manual",
+                rules_snapshot={}, nodes_total=2, metadata_json={"ventanas": {f"{n1}:0-0": estado, f"{n2}:0-0": "ok"}},
+            )
+    assert _keys(manual_id) == [f"{n1}:0-0"]

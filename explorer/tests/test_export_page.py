@@ -92,3 +92,12 @@ def test_la_pregunta_muestra_su_tipo_y_sus_motivos():
 
     assert any("Ejercicio nuevo" in c.value for c in at.caption)
     assert any("supera la dificultad del PDF" in w.value for w in at.warning)
+
+
+def test_la_cita_se_muestra_tal_cual():
+    # Texto plano: en markdown, `>` citaría solo la primera línea y `*`, `_` o `$` de una
+    # fórmula se interpretarían.
+    at = _open_page(_seed(run_status="succeeded"))
+
+    cita = "La administración de la justicia militar corresponde al Supremo Tribunal Militar."
+    assert any(t.value == cita for t in at.text)

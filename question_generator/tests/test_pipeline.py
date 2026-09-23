@@ -433,3 +433,57 @@ def test_el_dry_run_sin_nada_que_generar_no_cuesta(monkeypatch):
     estimate, n_windows = _estimate(manual_id)
 
     assert n_windows == 0 and estimate.total_usd == 0
+
+
+# ─── Arreglos de la revisión final ─────────────────────────────────────────
+
+
+def test_un_regenerate_que_falla_no_pierde_la_ventana(monkeypatch):
+    manual_id = _seed(n_nodes=1)
+    fake = FakeGemini(monkeypatch)
+    _run(manual_id)
+
+    fake.window = lambda message: WindowOutcome(items=[], error="respuesta ilegible")
+    _run(manual_id, regenerate=True)
+    assert _questions() == []
+
+    fake.window = lambda message: WindowOutcome(items=[_item()])
+    _run(manual_id)
+
+    assert len(fake.messages) == 3
+    assert len(_questions()) == 1
+
+
+def test_un_regenerate_cortado_retoma_las_ventanas_que_faltan(monkeypatch):
+    manual_id = _seed(n_nodes=3)
+    FakeGemini(monkeypatch)
+    _run(manual_id)
+
+    def interrupt(*_):
+        raise KeyboardInterrupt
+
+    with pytest.raises(KeyboardInterrupt):
+        _run(manual_id, regenerate=True, progress_cb=interrupt)
+    _run(manual_id)
+
+    assert len(_questions()) == 3
+
+
+def test_lo_generado_se_exporta_como_bundle_v2_valido(monkeypatch):
+    from qgen.bundle.build import build_bundle
+    from qgen.bundle.spec import validate
+
+    manual_id = _seed(n_nodes=2)
+    fake = FakeGemini(monkeypatch)
+    fake.window = lambda message: WindowOutcome(items=[
+        _item(), _item("¿Cómo luchan las sociedades?", correcta="luchan violentamente", prefijo="V"),
+    ])
+
+    _run(manual_id)
+    with session_scope() as session:
+        bundle = build_bundle(session, manual_id=manual_id)
+
+    report = validate(bundle)
+    assert report.ok, report.errors
+    assert report.counts["questions"] == 4  # dos por nodo: el contrato v1 lo habría rechazado
+    assert {q["question_type"] for q in bundle["questions"]} == {"teoria"}
