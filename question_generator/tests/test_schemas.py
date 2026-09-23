@@ -61,3 +61,71 @@ def test_duplicate_option_text_rejected():
 def test_empty_question_rejected():
     with pytest.raises(ValidationError):
         GeneratedQuestion(question="", options=_make_options(), justification="J")
+
+
+from qgen.prompts.schemas import (
+    MAX_PREGUNTAS_POR_VENTANA,
+    QuestionType,
+    VerificationResult,
+    WindowQuestion,
+    WindowResponse,
+)
+
+
+def _window_item(**cambios) -> dict:
+    item = {
+        "tipo": "teoria",
+        "pregunta": "¿Qué es la guerra?",
+        "opciones": [
+            {"rol": "correct", "texto": "un conflicto entre sociedades"},
+            {"rol": "confusa", "texto": "un conflicto entre individuos"},
+            {"rol": "distractor", "texto": "una doctrina militar"},
+            {"rol": "distractor", "texto": "un tratado internacional"},
+        ],
+        "cita": "La guerra es un conflicto entre sociedades.",
+        "justificacion": "Lo dice el texto.",
+    }
+    item.update(cambios)
+    return item
+
+
+def test_una_pregunta_de_ventana_valida():
+    q = WindowQuestion.model_validate(_window_item(tipo="ejercicio_nuevo"))
+    assert q.tipo == QuestionType.EJERCICIO_NUEVO
+
+
+def test_ventana_rechaza_reparto_de_roles_incorrecto():
+    item = _window_item()
+    item["opciones"][1]["rol"] = "correct"
+    with pytest.raises(ValidationError):
+        WindowQuestion.model_validate(item)
+
+
+def test_ventana_rechaza_cita_vacia():
+    with pytest.raises(ValidationError):
+        WindowQuestion.model_validate(_window_item(cita="   "))
+
+
+def test_ventana_rechaza_opciones_repetidas():
+    item = _window_item()
+    item["opciones"][3]["texto"] = "Una  doctrina militar"
+    with pytest.raises(ValidationError):
+        WindowQuestion.model_validate(item)
+
+
+def test_ventana_rechaza_tipo_desconocido():
+    with pytest.raises(ValidationError):
+        WindowQuestion.model_validate(_window_item(tipo="examen"))
+
+
+def test_la_respuesta_de_ventana_es_una_lista_de_preguntas():
+    assert len(WindowResponse.model_validate({"preguntas": [_window_item()]}).preguntas) == 1
+    assert MAX_PREGUNTAS_POR_VENTANA == 30
+
+
+def test_verificacion_solo_admite_letras_ninguna_o_varias():
+    assert VerificationResult(razonamiento="…", opcion="B", dificultad="igual").opcion == "B"
+    with pytest.raises(ValidationError):
+        VerificationResult(razonamiento="…", opcion="E", dificultad="igual")
+    with pytest.raises(ValidationError):
+        VerificationResult(razonamiento="…", opcion="A", dificultad="altísima")
