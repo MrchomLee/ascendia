@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "etl/src/etl/hierarchy/profile.py": {
-    "mtime": 1790177079.4056685,
-    "seen": 1790177162.1486318,
-    "ast_hash": "f63f48beffa94dca5ca53902b268f86d",
+    "mtime": 1790185735.0405593,
+    "seen": 1790185839.8641486,
+    "ast_hash": "f5a424665bff2a66058e0e20dd3665ac",
     "semantic_hash": ""
   },
   "etl/src/etl/models/__init__.py": {
@@ -642,9 +642,9 @@
     "semantic_hash": "cd86591fcf9ed36e4e2415356fd4fb4b"
   },
   "question_generator/src/qgen/rules/defaults.py": {
-    "mtime": 1790177088.287269,
-    "seen": 1790177162.1552632,
-    "ast_hash": "d4ecebc21f546c46aa9acef243671996",
+    "mtime": 1790185744.1468093,
+    "seen": 1790185839.8709059,
+    "ast_hash": "6e63151173fc99a54cda667666506214",
     "semantic_hash": ""
   },
   "question_generator/src/qgen/validation/__init__.py": {
@@ -678,9 +678,9 @@
     "semantic_hash": "63445dff8a1d69d5fadb606c0479d0a2"
   },
   "question_generator/tests/test_rules.py": {
-    "mtime": 1790177046.6291988,
-    "seen": 1790177162.156,
-    "ast_hash": "af49d6345ae5522d5ae6b3257596b408",
+    "mtime": 1790185721.84986,
+    "seen": 1790185839.8717043,
+    "ast_hash": "02fa7b3b18b4878a0c3d19cd4eb73d26",
     "semantic_hash": ""
   },
   "question_generator/tests/test_schemas.py": {
@@ -840,8 +840,8 @@
     "semantic_hash": ""
   },
   "etl/src/etl/hierarchy/temario.py": {
-    "mtime": 1790177107.9835284,
-    "seen": 1790177162.1486332,
+    "mtime": 1790185758.6952138,
+    "seen": 1790185839.8641505,
     "ast_hash": "8bc4e77b9933b5eb2c8d2fed74b179f7",
     "semantic_hash": ""
   },
@@ -879,6 +879,12 @@
     "mtime": 1790177044.4983115,
     "seen": 1790177162.1492486,
     "ast_hash": "61d6c4c26a75ea6995787fa82ca997bd",
+    "semantic_hash": ""
+  },
+  "etl/tests/test_algebra_trigonometria_geometria_analitica.py": {
+    "mtime": 1790185719.676455,
+    "seen": 1790185839.8646512,
+    "ast_hash": "652d12acbd487ef16f4d9bf14297432b",
     "semantic_hash": ""
   }
 }
