@@ -31,6 +31,9 @@ KIND_EJERCICIO = "EJERCICIO"
 KIND_MISCELANEA = "MISCELANEA"
 KIND_RESPUESTAS = "RESPUESTAS"
 KIND_BALDOR_TEMA = "BALDOR_TEMA"
+KIND_BLOQUE = "BLOQUE"
+KIND_PARTE_TEMARIO = "PARTE_TEMARIO"
+KIND_TEMA = "TEMA"
 
 KIND_LABELS: dict[str, str] = {
     KIND_PARTE: "PARTE",
@@ -45,6 +48,9 @@ KIND_LABELS: dict[str, str] = {
     KIND_MISCELANEA: "Miscelánea",
     KIND_RESPUESTAS: "Respuestas",
     KIND_BALDOR_TEMA: "Tema",
+    KIND_BLOQUE: "Bloque",
+    KIND_PARTE_TEMARIO: "Parte",
+    KIND_TEMA: "Tema",
 }
 
 
@@ -565,6 +571,39 @@ def match_baldor_tema_mayusculas(text: str) -> HeadingCandidate | None:
             ordinal="",
             title_remainder=stripped,
         )
+    return None
+
+
+_BLOQUE_RE = re.compile(r"^\s*BLOQUE\s+(?P<ordinal>\d+)\.\s+(?P<title>.+?)\s*$")
+_PARTE_TEMARIO_RE = re.compile(r"^\s*(?P<ordinal>\d+\.\d+)\.?\s+(?P<title>.+?)\s*$")
+
+
+def match_bloque(text: str) -> HeadingCandidate | None:
+    """Bloque de un temario en forma canónica ('BLOQUE 1. Proceso comunicativo')."""
+    if m := _BLOQUE_RE.match(text):
+        return HeadingCandidate(kind=KIND_BLOQUE, ordinal=m.group("ordinal"), title_remainder=m.group("title"))
+    return None
+
+
+def match_parte_temario(text: str) -> HeadingCandidate | None:
+    """Parte numerada de un temario ('1.1  Los elementos del proceso comunicativo').
+
+    Las líneas del índice ('3.5  Conectores discursivos ........ 25') no cuentan.
+    """
+    m = _PARTE_TEMARIO_RE.match(text)
+    if m is None or re.search(r"\.{4,}", m.group("title")):
+        return None
+    title = " ".join(m.group("title").split())
+    return HeadingCandidate(kind=KIND_PARTE_TEMARIO, ordinal=m.group("ordinal"), title_remainder=title)
+
+
+_TEMA_RE = re.compile(r"^\s*TEMA\s+(?P<ordinal>\d+)\.\s+(?P<title>.+?)\s*$")
+
+
+def match_tema(text: str) -> HeadingCandidate | None:
+    """Tema de un temario en forma canónica ('TEMA 1. La Guerra Fría')."""
+    if m := _TEMA_RE.match(text):
+        return HeadingCandidate(kind=KIND_TEMA, ordinal=m.group("ordinal"), title_remainder=m.group("title"))
     return None
 
 

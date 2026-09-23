@@ -114,11 +114,70 @@ _BALDOR_RULES = DocumentRules(
 )
 
 
+_TALLER_LECTURA_REDACCION_RULES = DocumentRules(
+    name="taller_lectura_redaccion",
+    preferred_topics=(
+        "elementos del proceso comunicativo (emisor, receptor, mensaje, código, canal, contexto, ruido, retroalimentación)",
+        "tipos de lenguaje",
+        "funciones del lenguaje y su intención comunicativa",
+        "principios básicos de la sintaxis",
+        "reglas de acentuación (agudas, graves, esdrújulas, tilde diacrítica)",
+        "reglas de puntuación",
+    ),
+    forbidden_topics=(
+        "instrucciones de actividades formativas o trabajo en equipo",
+        "referencias bibliográficas y direcciones de internet",
+        "números de figura, tabla o página",
+    ),
+    style_guide=(
+        "Español formal y claro, de nivel bachillerato. Preguntas conceptuales "
+        "(definiciones, elementos, funciones) y de aplicación de reglas sobre ejemplos concretos."
+    ),
+    extra_instructions=(
+        "En acentuación y puntuación, pregunta por la regla o por su aplicación a una palabra "
+        "u oración del texto; los distractores deben basarse en errores típicos de clasificación "
+        "(aguda/grave/esdrújula) o de uso del signo."
+    ),
+)
+
+
+_HISTORIA_UNIVERSAL_RULES = DocumentRules(
+    name="historia_universal",
+    preferred_topics=(
+        "causas, desarrollo y consecuencias de la Guerra Fría",
+        "conflictos regionales de la Guerra Fría (Alemania, Corea, Vietnam, Medio Oriente)",
+        "organismos internacionales y alianzas militares: propósito y miembros "
+        "(ONU, FMI, GATT, CAME, OEA, OUA, Liga Árabe, OTAN, Pacto de Varsovia)",
+        "el conflicto del Golfo Pérsico",
+        "el fin del bloque socialista europeo (Perestroika y Glasnost)",
+        "la actualidad en América Latina y el Caribe",
+        "la Unión Europea, el ataque a las Torres Gemelas y la invasión a Irak",
+        "las potencias emergentes (China, India, Rusia, Brasil)",
+    ),
+    forbidden_topics=(
+        "cifras exactas (porcentajes, número de víctimas, tropas o montos)",
+        "fechas con día y mes (los años sí se pueden preguntar)",
+        "referencias a mapas, figuras o números de página",
+    ),
+    style_guide=(
+        "Español formal y claro, de nivel bachillerato. Preguntas sobre hechos, causas, "
+        "consecuencias, actores y relaciones entre procesos históricos."
+    ),
+    extra_instructions=(
+        "Prefiere preguntas de causa-consecuencia y de identificación de países, bloques, "
+        "organismos o personajes. Los distractores deben ser plausibles dentro de la misma "
+        "época (otros actores o acontecimientos del capítulo), no anacronismos evidentes."
+    ),
+)
+
+
 PROFILE_RULES: dict[str, DocumentRules] = {
     "manual": _MANUAL_RULES,
     "codigo_legal": _CODIGO_LEGAL_RULES,
     "ley_organica": _LEY_ORGANICA_RULES,
     "algebra_baldor": _BALDOR_RULES,
+    "taller_lectura_redaccion": _TALLER_LECTURA_REDACCION_RULES,
+    "historia_universal": _HISTORIA_UNIVERSAL_RULES,
 }
 
 

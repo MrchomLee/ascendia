@@ -136,6 +136,10 @@ class HierarchyAssembler:
         toc: TocResult | None = None,
     ) -> HierarchyTree:
         kept_elements, kept_indices, dropped = self._filter_dropped(elements)
+        if self.profile.element_selector is not None:
+            selected, selected_indices = self.profile.element_selector(kept_elements, kept_indices)
+            dropped += len(set(kept_indices) - set(selected_indices))
+            kept_elements, kept_indices = selected, selected_indices
 
         if toc and toc.found and self.prefer_toc:
             tree = self._assemble_with_toc(kept_elements, kept_indices, toc)

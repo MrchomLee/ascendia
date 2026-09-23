@@ -49,3 +49,16 @@ def test_rules_override_from_empty_dict():
     ov = RulesOverride.from_dict({})
     d = get_default_rules("manual")
     assert merge_rules(d, ov) == d
+
+
+def test_taller_lectura_redaccion_tiene_reglas_de_generacion():
+    # Sin reglas, qgen-generate se cae con ValueError al primer uso del perfil.
+    rules = get_default_rules("taller_lectura_redaccion")
+    assert rules.name == "taller_lectura_redaccion"
+    assert rules.preferred_topics
+
+
+def test_historia_universal_tiene_reglas_de_generacion():
+    rules = get_default_rules("historia_universal")
+    assert rules.name == "historia_universal"
+    assert rules.preferred_topics

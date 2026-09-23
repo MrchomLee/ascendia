@@ -18,6 +18,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Callable, Pattern
 
+from etl.extraction.types import RawElement
 from etl.hierarchy.patterns import (
     KIND_ANEXO,
     KIND_ARTICULO,
@@ -50,7 +51,14 @@ from etl.hierarchy.patterns import (
     match_baldor_inciso,
     match_baldor_subseccion_romana,
     match_baldor_tema_mayusculas,
+    KIND_BLOQUE,
+    KIND_PARTE_TEMARIO,
+    match_bloque,
+    match_parte_temario,
+    KIND_TEMA,
+    match_tema,
 )
+from etl.hierarchy.temario import Temario, TemasPorTitulo
 
 
 # El orden importa: los patrones más específicos primero.
@@ -71,6 +79,9 @@ _ALL_MATCHERS: list[tuple[str, Callable[[str], HeadingCandidate | None]]] = [
     (KIND_EJERCICIO, match_ejercicio),
     (KIND_MISCELANEA, match_miscelanea),
     (KIND_RESPUESTAS, match_respuestas),
+    (KIND_BLOQUE, match_bloque),
+    (KIND_PARTE_TEMARIO, match_parte_temario),
+    (KIND_TEMA, match_tema),
 ]
 
 
@@ -96,6 +107,10 @@ class DocumentProfile:
         an extractor, its captured group is attached to the **closest open
         node** instead of being added as body text. Useful for DOF reform
         annotations alongside articles.
+    element_selector
+        Optional ``(elements, indices) -> (elements, indices)`` applied after the
+        drop filters: whatever it leaves out is excluded from the tree (see
+        :class:`~etl.hierarchy.temario.Temario`).
     """
 
     name: str
@@ -103,6 +118,7 @@ class DocumentProfile:
     drop_text_patterns: list[Pattern[str]] = field(default_factory=list)
     clean_text_patterns: list[tuple[Pattern[str], str]] = field(default_factory=list)
     metadata_extractors: dict[str, Pattern[str]] = field(default_factory=dict)
+    element_selector: Callable[[list[RawElement], list[int]], tuple[list[RawElement], list[int]]] | None = None
 
     @property
     def active_kinds(self) -> set[str]:
@@ -233,12 +249,49 @@ _BALDOR_PROFILE = DocumentProfile(
 
 
 
+# Recorte "Proceso_comunicativo_y_escritura.pdf" del Taller de Lectura y
+# Redacción 1 (Zarzar): solo el temario del examen, como Bloque › Parte.
+_TALLER_LECTURA_REDACCION_PROFILE = DocumentProfile(
+    name="taller_lectura_redaccion",
+    kind_to_depth={
+        KIND_BLOQUE: 0,
+        KIND_PARTE_TEMARIO: 1,
+    },
+    element_selector=Temario(
+        bloques={1: "Proceso comunicativo", 3: "Proceso de escritura"},
+        partes=frozenset({"1.1", "1.2", "3.1", "3.2", "3.3"}),
+    ).select,
+)
+
+
+# Recorte "Historia_Universal_Extracto.pdf" de Historia Universal (Rodríguez
+# Arvizu, Limusa, 3a. ed. 2017): el Capítulo 6 y sus cuatro temas del temario.
+# Los demás subtítulos quedan en el cuerpo de su tema.
+_HISTORIA_UNIVERSAL_PROFILE = DocumentProfile(
+    name="historia_universal",
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+        KIND_TEMA: 1,
+    },
+    element_selector=TemasPorTitulo(
+        temas=(
+            "La Guerra Fría",
+            "Las Grandes Organizaciones Internacionales",
+            "Principales acontecimientos de nuestros días",
+            "La llegada del Siglo XXI",
+        ),
+    ).select,
+)
+
+
 PROFILES: dict[str, DocumentProfile] = {
     "manual": _MANUAL_PROFILE,
     "codigo_legal": _CODIGO_LEGAL_PROFILE,
     "ley_organica": _LEY_ORGANICA_PROFILE,
     "libro_texto": _LIBRO_TEXTO_PROFILE,
     "algebra_baldor": _BALDOR_PROFILE,
+    "taller_lectura_redaccion": _TALLER_LECTURA_REDACCION_PROFILE,
+    "historia_universal": _HISTORIA_UNIVERSAL_PROFILE,
 }
 
 
