@@ -74,3 +74,9 @@ def test_calculo_una_variable_tiene_reglas_de_generacion():
     rules = get_default_rules("calculo_una_variable")
     assert rules.name == "calculo_una_variable"
     assert rules.preferred_topics
+
+
+def test_algebra_trigonometria_geometria_analitica_tiene_reglas_de_generacion():
+    rules = get_default_rules("algebra_trigonometria_geometria_analitica")
+    assert rules.name == "algebra_trigonometria_geometria_analitica"
+    assert rules.preferred_topics

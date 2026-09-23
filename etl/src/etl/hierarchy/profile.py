@@ -332,6 +332,26 @@ _CALCULO_UNA_VARIABLE_PROFILE = DocumentProfile(
 )
 
 
+# Recorte "Algebra_trigonometria_geometria_analitica_Caps_4_8_9_12.pdf" de
+# Álgebra, trigonometría y geometría analítica (Zill y Dewar, McGraw-Hill, 3a.
+# ed. 2012): cuatro capítulos completos, sin número en el PDF, como en Cálculo.
+_ALGEBRA_TRIGONOMETRIA_GEOMETRIA_ANALITICA_PROFILE = DocumentProfile(
+    name="algebra_trigonometria_geometria_analitica",
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+    },
+    element_selector=CapitulosConTemas(
+        capitulos={
+            4: ("Sistema de Coordenadas Rectangulares y Gráficas", ()),
+            8: ("Trigonometría del Triángulo Rectángulo", ()),
+            9: ("Trigonometría del Círculo Unitario", ()),
+            12: ("Coordenadas Polares", ()),
+        },
+        por_titulo=True,
+    ).select,
+)
+
+
 PROFILES: dict[str, DocumentProfile] = {
     "manual": _MANUAL_PROFILE,
     "codigo_legal": _CODIGO_LEGAL_PROFILE,
@@ -342,6 +362,7 @@ PROFILES: dict[str, DocumentProfile] = {
     "historia_universal": _HISTORIA_UNIVERSAL_PROFILE,
     "geografia_moderna_mexico": _GEOGRAFIA_MODERNA_MEXICO_PROFILE,
     "calculo_una_variable": _CALCULO_UNA_VARIABLE_PROFILE,
+    "algebra_trigonometria_geometria_analitica": _ALGEBRA_TRIGONOMETRIA_GEOMETRIA_ANALITICA_PROFILE,
 }
 
 

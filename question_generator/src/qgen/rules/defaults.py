@@ -232,6 +232,39 @@ _CALCULO_UNA_VARIABLE_RULES = DocumentRules(
 )
 
 
+_ALGEBRA_TRIGONOMETRIA_GEOMETRIA_ANALITICA_RULES = DocumentRules(
+    name="algebra_trigonometria_geometria_analitica",
+    preferred_topics=(
+        "plano cartesiano: distancia entre puntos, punto medio y regiones",
+        "círculos: ecuación, centro y radio, completar el cuadrado; intersecciones y simetría",
+        "ecuaciones de rectas: pendiente, formas de la ecuación, rectas paralelas y perpendiculares",
+        "variación directa, inversa y conjunta",
+        "ángulos: grados y radianes, longitud de arco",
+        "razones trigonométricas en el triángulo rectángulo; ángulos especiales y de referencia",
+        "funciones circulares; gráficas de seno y coseno (amplitud, periodo, desfase) y de las demás",
+        "identidades trigonométricas, funciones trigonométricas inversas y ecuaciones trigonométricas",
+        "coordenadas polares: conversión con rectangulares, gráficas polares y cónicas en polares",
+        "vectores en el plano y producto punto (ángulo entre vectores, proyección)",
+    ),
+    forbidden_topics=(
+        "números de ejemplo, teorema, definición, figura, ejercicio o página",
+        "notas históricas sobre matemáticos",
+    ),
+    style_guide=(
+        "Lenguaje matemático claro y preciso en español, de nivel bachillerato/ingreso a ingeniería. "
+        "Notación estándar escrita sin ambigüedad (x^2, sqrt(x), (a)/(b), sen θ, π/6). "
+        "Preguntas conceptuales (definiciones, teoremas, identidades) y operativas (calcular una distancia, "
+        "una pendiente, un valor trigonométrico o una conversión de coordenadas)."
+    ),
+    extra_instructions=(
+        "En preguntas operativas, verifica el cálculo antes de proponer la respuesta. Los distractores deben "
+        "venir de errores típicos: confundir grados con radianes, invertir seno y coseno, olvidar el signo según "
+        "el cuadrante, tomar el recíproco de la pendiente en vez del recíproco negativo, o confundir periodo y "
+        "amplitud. Si una fórmula del texto se ve incompleta o ambigua (exponentes o fracciones aplanados), no la uses."
+    ),
+)
+
+
 PROFILE_RULES: dict[str, DocumentRules] = {
     "manual": _MANUAL_RULES,
     "codigo_legal": _CODIGO_LEGAL_RULES,
@@ -241,6 +274,7 @@ PROFILE_RULES: dict[str, DocumentRules] = {
     "historia_universal": _HISTORIA_UNIVERSAL_RULES,
     "geografia_moderna_mexico": _GEOGRAFIA_MODERNA_MEXICO_RULES,
     "calculo_una_variable": _CALCULO_UNA_VARIABLE_RULES,
+    "algebra_trigonometria_geometria_analitica": _ALGEBRA_TRIGONOMETRIA_GEOMETRIA_ANALITICA_RULES,
 }
 
 
