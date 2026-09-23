@@ -1,39 +1,53 @@
-"""Orquestación de principio a fin: seleccionar nodos → generar → persistir."""
+"""Orquestación de principio a fin (spec §4–§8).
+
+nodos → ventanas pendientes → una llamada por ventana → revisión de cada
+pregunta (y verificación de los ejercicios nuevos) → descarte de duplicadas →
+guardado. Una corrida se puede cortar y retomar: la siguiente solo procesa las
+ventanas que faltan.
+"""
 
 from __future__ import annotations
 
-import json
 import logging
-import re
 import time
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from etl.models.schema import Chunk, Manual, Node
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from qgen.cost import CostEstimate, actual_cost_usd, doc_token_estimate, estimate_run
-from qgen.db.persistence import (
-    create_run,
-    finalize_run,
-    persist_question,
-    remove_questions_for_windows,
-)
+from qgen.cost import WindowEstimate, actual_cost_usd, doc_token_estimate, estimate_windows
+from qgen.db.persistence import create_run, finalize_run, persist_question, remove_questions_for_windows
 from qgen.gemini.cache import build_or_get_cache, delete_cache
 from qgen.gemini.client import MODEL_FLASH, resolve_model
-from qgen.gemini.generate import generate_one, generate_draft_questions
+from qgen.gemini.generate import generate_window, verify_exercise
 from qgen.models.schema import GenerationRun, Question
-from qgen.prompts.creator import build_creator_instruction
-from qgen.prompts.render import build_variable_prompt
-from qgen.prompts.system import SYSTEM_VERSION, build_system_instruction
+from qgen.prompts.families import (
+    SYSTEM_VERSION,
+    build_verification_instruction,
+    build_verification_message,
+    build_window_instruction,
+    build_window_message,
+)
+from qgen.prompts.schemas import QuestionType, WindowQuestion
 from qgen.reference.repository import get_reference_exemplars
 from qgen.rules.base import DocumentRules, RulesOverride, merge_rules, rules_to_dict
 from qgen.rules.defaults import get_default_rules
+from qgen.validation.checks import (
+    DuplicateIndex,
+    Verdict,
+    parse_items,
+    review,
+    tipo_permitido,
+    to_generated,
+    verification_motivos,
+    verification_options,
+)
 from qgen.windows import Window, build_windows
 
-# Módulo de logging en lugar de print() directo
 logger = logging.getLogger(__name__)
 
 
@@ -50,41 +64,9 @@ class RunSummary:
     actual_cost_usd: float
     batch_job_id: str | None = None
     cache_name: str | None = None
-
-
-# ---- Selección ------------------------------------------------------------
-
-def _select_nodes(session: Session, *, manual_id: int, regenerate: bool, limit: int | None, only_node_id: int | None) -> list[Node]:
-    stmt = (
-        select(Node)
-        .where(Node.manual_id == manual_id)
-        .where(Node.id.in_(select(Chunk.node_id).where(Chunk.manual_id == manual_id)))
-        .where(~Node.title.ilike('%introducci%'))
-        .order_by(Node.sort_key)
-    )
-    if only_node_id is not None:
-        stmt = stmt.where(Node.id == only_node_id)
-    if not regenerate:
-        existing = select(Question.node_id).where(Question.manual_id == manual_id)
-        stmt = stmt.where(~Node.id.in_(existing))
-    nodes = session.execute(stmt).scalars().all()
-    if limit is not None:
-        nodes = nodes[:limit]
-    return list(nodes)
-
-def _chunks_for(session: Session, node_id: int) -> list[Chunk]:
-    return list(session.execute(select(Chunk).where(Chunk.node_id == node_id).order_by(Chunk.ordinal)).scalars().all())
-
-def _resolve_rules(manual: Manual) -> tuple[DocumentRules, str]:
-    profile = (manual.metadata_json or {}).get("profile") or "manual"
-    default = get_default_rules(profile)
-    override_dict = (manual.metadata_json or {}).get("question_rules")
-    override = RulesOverride.from_dict(override_dict) if override_dict else None
-    return merge_rules(default, override), profile
-
-def _doc_token_estimate_from_chunks(session: Session, manual_id: int) -> int:
-    total_chars = session.execute(select(Chunk.char_count).where(Chunk.manual_id == manual_id)).scalars().all()
-    return doc_token_estimate(sum(total_chars))
+    windows_total: int = 0
+    windows_failed: int = 0
+    questions_saved: int = 0
 
 
 # ---- Ventanas (spec §4) ---------------------------------------------------
@@ -112,6 +94,10 @@ def _nodes_with_text(session: Session, *, manual_id: int, only_node_id: int | No
     if only_node_id is not None:
         stmt = stmt.where(Node.id == only_node_id)
     return list(session.execute(stmt).scalars().all())
+
+
+def _chunks_for(session: Session, node_id: int) -> list[Chunk]:
+    return list(session.execute(select(Chunk).where(Chunk.node_id == node_id).order_by(Chunk.ordinal)).scalars().all())
 
 
 def _done_window_keys(session: Session, manual_id: int) -> set[str]:
@@ -158,67 +144,148 @@ def plan_windows(
     return jobs[:limit] if limit is not None else jobs
 
 
-# ---- Entrada Pública ------------------------------------------------
-
-# El creador pide 1–3 enunciados por nodo según lo largo del texto.
-QUESTIONS_PER_NODE_ESTIMATE = 2
+# ---- Reglas y costo -------------------------------------------------------
 
 
-def estimate_only(session: Session, *, manual_id: int, model_name: str, mode: str, limit: int | None, only_node_id: int | None, regenerate: bool) -> tuple[CostEstimate, int]:
-    """Costo aproximado sin llamar a Gemini: una llamada del creador por nodo y
-    una por pregunta, todas leyendo el documento cacheado."""
+def _resolve_rules(manual: Manual) -> tuple[DocumentRules, str]:
+    profile = (manual.metadata_json or {}).get("profile") or "manual"
+    default = get_default_rules(profile)
+    override_dict = (manual.metadata_json or {}).get("question_rules")
+    override = RulesOverride.from_dict(override_dict) if override_dict else None
+    return merge_rules(default, override), profile
+
+
+def _doc_token_estimate_from_chunks(session: Session, manual_id: int) -> int:
+    total_chars = session.execute(select(Chunk.char_count).where(Chunk.manual_id == manual_id)).scalars().all()
+    return doc_token_estimate(sum(total_chars))
+
+
+def estimate_only(
+    session: Session,
+    *,
+    manual_id: int,
+    model_name: str,
+    mode: str,
+    limit: int | None,
+    only_node_id: int | None,
+    regenerate: bool,
+) -> tuple[WindowEstimate, int]:
+    """Costo aproximado sin llamar a Gemini; el entero son las ventanas por procesar."""
     model_name = resolve_model(model_name)
-    nodes = _select_nodes(session, manual_id=manual_id, regenerate=regenerate, limit=limit, only_node_id=only_node_id)
-    # Sin nodos no se crea cache: no hay nada que cobrar.
-    doc_tokens = _doc_token_estimate_from_chunks(session, manual_id) if nodes else 0
-    estimate = estimate_run(
+    manual = session.get(Manual, manual_id)
+    if manual is None:
+        raise ValueError(f"Manual {manual_id} not found")
+    rules, _ = _resolve_rules(manual)
+    jobs = plan_windows(session, manual_id=manual_id, only_node_id=only_node_id, regenerate=regenerate, limit=limit)
+    # Sin ventanas no se crea cache: no hay nada que cobrar.
+    doc_tokens = _doc_token_estimate_from_chunks(session, manual_id) if jobs else 0
+    estimate = estimate_windows(
         model=model_name,
         mode=mode,
-        n_questions=len(nodes) * QUESTIONS_PER_NODE_ESTIMATE,
-        draft_calls=len(nodes),
+        windows=len(jobs),
+        window_chars=sum(len(job.window.text) for job in jobs),
+        with_exercises="ejercicio" in rules.tipos,
         doc_tokens=doc_tokens,
     )
-    return estimate, len(nodes)
+    return estimate, len(jobs)
 
-def run_generation(session: Session, *, manual_id: int, model_name: str = MODEL_FLASH, mode: str = "immediate", limit: int | None = None, only_node_id: int | None = None, regenerate: bool = False, cache_ttl_seconds: int = 3600, progress_cb=None) -> RunSummary:
+
+# ---- Entrada pública ------------------------------------------------------
+
+
+def run_generation(
+    session: Session,
+    *,
+    manual_id: int,
+    model_name: str = MODEL_FLASH,
+    mode: str = "immediate",
+    limit: int | None = None,
+    only_node_id: int | None = None,
+    regenerate: bool = False,
+    cache_ttl_seconds: int = 3600,
+    progress_cb=None,
+) -> RunSummary:
     model_name = resolve_model(model_name)
     manual = session.get(Manual, manual_id)
     if manual is None:
         raise ValueError(f"Manual {manual_id} not found")
 
     rules, profile = _resolve_rules(manual)
-    nodes = _select_nodes(session, manual_id=manual_id, regenerate=regenerate, limit=limit, only_node_id=only_node_id)
+    jobs = plan_windows(session, manual_id=manual_id, only_node_id=only_node_id, regenerate=regenerate, limit=limit)
+    node_ids = sorted({job.node_id for job in jobs})
 
-    if regenerate and nodes:
-        remove_questions_for_windows(session, manual_id=manual_id, window_keys=[], node_ids=[n.id for n in nodes])
+    if regenerate and jobs:
+        remove_questions_for_windows(
+            session, manual_id=manual_id, window_keys=[job.window.key for job in jobs], node_ids=node_ids,
+        )
 
-    if not nodes:
+    if not jobs:
         run = create_run(session, manual_id=manual_id, model=model_name, mode=mode, profile_used=profile, rules_snapshot=rules_to_dict(rules), nodes_total=0)
         finalize_run(session, run=run, nodes_completed=0, nodes_failed=0, cost_input_tokens=0, cost_output_tokens=0, cost_cached_tokens=0, cost_estimate_usd=0.0, status="succeeded")
         return RunSummary(run_id=run.id, mode=mode, model=run.model, profile=profile, nodes_total=0, nodes_completed=0, nodes_failed=0, cost_estimate_usd=0.0, actual_cost_usd=0.0)
 
+    manual_title = manual.title or manual.code
     exemplars = get_reference_exemplars(session, profile=profile, manual_code=manual.code, limit=5)
-    creator_exemplars = [e["question_text"] for e in exemplars] if exemplars else None
-    creator_instruction = build_creator_instruction(rules, exemplars=creator_exemplars)
+    instruction = build_window_instruction(rules, manual_title=manual_title, exemplars=exemplars or None)
 
-    run = create_run(session, manual_id=manual_id, model=model_name, mode=mode, profile_used=profile, rules_snapshot=rules_to_dict(rules), nodes_total=len(nodes), cache_name="none", metadata_json={"system_version": SYSTEM_VERSION, "limit": limit, "only_node_id": only_node_id, "regenerate": regenerate})
+    run = create_run(
+        session, manual_id=manual_id, model=model_name, mode=mode, profile_used=profile,
+        rules_snapshot=rules_to_dict(rules), nodes_total=len(node_ids), cache_name="none",
+        metadata_json={"system_version": SYSTEM_VERSION, "limit": limit, "only_node_id": only_node_id, "regenerate": regenerate},
+    )
+    return _run_immediate(session, run, manual, jobs, rules, instruction, manual_title, progress_cb)
 
-    return _run_immediate(session, run, manual, nodes, rules, creator_instruction, progress_cb, exemplars=exemplars)
+
+# ---- Controlador de ejecución inmediata -----------------------------------
 
 
-# ---- Controlador de Ejecución Inmediata -----------------------------------
+@dataclass
+class _Accepted:
+    question: WindowQuestion
+    verdict: Verdict
+    verificacion: dict | None
 
-def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: list[Node], rules: DocumentRules, creator_instruction: str, progress_cb, exemplars: list[dict] | None = None) -> RunSummary:
-    completed = 0
-    failed = 0
-    total_in = 0
-    total_out = 0
-    total_cached = 0
+
+@dataclass
+class _WindowResult:
+    job: WindowJob
+    error: str | None = None
+    accepted: list[_Accepted] = field(default_factory=list)
+    descartes: list[str] = field(default_factory=list)
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cached_tokens: int = 0
+    latency_s: float = 0.0
+
+
+def _run_immediate(
+    session: Session,
+    run: GenerationRun,
+    manual: Manual,
+    jobs: list[WindowJob],
+    rules: DocumentRules,
+    instruction: str,
+    manual_title: str,
+    progress_cb,
+) -> RunSummary:
+    total_in = total_out = total_cached = 0
+    ventanas: dict[str, str] = {}
+    failures: list[dict] = []  # por qué falló cada ventana: una corrida `partial` ya se pagó
+    descartes: list[dict] = []
+    conteo: Counter[str] = Counter()
+    saved = 0
     cache = None
     cache_name = "none"
     cache_started = time.monotonic()
     executor: ThreadPoolExecutor | None = None
-    failures: list[dict] = []  # por qué falló cada llamada: una corrida `partial` ya se pagó
+    node_of = {job.window.key: job.node_id for job in jobs}
+    planned = Counter(job.node_id for job in jobs)
+
+    duplicados = DuplicateIndex()
+    for node_id, texto, tipo in session.execute(
+        select(Question.node_id, Question.question_text, Question.question_type).where(Question.manual_id == manual.id)
+    ):
+        duplicados.add(node_id, texto, tipo)
 
     def finalize(status: str) -> float:
         """Cierra la corrida con lo gastado hasta ahora, incluida la creación y el almacenamiento del cache."""
@@ -233,17 +300,32 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
             cache_create_tokens=cache_tokens,
             cache_storage_token_hours=cache_tokens * cache_hours,
         )
-        run.metadata_json = {**(run.metadata_json or {}), "cache_tokens": cache_tokens, "cache_hours": round(cache_hours, 4), "failures": failures}
-        finalize_run(session, run=run, nodes_completed=completed, nodes_failed=failed, cost_input_tokens=total_in, cost_output_tokens=total_out, cost_cached_tokens=total_cached, cost_estimate_usd=cost, status=status)
+        ok = Counter(node_of[key] for key, estado in ventanas.items() if estado == "ok")
+        fallidos = {node_of[key] for key, estado in ventanas.items() if estado == "fallida"}
+        run.metadata_json = {
+            **(run.metadata_json or {}),
+            "cache_tokens": cache_tokens,
+            "cache_hours": round(cache_hours, 4),
+            "ventanas": dict(ventanas),
+            "preguntas": dict(conteo),
+            "descartes": list(descartes),
+            "failures": list(failures),
+        }
+        finalize_run(
+            session, run=run,
+            nodes_completed=sum(1 for node_id, total in planned.items() if ok[node_id] == total),
+            nodes_failed=len(fallidos),
+            cost_input_tokens=total_in, cost_output_tokens=total_out, cost_cached_tokens=total_cached,
+            cost_estimate_usd=cost, status=status,
+        )
         session.commit()
         return cost
 
     try:
-        # 1. Crear caché con el PDF (sin system_instruction global)
+        # 1. Cache con el PDF (sin system_instruction global); si falla, se sigue sin él.
         pdf_path = Path(manual.source_path)
         if not pdf_path.exists():
             pdf_path = Path(f"data/raw_pdfs/{manual.code}.pdf")
-
         try:
             cache = build_or_get_cache(
                 pdf_path=pdf_path,
@@ -255,151 +337,116 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
             cache_started = time.monotonic()
         except Exception as e:
             logger.warning("Error creando cache: %s", e)
-
         run.cache_name = cache_name
         session.commit()
 
-        # 2. Pre-fetch: extraer datos puros (no ORM objects) para thread safety.
-        #    Los hilos solo reciben strings y enteros, nunca objetos SQLAlchemy.
-        node_jobs = []
-        for node in nodes:
-            chunks = _chunks_for(session, node.id)
-            prompt = build_variable_prompt(node, chunks)
-            text_chunk = "\n\n".join(c.text for c in chunks)
-            node_jobs.append({
-                "id": node.id,
-                "prompt": prompt,
-                "text_chunk": text_chunk,
-                # Datos serializados del nodo para el callback (sin objeto ORM)
-                "node_label": f"{node.level_label} {node.ordinal}".strip(),
-                "node_title": node.title,
-                "node_breadcrumb": node.breadcrumb,
-            })
+        run_model = run.model  # string: seguro entre hilos
+        verification_instruction = build_verification_instruction()
 
-        # Referencia local al modelo para los hilos (string, thread-safe)
-        run_model = run.model
-
-        def process_node(node_idx, job):
-            """Función ejecutada en hilo worker. No toca la sesión de SQLAlchemy."""
-            node_completed = 0
-            node_failed = 0
-            errors: list[str] = []
-
-            prompt = job["prompt"]
-            text_chunk = job["text_chunk"]
-
-            draft = generate_draft_questions(
+        def process(job: WindowJob) -> _WindowResult:
+            """Hilo de trabajo: llamadas a Gemini y revisiones; no toca la sesión de SQLAlchemy."""
+            outcome = generate_window(
                 cache=cache,
                 model=run_model,
-                variable_prompt=prompt,
-                system_instruction=creator_instruction
+                message=build_window_message(job.window, manual_title=manual_title, breadcrumb=job.node_breadcrumb),
+                system_instruction=instruction,
             )
-            node_in = draft.input_tokens
-            node_out = draft.output_tokens
-            node_cached = draft.cached_tokens
+            result = _WindowResult(
+                job=job, input_tokens=outcome.input_tokens, output_tokens=outcome.output_tokens,
+                cached_tokens=outcome.cached_tokens, latency_s=outcome.latency_s,
+            )
+            if outcome.error is not None:
+                result.error = outcome.error
+                return result
 
-            if not draft.questions:
-                node_failed += 1
-                errors.append(draft.error or "el creador no devolvió enunciados")
-                return (node_completed, node_failed, node_in, node_out, node_cached, [], errors)
-
-            results = []
-            for pregunta in draft.questions:
-                pregunta_limpia = re.split(r'\b[A-D][\.\\)]\s', pregunta, maxsplit=1, flags=re.IGNORECASE)[0].strip()
-                system_instruction = build_system_instruction(rules, target_question=pregunta_limpia, exemplars=exemplars)
-
-                outcome = generate_one(
-                    cache=cache,
-                    model=run_model,
-                    variable_prompt=prompt,
-                    system_instruction=system_instruction
-                )
-                # Los tokens se pagan aunque la respuesta no valide.
-                node_in += outcome.input_tokens
-                node_out += outcome.output_tokens
-                node_cached += outcome.cached_tokens
-
-                if outcome.question is None:
-                    node_failed += 1
-                    errors.append(outcome.error or "respuesta vacía")
+            preguntas, result.descartes = parse_items(outcome.items)
+            for q in preguntas:
+                if not tipo_permitido(q, rules.tipos):
+                    result.descartes.append(f"tipo {q.tipo.value} no permitido en {rules.name}")
                     continue
+                verdict = review(q, job.window.text)
+                verificacion = None
+                if q.tipo == QuestionType.EJERCICIO_NUEVO:
+                    textos, letra = verification_options(q)
+                    check = verify_exercise(
+                        model=run_model,
+                        message=build_verification_message(q.pregunta, textos, q.cita),
+                        system_instruction=verification_instruction,
+                    )
+                    result.input_tokens += check.input_tokens
+                    result.output_tokens += check.output_tokens
+                    result.cached_tokens += check.cached_tokens
+                    verdict = verdict.with_motivos(verification_motivos(check.result, letra))
+                    verificacion = check.result.model_dump() if check.result else {"error": check.error}
+                result.accepted.append(_Accepted(question=q, verdict=verdict, verificacion=verificacion))
+            return result
 
-                # Validación Algorítmica (Python)
-                validation_status = "pending"
-                reviewer_notes = "Sin notas."
-
-                correct_opt = next((o for o in outcome.question.options if o.role.value == "correct"), None)
-                if correct_opt:
-                    txt_chunk_norm = re.sub(r'\s+', ' ', text_chunk).strip()
-                    opt_norm = re.sub(r'\s+', ' ', correct_opt.text).strip()
-                    if opt_norm not in txt_chunk_norm:
-                        validation_status = "needs_review"
-                        reviewer_notes = "Revisión automática: La respuesta correcta no es una cita literal (el modelo parafraseó)."
-
-                metadata = {
-                    "provider": "gemini",
-                    "input_tokens": outcome.input_tokens,
-                    "output_tokens": outcome.output_tokens,
-                    "cached_tokens": outcome.cached_tokens,
-                    "latency_s": outcome.latency_s,
-                    "reviewer_notes": reviewer_notes,
-                    "reviewer_raw": json.dumps(outcome.raw_response)
-                }
-
-                results.append({
-                    "node_id": job["id"],
-                    "payload": outcome.question,
-                    "raw_response": outcome.raw_response,
-                    "metadata": metadata,
-                    "validation_status": validation_status
-                })
-
-                node_completed += 1
-
-            return (node_completed, node_failed, node_in, node_out, node_cached, results, errors)
-
-        # 3. Ejecutar peticiones concurrentemente. Sin `with`: al salir de un
-        #    `with` el executor espera a TODOS los nodos encolados, así que un
-        #    Ctrl-C no cortaría nada. El `finally` cancela los pendientes.
-        max_workers = 15 if cache else 2  # Sin cache → Free Tier / límite restrictivo
-        executor = ThreadPoolExecutor(max_workers=max_workers)
-        futures = {executor.submit(process_node, idx, job): (idx, job) for idx, job in enumerate(node_jobs)}
+        # 2. Ventanas en paralelo. Sin `with`: al salir de un `with` el executor espera
+        #    a TODAS las ventanas encoladas, así que un Ctrl-C no cortaría nada.
+        executor = ThreadPoolExecutor(max_workers=15 if cache else 2)  # sin cache → plan gratuito
+        futures = {executor.submit(process, job): job for job in jobs}
         order = 0
 
-        for future in as_completed(futures):
-            idx, job = futures[future]
-            c, f, i, o, ca, res, errs = future.result()
-            completed += c
-            failed += f
-            total_in += i
-            total_out += o
-            total_cached += ca
+        for idx, future in enumerate(as_completed(futures)):
+            result = future.result()
+            job = result.job
+            key = job.window.key
+            total_in += result.input_tokens
+            total_out += result.output_tokens
+            total_cached += result.cached_tokens
 
-            # Persistencia en el hilo principal (thread-safe), antes del callback:
-            # si el callback falla o se corta la corrida, lo generado ya quedó guardado.
-            for r in res:
+            if result.error is not None:
+                ventanas[key] = "fallida"
+                failures.append({"window_key": key, "node_id": job.node_id, "error": result.error})
+                logger.warning("%s [%s]: %s", job.node_label, key, result.error)
+                if progress_cb:
+                    progress_cb(idx, len(jobs), job, None, result.error)
+                continue
+
+            descartadas = len(result.descartes)
+            descartes.extend({"window_key": key, "motivo": motivo} for motivo in result.descartes)
+            guardadas = revision = 0
+            for accepted in result.accepted:
+                q = accepted.question
+                if duplicados.is_duplicate(job.node_id, q.pregunta, q.tipo.value):
+                    descartes.append({"window_key": key, "motivo": "duplicada"})
+                    descartadas += 1
+                    continue
+                duplicados.add(job.node_id, q.pregunta, q.tipo.value)
+                # 3. Persistencia en el hilo principal.
                 persist_question(
-                    session, run=run, node_id=r["node_id"], manual_id=manual.id, generation_order=order, payload=r["payload"], raw_response=r["raw_response"],
-                    metadata=r["metadata"], validation_status=r["validation_status"]
+                    session, run=run, node_id=job.node_id, manual_id=manual.id, generation_order=order,
+                    payload=to_generated(q),
+                    raw_response={"ventana": key, "item": q.model_dump(mode="json")},
+                    metadata={
+                        "provider": "gemini",
+                        "paginas": [job.window.page_start, job.window.page_end],
+                        "motivos": list(accepted.verdict.motivos),
+                        "verificacion": accepted.verificacion,
+                        "ventana_tokens": {"input": result.input_tokens, "output": result.output_tokens},
+                        "latencia_ventana_s": round(result.latency_s, 2),
+                    },
+                    validation_status=accepted.verdict.status,
+                    question_type=q.tipo.value,
+                    source_quote=q.cita,
+                    window_key=key,
                 )
                 order += 1
+                saved += 1
+                guardadas += 1
+                revision += accepted.verdict.status == "needs_review"
+                conteo[f"{q.tipo.value}/{accepted.verdict.status}"] += 1
+            ventanas[key] = "ok"
+            # Se guarda antes del callback: si el callback falla o se corta la corrida,
+            # lo generado ya quedó.
             session.commit()
-
-            for err in errs:
-                logger.warning("%s: %s", job["node_label"], err)
-                failures.append({"node_id": job["id"], "error": err})
-
-            # Callback de progreso con datos serializados (hilo principal)
             if progress_cb:
-                for r in res:
-                    progress_cb(idx, len(nodes), job, r["payload"], None)
-                for err in errs:
-                    progress_cb(idx, len(nodes), job, None, err)
+                progress_cb(idx, len(jobs), job, {"guardadas": guardadas, "revision": revision, "descartes": descartadas}, None)
 
-        computed_cost = finalize("succeeded" if failed == 0 else "partial")
+        computed_cost = finalize("succeeded" if not failures else "partial")
     except BaseException as exc:
         # Una corrida no puede quedarse en `running`: el exportador no entrega
-        # corridas a medias. Lo ya persistido se conserva.
+        # corridas a medias. Lo ya guardado se conserva y se retoma después.
         session.rollback()
         finalize("cancelled" if isinstance(exc, KeyboardInterrupt) else "failed")
         raise
@@ -409,7 +456,13 @@ def _run_immediate(session: Session, run: GenerationRun, manual: Manual, nodes: 
         if cache:
             delete_cache(cache)
 
-    return RunSummary(run_id=run.id, mode=run.mode, model=run.model, profile=run.profile_used, nodes_total=len(nodes), nodes_completed=completed, nodes_failed=failed, cost_estimate_usd=0.0, actual_cost_usd=computed_cost, cache_name=cache_name)
+    return RunSummary(
+        run_id=run.id, mode=run.mode, model=run.model, profile=run.profile_used,
+        nodes_total=run.nodes_total, nodes_completed=run.nodes_completed, nodes_failed=run.nodes_failed,
+        cost_estimate_usd=0.0, actual_cost_usd=computed_cost, cache_name=cache_name,
+        windows_total=len(jobs), windows_failed=len(failures), questions_saved=saved,
+    )
+
 
 # ---- Batch desactivado ----
 def _run_batch_submit(*args, **kwargs): raise NotImplementedError("No compatible con Ollama local.")

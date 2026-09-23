@@ -21,65 +21,78 @@ BATCH_DISCOUNT = 0.5  # input + output halved; cached tokens NOT further discoun
 CHARS_PER_TOKEN = 4.0  # rough Spanish estimate
 
 
+# Supuestos de la estimación por ventanas (spec §9): valores iniciales, se calibran
+# con la primera corrida real.
+INSTRUCTION_TOKENS = 1500
+CHARS_PER_QUESTION = 350
+OUTPUT_TOKENS_PER_QUESTION = 350
+CHARS_PER_NEW_EXERCISE = 1500
+VERIFICATION_INPUT_TOKENS = 1000
+VERIFICATION_OUTPUT_TOKENS = 800
+
+
 @dataclass
-class CostEstimate:
+class WindowEstimate:
     model: str
     mode: str
+    windows: int
+    window_tokens: int
     n_questions: int
+    verifications: int
     cache_tokens: int
-    input_tokens_per_q: int
-    output_tokens_per_q: int
     cache_create_usd: float
     cache_storage_usd: float
-    per_question_usd: float
+    generation_usd: float
+    verification_usd: float
     total_usd: float
-    draft_calls: int = 0
-    per_draft_usd: float = 0.0
 
 
-def estimate_run(
+def estimate_windows(
     *,
     model: str,
     mode: str,
-    n_questions: int,
+    windows: int,
+    window_chars: int,
+    with_exercises: bool,
     doc_tokens: int,
-    avg_variable_input_tokens: int = 1100,
-    avg_output_tokens: int = 600,
     cache_storage_hours: float = 1.0,
-    draft_calls: int = 0,
-    avg_draft_output_tokens: int = 150,
-) -> CostEstimate:
-    """`draft_calls` son las llamadas del creador (una por nodo): leen el mismo
-    documento cacheado que las de opciones, pero solo devuelven enunciados."""
+) -> WindowEstimate:
+    """Una llamada por ventana (instrucción + texto de la ventana + documento cacheado)
+    y una verificación por cada ejercicio nuevo estimado."""
     if model not in _PRICING:
         raise ValueError(f"No pricing entry for {model!r}")
     in_p, cached_p, out_p, store_p = _PRICING[model]
     discount = BATCH_DISCOUNT if mode == "batch" else 1.0
 
-    cache_create = (doc_tokens * in_p) / 1_000_000  # one-off charge to fill cache
+    window_tokens = int(window_chars / CHARS_PER_TOKEN)
+    n_questions = round(window_chars / CHARS_PER_QUESTION)
+    verifications = round(window_chars / CHARS_PER_NEW_EXERCISE) if with_exercises else 0
+
+    cache_create = (doc_tokens * in_p) / 1_000_000
     cache_storage = (doc_tokens * store_p * cache_storage_hours) / 1_000_000
+    generation = (
+        windows * (doc_tokens * cached_p + INSTRUCTION_TOKENS * in_p * discount)
+        + window_tokens * in_p * discount
+        + n_questions * OUTPUT_TOKENS_PER_QUESTION * out_p * discount
+    ) / 1_000_000
+    verification = verifications * (
+        VERIFICATION_INPUT_TOKENS * in_p + VERIFICATION_OUTPUT_TOKENS * out_p
+    ) * discount / 1_000_000
+    total = cache_create + cache_storage + generation + verification if windows else 0.0
 
-    cached_in_per_q = (doc_tokens * cached_p) / 1_000_000
-    var_in_per_q = (avg_variable_input_tokens * in_p * discount) / 1_000_000
-    out_per_q = (avg_output_tokens * out_p * discount) / 1_000_000
-
-    per_q = cached_in_per_q + var_in_per_q + out_per_q
-    per_draft = cached_in_per_q + var_in_per_q + (avg_draft_output_tokens * out_p * discount) / 1_000_000
-    total = cache_create + cache_storage + per_q * n_questions + per_draft * draft_calls
-
-    return CostEstimate(
+    return WindowEstimate(
         model=model,
         mode=mode,
+        windows=windows,
+        window_tokens=window_tokens,
         n_questions=n_questions,
+        verifications=verifications,
         cache_tokens=doc_tokens,
-        input_tokens_per_q=avg_variable_input_tokens,
-        output_tokens_per_q=avg_output_tokens,
         cache_create_usd=round(cache_create, 4),
         cache_storage_usd=round(cache_storage, 4),
-        per_question_usd=round(per_q, 6),
-        total_usd=round(total, 4),
-        draft_calls=draft_calls,
-        per_draft_usd=round(per_draft, 6),
+        generation_usd=round(generation, 6),
+        verification_usd=round(verification, 6),
+        total_usd=round(total, 6),
     )
 
 
@@ -96,7 +109,7 @@ def actual_cost_usd(
     """Compute actual cost from observed usage_metadata totals.
 
     `cache_create_tokens` se cobra una vez a precio de input, igual que asume
-    `estimate_run`; el batch no lo abarata.
+    `estimate_windows`; el batch no lo abarata.
     """
     if model not in _PRICING:
         return 0.0

@@ -1,9 +1,8 @@
-"""Orquestación de `qgen-generate` de principio a fin, con Gemini simulado.
+"""Orquestación de `qgen-generate` por ventanas (spec §4–§8), con Gemini simulado.
 
-Aquí no se prueba la calidad de las preguntas sino lo que rodea a las llamadas:
-que la corrida siempre se cierre (también si se corta a medias), que lo
-generado se guarde, que el cache se borre y que el costo cuente todo lo que se
-pagó.
+No se prueba la calidad de las preguntas sino lo que rodea a las llamadas: una
+llamada por ventana, qué se guarda y con qué estado, qué se descarta, que la
+corrida siempre se cierre, que se pueda reanudar y que el costo cuente todo.
 """
 
 from datetime import datetime, timezone
@@ -19,68 +18,85 @@ from qgen.cost import actual_cost_usd
 from qgen.db.migration import init_question_tables
 from qgen.gemini.cache import DocumentCache
 from qgen.gemini.client import MODEL_FLASH, MODEL_PRO
-from qgen.gemini.generate import DraftOutcome, GenerationOutcome
+from qgen.gemini.generate import VerificationOutcome, WindowOutcome
 from qgen.models.schema import GenerationRun, Question
-from qgen.prompts.schemas import GeneratedOption, GeneratedQuestion, OptionRole
+from qgen.prompts.schemas import VerificationResult
 
-TEXT = "La guerra es un conflicto entre sociedades que luchan violentamente."
+TEXTO = "La guerra es un conflicto entre sociedades que luchan violentamente."
+EJEMPLO = "EJEMPLO 1 Derivar f(x) = x^2. Solución: f'(x) = 2x."
 
 
-def _question(prefix: str = "T") -> GeneratedQuestion:
-    return GeneratedQuestion(
-        question=f"{prefix} — ¿qué es la guerra?",
-        options=[
-            GeneratedOption(role=OptionRole.CORRECT, text=TEXT),
-            GeneratedOption(role=OptionRole.CONFUSA, text=f"{prefix} confusa"),
-            GeneratedOption(role=OptionRole.DISTRACTOR, text=f"{prefix} fácil 1"),
-            GeneratedOption(role=OptionRole.DISTRACTOR, text=f"{prefix} fácil 2"),
+def _item(pregunta="¿Qué es la guerra?", *, tipo="teoria", correcta="un conflicto entre sociedades",
+          cita=TEXTO, prefijo="T") -> dict:
+    return {
+        "tipo": tipo,
+        "pregunta": pregunta,
+        "opciones": [
+            {"rol": "correct", "texto": correcta},
+            {"rol": "confusa", "texto": f"{prefijo} confusa"},
+            {"rol": "distractor", "texto": f"{prefijo} distractor 1"},
+            {"rol": "distractor", "texto": f"{prefijo} distractor 2"},
         ],
-        justification="Párrafo 1.",
-    )
+        "cita": cita,
+        "justificacion": "Lo dice el texto.",
+    }
 
 
-def _seed(n_nodes: int = 2) -> int:
+def _ejercicio_nuevo() -> dict:
+    return _item("Deriva f(x) = x^3.", tipo="ejercicio_nuevo", correcta="3x^2", cita=EJEMPLO, prefijo="E")
+
+
+def _seed(n_nodes: int = 2, *, profile: str = "manual", texto: str = TEXTO) -> int:
     init_question_tables()
     with session_scope() as session:
         manual = Manual(
-            code="TST", title="Manual de prueba", source_path="no-existe.pdf",
-            page_count=10, extractor_used="docling", ingested_at=datetime.now(timezone.utc),
-            metadata_json={"profile": "manual"},
+            code="TST", title="Manual de prueba", source_path="no-existe.pdf", page_count=10,
+            extractor_used="docling", ingested_at=datetime.now(timezone.utc), metadata_json={"profile": profile},
         )
         session.add(manual)
         session.flush()
         for i in range(n_nodes):
             node = Node(
                 manual_id=manual.id, level=0, level_label="Capítulo", ordinal=str(i + 1),
-                title=f"Capítulo {i + 1}", breadcrumb=f"Capítulo {i + 1}",
-                page_start=i + 1, sort_key=f"{i + 1:02d}",
+                title=f"Capítulo {i + 1}", breadcrumb=f"Capítulo {i + 1}", page_start=i + 1, sort_key=f"{i + 1:02d}",
             )
             session.add(node)
             session.flush()
             session.add(Chunk(
-                node_id=node.id, manual_id=manual.id, ordinal=0, text=TEXT,
-                char_count=len(TEXT), page_start=i + 1, page_end=i + 1,
+                node_id=node.id, manual_id=manual.id, ordinal=0, text=texto,
+                char_count=len(texto), page_start=i + 1, page_end=i + 1,
             ))
         return manual.id
 
 
+def _letra(message: str, texto: str) -> str:
+    """La letra con que la verificación presenta la opción `texto`."""
+    for line in message.splitlines():
+        if line[1:3] == ") " and line[3:] == texto:
+            return line[0]
+    raise AssertionError(f"{texto!r} no está en las opciones de la verificación")
+
+
 class FakeGemini:
-    """Sustituye cache, creador y generador de opciones del pipeline."""
+    """Sustituye cache, llamada por ventana y verificación del pipeline."""
 
     def __init__(self, monkeypatch, *, cache_tokens: int = 0) -> None:
         self.cache_models: list[str] = []
         self.deleted: list[str] = []
+        self.messages: list[str] = []
         self.cache_tokens = cache_tokens
-        self.drafts = ["¿Qué es la guerra?"]
-        self.one = lambda: GenerationOutcome(
-            question=_question(), raw_response={}, input_tokens=100, output_tokens=50, cached_tokens=80,
+        self.window = lambda message: WindowOutcome(items=[_item()], input_tokens=100, output_tokens=50, cached_tokens=80)
+        self.verify = lambda message: VerificationOutcome(
+            result=VerificationResult(razonamiento="…", opcion=_letra(message, "3x^2"), dificultad="igual"),
         )
         monkeypatch.setattr(pipeline, "build_or_get_cache", self._build_cache)
         monkeypatch.setattr(pipeline, "delete_cache", lambda cache: self.deleted.append(cache.name))
-        monkeypatch.setattr(pipeline, "generate_draft_questions", lambda **_: DraftOutcome(
-            questions=list(self.drafts), input_tokens=10, output_tokens=5, cached_tokens=8,
-        ))
-        monkeypatch.setattr(pipeline, "generate_one", lambda **_: self.one())
+        monkeypatch.setattr(pipeline, "generate_window", self._generate_window)
+        monkeypatch.setattr(pipeline, "verify_exercise", lambda *, message, **_: self.verify(message))
+
+    def _generate_window(self, *, message, **_):
+        self.messages.append(message)
+        return self.window(message)
 
     def _build_cache(self, *, model, **_):
         self.cache_models.append(model)
@@ -90,47 +106,221 @@ class FakeGemini:
         )
 
 
+def _run(manual_id: int, **kwargs):
+    with session_scope() as session:
+        return pipeline.run_generation(session, manual_id=manual_id, **kwargs)
+
+
 def _runs():
     with session_scope() as session:
-        return session.execute(select(GenerationRun)).scalars().all()
+        return session.execute(select(GenerationRun).order_by(GenerationRun.id)).scalars().all()
 
 
-def _question_count() -> int:
+def _questions() -> list[dict]:
     with session_scope() as session:
-        return len(session.execute(select(Question)).scalars().all())
+        return [
+            {
+                "tipo": q.question_type, "estado": q.validation_status, "ventana": q.window_key,
+                "cita": q.source_quote, "motivos": (q.metadata_json or {}).get("motivos"),
+            }
+            for q in session.execute(select(Question).order_by(Question.id)).scalars().all()
+        ]
 
 
-# ─── El callback del CLI ───────────────────────────────────────────────────
+# ─── Una llamada por ventana ───────────────────────────────────────────────
 
 
-def test_cli_progress_callback_accepts_pipeline_jobs(monkeypatch):
+def test_una_llamada_por_ventana_y_sus_preguntas_se_guardan(monkeypatch):
     manual_id = _seed()
     fake = FakeGemini(monkeypatch)
 
-    with session_scope() as session:
-        summary = pipeline.run_generation(session, manual_id=manual_id, progress_cb=_progress_cb)
+    summary = _run(manual_id)
 
-    assert summary.nodes_completed == 2
-    assert [r.status for r in _runs()] == ["succeeded"]
-    assert _question_count() == 2
+    assert len(fake.messages) == 2
+    assert (summary.windows_total, summary.windows_failed, summary.questions_saved) == (2, 0, 2)
+    [run] = _runs()
+    assert run.status == "succeeded"
+    assert (run.nodes_total, run.nodes_completed, run.nodes_failed) == (2, 2, 0)
+    assert sorted(run.metadata_json["ventanas"].values()) == ["ok", "ok"]
+    assert run.metadata_json["preguntas"] == {"teoria/pending": 2}
+    preguntas = _questions()
+    assert [(q["tipo"], q["estado"], q["cita"]) for q in preguntas] == [("teoria", "pending", TEXTO)] * 2
+    assert {q["ventana"] for q in preguntas} == set(run.metadata_json["ventanas"])
     assert fake.deleted == ["cachedContents/test"]
+
+
+def test_el_mensaje_lleva_el_titulo_del_manual_la_ruta_y_el_texto(monkeypatch):
+    manual_id = _seed(n_nodes=1)
+    fake = FakeGemini(monkeypatch)
+
+    _run(manual_id)
+
+    [message] = fake.messages
+    assert "Manual de prueba" in message and "Capítulo 1" in message and TEXTO in message
+
+
+# ─── Descartes y revisión ──────────────────────────────────────────────────
+
+
+def test_una_pregunta_mal_formada_no_tumba_la_ventana(monkeypatch):
+    manual_id = _seed(n_nodes=1)
+    fake = FakeGemini(monkeypatch)
+    fake.window = lambda message: WindowOutcome(items=[_item(), {"tipo": "teoria"}])
+
+    _run(manual_id)
+
+    [run] = _runs()
+    assert run.status == "succeeded"
+    assert len(_questions()) == 1
+    assert run.metadata_json["descartes"][0]["motivo"].startswith("pregunta 2: estructura inválida")
+
+
+def test_un_tipo_que_el_perfil_no_permite_se_descarta(monkeypatch):
+    manual_id = _seed(n_nodes=1, profile="manual")  # militar: solo teoría
+    fake = FakeGemini(monkeypatch)
+    fake.window = lambda message: WindowOutcome(items=[_item(), _ejercicio_nuevo()])
+
+    _run(manual_id)
+
+    assert [q["tipo"] for q in _questions()] == ["teoria"]
+    [run] = _runs()
+    assert run.metadata_json["descartes"][0]["motivo"] == "tipo ejercicio_nuevo no permitido en manual"
+
+
+def test_una_respuesta_parafraseada_queda_en_revision_con_su_motivo(monkeypatch):
+    manual_id = _seed(n_nodes=1)
+    fake = FakeGemini(monkeypatch)
+    fake.window = lambda message: WindowOutcome(items=[_item(correcta="una pelea violenta")])
+
+    _run(manual_id)
+
+    [q] = _questions()
+    assert (q["estado"], q["motivos"]) == ("needs_review", ["respuesta parafraseada"])
+
+
+def test_las_duplicadas_se_descartan(monkeypatch):
+    manual_id = _seed(n_nodes=1)
+    fake = FakeGemini(monkeypatch)
+    fake.window = lambda message: WindowOutcome(items=[_item(), _item(prefijo="U")])
+
+    _run(manual_id)
+
+    [q] = _questions()
+    [run] = _runs()
+    assert run.metadata_json["descartes"] == [{"window_key": q["ventana"], "motivo": "duplicada"}]
+
+
+# ─── Ejercicios nuevos ─────────────────────────────────────────────────────
+
+
+def test_el_ejercicio_nuevo_verificado_queda_pendiente(monkeypatch):
+    manual_id = _seed(n_nodes=1, profile="calculo_una_variable", texto=EJEMPLO)
+    fake = FakeGemini(monkeypatch)
+    fake.window = lambda message: WindowOutcome(items=[_ejercicio_nuevo()])
+
+    _run(manual_id)
+
+    [q] = _questions()
+    assert (q["tipo"], q["estado"]) == ("ejercicio_nuevo", "pending")
+
+
+@pytest.mark.parametrize("opcion, dificultad, motivo", [
+    ("otra", "igual", "la verificación eligió"),
+    ("ninguna", "igual", "ninguna"),
+    ("clave", "mayor", "supera la dificultad del PDF"),
+])
+def test_la_verificacion_manda_a_revision(monkeypatch, opcion, dificultad, motivo):
+    manual_id = _seed(n_nodes=1, profile="calculo_una_variable", texto=EJEMPLO)
+    fake = FakeGemini(monkeypatch)
+    fake.window = lambda message: WindowOutcome(items=[_ejercicio_nuevo()])
+
+    def verify(message):
+        clave = _letra(message, "3x^2")
+        elegida = {"clave": clave, "otra": "A" if clave != "A" else "B"}.get(opcion, opcion)
+        return VerificationOutcome(result=VerificationResult(razonamiento="…", opcion=elegida, dificultad=dificultad))
+
+    fake.verify = verify
+
+    _run(manual_id)
+
+    [q] = _questions()
+    assert q["estado"] == "needs_review"
+    assert any(motivo in m for m in q["motivos"])
+
+
+def test_si_la_verificacion_falla_la_pregunta_queda_en_revision(monkeypatch):
+    manual_id = _seed(n_nodes=1, profile="calculo_una_variable", texto=EJEMPLO)
+    fake = FakeGemini(monkeypatch)
+    fake.window = lambda message: WindowOutcome(items=[_ejercicio_nuevo()])
+    fake.verify = lambda message: VerificationOutcome(result=None, error="RuntimeError: 500 INTERNAL")
+
+    _run(manual_id)
+
+    [q] = _questions()
+    assert (q["estado"], q["motivos"]) == ("needs_review", ["verificación fallida"])
+
+
+# ─── Reanudar ──────────────────────────────────────────────────────────────
+
+
+def test_una_ventana_fallida_se_retoma_en_la_siguiente_corrida(monkeypatch):
+    manual_id = _seed(n_nodes=1)
+    fake = FakeGemini(monkeypatch)
+    fake.window = lambda message: WindowOutcome(items=[], error="respuesta ilegible: JSONDecodeError", input_tokens=10)
+
+    _run(manual_id)
+
+    [primera] = _runs()
+    assert primera.status == "partial"
+    assert (primera.nodes_completed, primera.nodes_failed) == (0, 1)
+    assert list(primera.metadata_json["ventanas"].values()) == ["fallida"]
+    assert primera.metadata_json["failures"][0]["error"].startswith("respuesta ilegible")
+
+    fake.window = lambda message: WindowOutcome(items=[_item()])
+    _run(manual_id)
+
+    assert len(fake.messages) == 2
+    assert _runs()[1].status == "succeeded"
+    assert len(_questions()) == 1
+
+
+def test_las_ventanas_ya_hechas_no_se_repiten(monkeypatch):
+    manual_id = _seed(n_nodes=1)
+    fake = FakeGemini(monkeypatch)
+
+    _run(manual_id)
+    segunda = _run(manual_id)
+
+    assert len(fake.messages) == 1
+    assert (segunda.nodes_total, segunda.windows_total) == (0, 0)
+    assert len(_questions()) == 1
+
+
+def test_regenerate_rehace_las_ventanas(monkeypatch):
+    manual_id = _seed(n_nodes=1)
+    fake = FakeGemini(monkeypatch)
+
+    _run(manual_id)
+    _run(manual_id, regenerate=True)
+
+    assert len(fake.messages) == 2
+    assert len(_questions()) == 1  # la primera se borró antes de rehacer la ventana
 
 
 # ─── La corrida siempre se cierra ──────────────────────────────────────────
 
 
-def test_unexpected_error_marks_run_failed_and_deletes_cache(monkeypatch):
+def test_un_error_inesperado_marca_la_corrida_failed_y_borra_el_cache(monkeypatch):
     manual_id = _seed()
     fake = FakeGemini(monkeypatch)
 
-    def boom():
+    def boom(message):
         raise RuntimeError("se cayó a medias")
 
-    fake.one = boom
+    fake.window = boom
 
     with pytest.raises(RuntimeError, match="se cayó a medias"):
-        with session_scope() as session:
-            pipeline.run_generation(session, manual_id=manual_id)
+        _run(manual_id)
 
     [run] = _runs()
     assert run.status == "failed"
@@ -138,7 +328,7 @@ def test_unexpected_error_marks_run_failed_and_deletes_cache(monkeypatch):
     assert fake.deleted == ["cachedContents/test"]
 
 
-def test_ctrl_c_marks_run_cancelled_and_keeps_what_was_saved(monkeypatch):
+def test_ctrl_c_marca_la_corrida_cancelled_y_conserva_lo_guardado(monkeypatch):
     manual_id = _seed(n_nodes=1)
     fake = FakeGemini(monkeypatch)
 
@@ -146,39 +336,48 @@ def test_ctrl_c_marks_run_cancelled_and_keeps_what_was_saved(monkeypatch):
         raise KeyboardInterrupt
 
     with pytest.raises(KeyboardInterrupt):
-        with session_scope() as session:
-            pipeline.run_generation(session, manual_id=manual_id, progress_cb=interrupt)
+        _run(manual_id, progress_cb=interrupt)
 
     [run] = _runs()
     assert run.status == "cancelled"
     assert run.nodes_completed == 1
-    # Se persiste antes de avisar al callback: lo ya pagado no se pierde.
-    assert _question_count() == 1
+    # Se guarda antes de avisar al callback: lo ya pagado no se pierde.
+    assert len(_questions()) == 1
     assert fake.deleted == ["cachedContents/test"]
+
+
+def test_el_callback_del_cli_acepta_ventanas_buenas_y_fallidas(monkeypatch):
+    manual_id = _seed()
+    fake = FakeGemini(monkeypatch)
+    # `list.pop` es atómico: las dos ventanas se piden desde dos hilos.
+    respuestas = [WindowOutcome(items=[_item()]), WindowOutcome(items=[], error="respuesta ilegible")]
+    fake.window = lambda message: respuestas.pop(0)
+
+    summary = _run(manual_id, progress_cb=_progress_cb)
+
+    assert (summary.windows_total, summary.windows_failed) == (2, 1)
 
 
 # ─── Modelo ────────────────────────────────────────────────────────────────
 
 
-def test_model_alias_is_resolved_before_calling_gemini(monkeypatch):
+def test_el_alias_del_modelo_se_resuelve_antes_de_llamar(monkeypatch):
     manual_id = _seed(n_nodes=1)
     fake = FakeGemini(monkeypatch)
 
-    with session_scope() as session:
-        summary = pipeline.run_generation(session, manual_id=manual_id, model_name="pro")
+    summary = _run(manual_id, model_name="pro")
 
     assert summary.model == MODEL_PRO
     assert fake.cache_models == [MODEL_PRO]
     assert summary.actual_cost_usd > 0
 
 
-def test_unknown_model_is_rejected_before_creating_a_run(monkeypatch):
+def test_un_modelo_desconocido_se_rechaza_antes_de_crear_la_corrida(monkeypatch):
     manual_id = _seed(n_nodes=1)
     FakeGemini(monkeypatch)
 
     with pytest.raises(ValueError, match="Unknown model"):
-        with session_scope() as session:
-            pipeline.run_generation(session, manual_id=manual_id, model_name="deepseek-r1:8b")
+        _run(manual_id, model_name="deepseek-r1:8b")
 
     assert _runs() == []
 
@@ -186,198 +385,51 @@ def test_unknown_model_is_rejected_before_creating_a_run(monkeypatch):
 # ─── Costo ─────────────────────────────────────────────────────────────────
 
 
-def test_tokens_include_draft_calls_and_failed_answers(monkeypatch):
-    manual_id = _seed(n_nodes=1)
+def test_el_costo_cuenta_la_ventana_la_verificacion_y_el_cache(monkeypatch):
+    manual_id = _seed(n_nodes=1, profile="calculo_una_variable", texto=EJEMPLO)
     fake = FakeGemini(monkeypatch, cache_tokens=1_000)
-    fake.drafts = ["¿Primera?", "¿Segunda?"]
-    outcomes = iter([
-        GenerationOutcome(question=_question("A"), raw_response={}, input_tokens=100, output_tokens=50, cached_tokens=80),
-        # Respuesta que no valida: se pagó igual.
-        GenerationOutcome(question=None, raw_response={}, error="validation error",
-                          input_tokens=100, output_tokens=50, cached_tokens=80),
-    ])
-    fake.one = lambda: next(outcomes)
+    fake.window = lambda message: WindowOutcome(items=[_ejercicio_nuevo()], input_tokens=100, output_tokens=50, cached_tokens=80)
+    fake.verify = lambda message: VerificationOutcome(
+        result=VerificationResult(razonamiento="…", opcion=_letra(message, "3x^2"), dificultad="igual"),
+        input_tokens=30, output_tokens=20,
+    )
 
-    with session_scope() as session:
-        summary = pipeline.run_generation(session, manual_id=manual_id)
+    summary = _run(manual_id)
 
     [run] = _runs()
-    assert run.status == "partial"
-    # 1 draft (10/5/8) + 2 llamadas de opciones (100/50/80 cada una).
-    assert (run.cost_input_tokens, run.cost_output_tokens, run.cost_cached_tokens) == (210, 105, 168)
+    assert (run.cost_input_tokens, run.cost_output_tokens, run.cost_cached_tokens) == (130, 70, 80)
     assert run.metadata_json["cache_tokens"] == 1_000
-
-    without_cache = actual_cost_usd(
-        model=MODEL_FLASH, mode="immediate", input_tokens=210, output_tokens=105, cached_tokens=168,
-    )
-    assert summary.actual_cost_usd > without_cache
+    sin_cache = actual_cost_usd(model=MODEL_FLASH, mode="immediate", input_tokens=130, output_tokens=70, cached_tokens=80)
+    assert summary.actual_cost_usd > sin_cache
 
 
 # ─── Dry-run ───────────────────────────────────────────────────────────────
 
 
-def test_dry_run_estimates_a_real_cost():
+def _estimate(manual_id: int):
+    with session_scope() as session:
+        return pipeline.estimate_only(
+            session, manual_id=manual_id, model_name="flash", mode="immediate",
+            limit=None, only_node_id=None, regenerate=False,
+        )
+
+
+def test_el_dry_run_estima_por_ventanas():
     manual_id = _seed(n_nodes=3)
 
-    with session_scope() as session:
-        estimate, n_nodes = pipeline.estimate_only(
-            session, manual_id=manual_id, model_name="flash", mode="immediate",
-            limit=None, only_node_id=None, regenerate=False,
-        )
+    estimate, n_windows = _estimate(manual_id)
 
-    assert n_nodes == 3
+    assert n_windows == 3 and estimate.windows == 3
     assert estimate.model == MODEL_FLASH
-    assert estimate.draft_calls == 3
-    assert estimate.n_questions == 3 * pipeline.QUESTIONS_PER_NODE_ESTIMATE
-    assert estimate.cache_tokens > 0
-    assert estimate.total_usd > 0
+    assert estimate.verifications == 0  # manual militar: sin ejercicios
+    assert estimate.cache_tokens > 0 and estimate.total_usd > 0
 
 
-def test_dry_run_with_nothing_to_generate_costs_nothing(monkeypatch):
+def test_el_dry_run_sin_nada_que_generar_no_cuesta(monkeypatch):
     manual_id = _seed(n_nodes=1)
     FakeGemini(monkeypatch)
-    with session_scope() as session:
-        pipeline.run_generation(session, manual_id=manual_id)
+    _run(manual_id)
 
-    with session_scope() as session:
-        estimate, n_nodes = pipeline.estimate_only(
-            session, manual_id=manual_id, model_name="flash", mode="immediate",
-            limit=None, only_node_id=None, regenerate=False,
-        )
+    estimate, n_windows = _estimate(manual_id)
 
-    assert n_nodes == 0
-    assert estimate.total_usd == 0
-
-
-# ─── Por qué falló ─────────────────────────────────────────────────────────
-
-
-def _node_id(manual_id: int) -> int:
-    with session_scope() as session:
-        return session.execute(select(Node.id).where(Node.manual_id == manual_id)).scalar_one()
-
-
-def test_el_motivo_de_una_opcion_fallida_queda_en_la_corrida_y_se_avisa(monkeypatch):
-    manual_id = _seed(n_nodes=1)
-    fake = FakeGemini(monkeypatch)
-    fake.drafts = ["¿Primera?", "¿Segunda?"]
-    outcomes = iter([
-        GenerationOutcome(question=_question("A"), raw_response={}),
-        GenerationOutcome(question=None, raw_response={}, error="validation error: Role mismatch for 'correct'"),
-    ])
-    fake.one = lambda: next(outcomes)
-    avisos: list[str | None] = []
-
-    with session_scope() as session:
-        pipeline.run_generation(
-            session, manual_id=manual_id,
-            progress_cb=lambda idx, total, job, question, error: avisos.append(error),
-        )
-
-    [run] = _runs()
-    assert run.metadata_json["failures"] == [
-        {"node_id": _node_id(manual_id), "error": "validation error: Role mismatch for 'correct'"},
-    ]
-    assert "validation error: Role mismatch for 'correct'" in avisos
-
-
-def test_el_motivo_de_un_creador_fallido_queda_en_la_corrida(monkeypatch):
-    manual_id = _seed(n_nodes=1)
-    FakeGemini(monkeypatch)
-    monkeypatch.setattr(pipeline, "generate_draft_questions", lambda **_: DraftOutcome(
-        questions=[], error="ClientError: 400 INVALID_ARGUMENT",
-    ))
-
-    with session_scope() as session:
-        pipeline.run_generation(session, manual_id=manual_id)
-
-    [run] = _runs()
-    assert run.status == "partial"
-    assert run.metadata_json["failures"] == [
-        {"node_id": _node_id(manual_id), "error": "ClientError: 400 INVALID_ARGUMENT"},
-    ]
-
-
-class _FakeClient:
-    """Cliente de Gemini mínimo: `generate_content` falla o devuelve `response`."""
-
-    def __init__(self, *, raises: Exception | None = None, response=None) -> None:
-        self.raises, self.response = raises, response
-        self.models = self
-
-    def get(self):
-        return self
-
-    def generate_content(self, **_):
-        if self.raises:
-            raise self.raises
-        return self.response
-
-
-def test_el_creador_devuelve_el_motivo_si_la_api_rechaza_la_llamada():
-    from qgen.gemini.generate import generate_draft_questions
-
-    client = _FakeClient(raises=RuntimeError("400 INVALID_ARGUMENT: request not supported"))
-    draft = generate_draft_questions(
-        model=MODEL_FLASH, variable_prompt="texto", system_instruction="instrucciones", client=client,
-    )
-
-    assert draft.questions == []
-    assert "400 INVALID_ARGUMENT" in draft.error
-
-
-def test_el_creador_devuelve_el_motivo_si_la_respuesta_no_es_json():
-    from types import SimpleNamespace
-
-    from qgen.gemini.generate import generate_draft_questions
-
-    response = SimpleNamespace(text="esto no es json", usage_metadata=SimpleNamespace(
-        prompt_token_count=12, candidates_token_count=3, cached_content_token_count=0,
-    ))
-    draft = generate_draft_questions(
-        model=MODEL_FLASH, variable_prompt="texto", system_instruction="instrucciones",
-        client=_FakeClient(response=response),
-    )
-
-    assert draft.questions == []
-    assert draft.error is not None
-    assert (draft.input_tokens, draft.output_tokens) == (12, 3)  # se pagaron igual
-
-
-# ─── Respuestas reales de Gemini 3 ─────────────────────────────────────────
-
-
-def test_una_respuesta_con_thought_signature_se_guarda(monkeypatch):
-    """Gemini 3 firma sus partes con `thought_signature` (bytes no UTF-8). La
-    respuesta cruda se guarda como JSON: en metadata y en raw_response_json."""
-    import json
-
-    from google.genai import types
-
-    import qgen.gemini.generate as gemini_generate
-
-    manual_id = _seed(n_nodes=1)
-    FakeGemini(monkeypatch)
-    monkeypatch.setattr(pipeline, "generate_one", gemini_generate.generate_one)
-    response = types.GenerateContentResponse(
-        candidates=[types.Candidate(content=types.Content(role="model", parts=[types.Part(
-            text=_question("R").model_dump_json(),
-            thought_signature=b"\x12\x8e'\n\x8b'\x01i\x14}\x13\xbe",  # tal cual en el log real
-        )]))],
-        usage_metadata=types.GenerateContentResponseUsageMetadata(
-            prompt_token_count=100, candidates_token_count=50,
-        ),
-    )
-    monkeypatch.setattr(gemini_generate, "default_client", lambda: _FakeClient(response=response))
-
-    with session_scope() as session:
-        pipeline.run_generation(session, manual_id=manual_id)
-
-    [run] = _runs()
-    assert run.status == "succeeded"
-    with session_scope() as session:
-        [question] = session.execute(select(Question)).scalars().all()
-        stored = question.raw_response_json
-    part = stored["candidates"][0]["content"]["parts"][0]
-    assert isinstance(part["thought_signature"], str)
-    json.dumps(stored)
+    assert n_windows == 0 and estimate.total_usd == 0

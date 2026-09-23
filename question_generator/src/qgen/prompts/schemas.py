@@ -49,9 +49,6 @@ class GeneratedQuestion(BaseModel):
         return self
 
 
-class QuestionDraftList(BaseModel):
-    questions: list[str] = Field(min_length=1, max_length=5)
-
 # ─── Llamada por ventana (spec §6) ─────────────────────────────────────────
 
 MAX_PREGUNTAS_POR_VENTANA = 30
