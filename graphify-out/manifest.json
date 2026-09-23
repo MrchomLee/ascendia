@@ -228,10 +228,10 @@
     "semantic_hash": "71fa298ad67f1055fc414654a3344e2b"
   },
   "etl/src/etl/extraction/docling_adapter.py": {
-    "mtime": 1787079367.2227254,
-    "seen": 1788799178.6974492,
-    "ast_hash": "fce72953de25ff67e4fd1ab67604f756",
-    "semantic_hash": "fce72953de25ff67e4fd1ab67604f756"
+    "mtime": 1790176190.641415,
+    "seen": 1790176286.4013107,
+    "ast_hash": "760570a86c5ced7a8e2c7bb24201a9b0",
+    "semantic_hash": ""
   },
   "etl/src/etl/extraction/toc_parser.py": {
     "mtime": 1786988998.0,
@@ -258,9 +258,9 @@
     "semantic_hash": "d19515741cb123291c7b40620ff00904"
   },
   "etl/src/etl/hierarchy/assembler.py": {
-    "mtime": 1790121353.7489767,
-    "seen": 1790174991.5237553,
-    "ast_hash": "6dbd06cb74e8af7d178dc1e227234856",
+    "mtime": 1790176001.5501287,
+    "seen": 1790176286.4017518,
+    "ast_hash": "702a1b7266a0d411182308cb4f281bcd",
     "semantic_hash": ""
   },
   "etl/src/etl/hierarchy/gemini_classifier.py": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "etl/src/etl/hierarchy/profile.py": {
-    "mtime": 1790174911.5682569,
-    "seen": 1790174991.523902,
-    "ast_hash": "a2adcf9fd974b43a58bcd9e88538730a",
+    "mtime": 1790177079.4056685,
+    "seen": 1790177162.1486318,
+    "ast_hash": "f63f48beffa94dca5ca53902b268f86d",
     "semantic_hash": ""
   },
   "etl/src/etl/models/__init__.py": {
@@ -642,9 +642,9 @@
     "semantic_hash": "cd86591fcf9ed36e4e2415356fd4fb4b"
   },
   "question_generator/src/qgen/rules/defaults.py": {
-    "mtime": 1790174918.5055223,
-    "seen": 1790174991.5338588,
-    "ast_hash": "14128db5a7280cf48c9baf57615cca54",
+    "mtime": 1790177088.287269,
+    "seen": 1790177162.1552632,
+    "ast_hash": "d4ecebc21f546c46aa9acef243671996",
     "semantic_hash": ""
   },
   "question_generator/src/qgen/validation/__init__.py": {
@@ -678,9 +678,9 @@
     "semantic_hash": "63445dff8a1d69d5fadb606c0479d0a2"
   },
   "question_generator/tests/test_rules.py": {
-    "mtime": 1790174869.8211386,
-    "seen": 1790174991.5349593,
-    "ast_hash": "bce27d9fe69ba77c8a10d1d3e5184ad7",
+    "mtime": 1790177046.6291988,
+    "seen": 1790177162.156,
+    "ast_hash": "af49d6345ae5522d5ae6b3257596b408",
     "semantic_hash": ""
   },
   "question_generator/tests/test_schemas.py": {
@@ -834,15 +834,15 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1790114426.3482409,
-    "seen": 1790174991.5353656,
-    "ast_hash": "025f046f5de745108dcbc98a23d37d9f",
+    "mtime": 1790174996.5993915,
+    "seen": 1790176286.4094036,
+    "ast_hash": "da8d467e2f25c78ab2763c2e7c73b8a4",
     "semantic_hash": ""
   },
   "etl/src/etl/hierarchy/temario.py": {
-    "mtime": 1790174940.0702462,
-    "seen": 1790174991.5239034,
-    "ast_hash": "9a2f105a60071f5a7e6dd1db51c72e2f",
+    "mtime": 1790177107.9835284,
+    "seen": 1790177162.1486332,
+    "ast_hash": "8bc4e77b9933b5eb2c8d2fed74b179f7",
     "semantic_hash": ""
   },
   "etl/tests/test_historia_universal.py": {
@@ -861,6 +861,24 @@
     "mtime": 1790117130.616195,
     "seen": 1790174991.5283132,
     "ast_hash": "65f6933ca0faa2e5439dea4565752edd",
+    "semantic_hash": ""
+  },
+  "etl/tests/test_geografia_moderna_mexico.py": {
+    "mtime": 1790175850.7054262,
+    "seen": 1790176286.4027262,
+    "ast_hash": "dee37c300751abbce6021c2cbfe3d1aa",
+    "semantic_hash": ""
+  },
+  "etl/tests/test_tablas.py": {
+    "mtime": 1790176178.3076582,
+    "seen": 1790176286.4030316,
+    "ast_hash": "cde5ca008fc8508a0e881a2e6c458c4d",
+    "semantic_hash": ""
+  },
+  "etl/tests/test_calculo_una_variable.py": {
+    "mtime": 1790177044.4983115,
+    "seen": 1790177162.1492486,
+    "ast_hash": "61d6c4c26a75ea6995787fa82ca997bd",
     "semantic_hash": ""
   }
 }
