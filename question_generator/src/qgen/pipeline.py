@@ -31,6 +31,7 @@ from qgen.prompts.system import SYSTEM_VERSION, build_system_instruction
 from qgen.reference.repository import get_reference_exemplars
 from qgen.rules.base import DocumentRules, RulesOverride, merge_rules, rules_to_dict
 from qgen.rules.defaults import get_default_rules
+from qgen.windows import Window, build_windows
 
 # Módulo de logging en lugar de print() directo
 logger = logging.getLogger(__name__)
@@ -84,6 +85,77 @@ def _resolve_rules(manual: Manual) -> tuple[DocumentRules, str]:
 def _doc_token_estimate_from_chunks(session: Session, manual_id: int) -> int:
     total_chars = session.execute(select(Chunk.char_count).where(Chunk.manual_id == manual_id)).scalars().all()
     return doc_token_estimate(sum(total_chars))
+
+
+# ---- Ventanas (spec §4) ---------------------------------------------------
+
+
+@dataclass(frozen=True)
+class WindowJob:
+    """Una ventana por procesar, con lo que hace falta del nodo (sin objetos ORM: viaja a los hilos)."""
+
+    window: Window
+    node_id: int
+    node_label: str
+    node_title: str
+    node_breadcrumb: str
+
+
+def _nodes_with_text(session: Session, *, manual_id: int, only_node_id: int | None) -> list[Node]:
+    stmt = (
+        select(Node)
+        .where(Node.manual_id == manual_id)
+        .where(Node.id.in_(select(Chunk.node_id).where(Chunk.manual_id == manual_id)))
+        .where(~Node.title.ilike("%introducci%"))
+        .order_by(Node.sort_key)
+    )
+    if only_node_id is not None:
+        stmt = stmt.where(Node.id == only_node_id)
+    return list(session.execute(stmt).scalars().all())
+
+
+def _done_window_keys(session: Session, manual_id: int) -> set[str]:
+    """Ventanas ya procesadas: `ok` en alguna corrida anterior, o con preguntas guardadas
+    (esto último cubre una corrida que murió sin llegar a cerrarse)."""
+    done: set[str] = set()
+    for meta in session.execute(
+        select(GenerationRun.metadata_json).where(GenerationRun.manual_id == manual_id)
+    ).scalars():
+        done |= {key for key, estado in ((meta or {}).get("ventanas") or {}).items() if estado == "ok"}
+    done |= set(
+        session.execute(
+            select(Question.window_key)
+            .where(Question.manual_id == manual_id)
+            .where(Question.window_key.is_not(None))
+            .distinct()
+        ).scalars()
+    )
+    return done
+
+
+def plan_windows(
+    session: Session,
+    *,
+    manual_id: int,
+    only_node_id: int | None = None,
+    regenerate: bool = False,
+    limit: int | None = None,
+) -> list[WindowJob]:
+    """Las ventanas que le tocan a esta corrida, en orden de nodo. `limit` cuenta ventanas."""
+    done = set() if regenerate else _done_window_keys(session, manual_id)
+    jobs: list[WindowJob] = []
+    for node in _nodes_with_text(session, manual_id=manual_id, only_node_id=only_node_id):
+        for window in build_windows(node.id, _chunks_for(session, node.id)):
+            if window.key in done:
+                continue
+            jobs.append(WindowJob(
+                window=window,
+                node_id=node.id,
+                node_label=f"{node.level_label} {node.ordinal}".strip(),
+                node_title=node.title,
+                node_breadcrumb=node.breadcrumb,
+            ))
+    return jobs[:limit] if limit is not None else jobs
 
 
 # ---- Entrada Pública ------------------------------------------------
