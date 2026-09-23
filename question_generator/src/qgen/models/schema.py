@@ -92,6 +92,11 @@ class Question(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
+    # qgen v2 (spec §8): tipo de pregunta, cita en que se apoya y ventana que la produjo.
+    question_type: Mapped[str] = mapped_column(String(32), default="teoria", server_default="teoria")
+    source_quote: Mapped[str] = mapped_column(Text, default="", server_default="")
+    window_key: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+
     run: Mapped[GenerationRun] = relationship(back_populates="questions")
     node: Mapped[Node] = relationship()
     options: Mapped[list[QuestionOption]] = relationship(

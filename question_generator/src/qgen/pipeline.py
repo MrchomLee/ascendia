@@ -19,7 +19,7 @@ from qgen.db.persistence import (
     create_run,
     finalize_run,
     persist_question,
-    remove_existing_questions_for_nodes,
+    remove_questions_for_windows,
 )
 from qgen.gemini.cache import build_or_get_cache, delete_cache
 from qgen.gemini.client import MODEL_FLASH, resolve_model
@@ -118,7 +118,7 @@ def run_generation(session: Session, *, manual_id: int, model_name: str = MODEL_
     nodes = _select_nodes(session, manual_id=manual_id, regenerate=regenerate, limit=limit, only_node_id=only_node_id)
 
     if regenerate and nodes:
-        remove_existing_questions_for_nodes(session, manual_id=manual_id, node_ids=[n.id for n in nodes])
+        remove_questions_for_windows(session, manual_id=manual_id, window_keys=[], node_ids=[n.id for n in nodes])
 
     if not nodes:
         run = create_run(session, manual_id=manual_id, model=model_name, mode=mode, profile_used=profile, rules_snapshot=rules_to_dict(rules), nodes_total=0)

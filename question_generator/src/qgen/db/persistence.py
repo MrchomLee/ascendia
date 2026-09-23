@@ -54,6 +54,9 @@ def persist_question(
     raw_response: dict,
     metadata: dict[str, Any] | None = None,
     validation_status: str = "pending",
+    question_type: str = "teoria",
+    source_quote: str = "",
+    window_key: str | None = None,
 ) -> Question:
     q = Question(
         run_id=run.id,
@@ -65,6 +68,9 @@ def persist_question(
         raw_response_json=raw_response,
         validation_status=validation_status,
         metadata_json=metadata or {},
+        question_type=question_type,
+        source_quote=source_quote,
+        window_key=window_key,
     )
     session.add(q)
     session.flush()
@@ -82,23 +88,29 @@ def persist_question(
     return q
 
 
-def remove_existing_questions_for_nodes(
-    session: Session, *, manual_id: int, node_ids: list[int]
+def remove_questions_for_windows(
+    session: Session, *, manual_id: int, window_keys: list[str], node_ids: list[int]
 ) -> int:
-    """Usado por --regenerate. Eliminación en cascada mediante claves foráneas (FKs) run/question/options."""
-    if not node_ids:
+    """--regenerate: borra las preguntas de las ventanas que se van a rehacer y las
+    antiguas sin ventana (anteriores a v2) de esos nodos. Las demás ventanas del nodo
+    conservan sus preguntas. Las opciones caen en cascada."""
+    if not window_keys:
         return 0
     rows = (
         session.execute(
             select(Question)
             .where(Question.manual_id == manual_id)
-            .where(Question.node_id.in_(node_ids))
+            .where(
+                Question.window_key.in_(window_keys)
+                | (Question.window_key.is_(None) & Question.node_id.in_(node_ids))
+            )
         )
         .scalars()
         .all()
     )
     for q in rows:
         session.delete(q)
+    session.flush()
     return len(rows)
 
 

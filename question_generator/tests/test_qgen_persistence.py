@@ -9,7 +9,7 @@ from qgen.db.persistence import (
     create_run,
     finalize_run,
     persist_question,
-    remove_existing_questions_for_nodes,
+    remove_questions_for_windows,
 )
 from qgen.models.schema import GenerationRun, Question, QuestionOption
 from qgen.prompts.schemas import GeneratedOption, GeneratedQuestion, OptionRole
@@ -121,7 +121,29 @@ def test_two_runs_can_share_a_node():
         assert s.query(QuestionOption).count() == 8  # 2 × 4
 
 
-def test_remove_existing_for_nodes():
+def test_regenerar_borra_solo_las_ventanas_que_se_rehacen():
+    init_question_tables()
+    with session_scope() as s:
+        manual_id, node_id = _seed_manual_and_node(s)
+        run = create_run(
+            s, manual_id=manual_id, model="gemini-3.6-flash", mode="immediate",
+            profile_used="manual", rules_snapshot={}, nodes_total=1,
+        )
+        for order, (prefix, window_key) in enumerate([("A", "1:0-0"), ("B", "1:1-1"), ("C", None)]):
+            persist_question(
+                s, run=run, node_id=node_id, manual_id=manual_id, generation_order=order,
+                payload=_make_question(prefix), raw_response={}, window_key=window_key,
+            )
+
+    with session_scope() as s:
+        # La de la ventana 1:0-0 y la antigua sin ventana del mismo nodo; la de 1:1-1 se queda.
+        assert remove_questions_for_windows(s, manual_id=manual_id, window_keys=["1:0-0"], node_ids=[node_id]) == 2
+
+    with session_scope() as s:
+        assert [q.window_key for q in s.query(Question).all()] == ["1:1-1"]
+
+
+def test_la_pregunta_guarda_tipo_cita_y_ventana():
     init_question_tables()
     with session_scope() as s:
         manual_id, node_id = _seed_manual_and_node(s)
@@ -130,13 +152,53 @@ def test_remove_existing_for_nodes():
             profile_used="manual", rules_snapshot={}, nodes_total=1,
         )
         persist_question(
-            s, run=run, node_id=node_id, manual_id=manual_id,
-            generation_order=0, payload=_make_question("X"), raw_response={},
+            s, run=run, node_id=node_id, manual_id=manual_id, generation_order=0,
+            payload=_make_question(), raw_response={},
+            question_type="ejercicio_nuevo", source_quote="Texto de prueba.", window_key="1:0-0",
         )
 
     with session_scope() as s:
-        n = remove_existing_questions_for_nodes(s, manual_id=1, node_ids=[1])
-        assert n >= 1
+        q = s.query(Question).one()
+        assert (q.question_type, q.source_quote, q.window_key) == ("ejercicio_nuevo", "Texto de prueba.", "1:0-0")
+
+
+def test_por_defecto_una_pregunta_es_de_teoria_sin_cita():
+    init_question_tables()
+    with session_scope() as s:
+        manual_id, node_id = _seed_manual_and_node(s)
+        run = create_run(
+            s, manual_id=manual_id, model="gemini-3.6-flash", mode="immediate",
+            profile_used="manual", rules_snapshot={}, nodes_total=1,
+        )
+        persist_question(
+            s, run=run, node_id=node_id, manual_id=manual_id, generation_order=0,
+            payload=_make_question(), raw_response={},
+        )
 
     with session_scope() as s:
-        assert s.query(Question).count() == 0
+        q = s.query(Question).one()
+        assert (q.question_type, q.source_quote, q.window_key) == ("teoria", "", None)
+
+
+def test_la_migracion_anade_las_columnas_nuevas_a_una_base_antigua():
+    from etl.db.session import get_engine
+    from sqlalchemy import inspect, text
+
+    engine = get_engine()
+    with engine.begin() as conn:
+        conn.execute(text(
+            "CREATE TABLE questions (id INTEGER PRIMARY KEY, run_id INTEGER, node_id INTEGER, "
+            "manual_id INTEGER, generation_order INTEGER, question_text TEXT, justification TEXT, "
+            "raw_response_json JSON, validation_status VARCHAR(32), validated_at DATETIME, "
+            "created_at DATETIME, metadata_json JSON)"
+        ))
+        conn.execute(text("INSERT INTO questions (id, question_text) VALUES (1, 'vieja')"))
+
+    init_question_tables()
+    init_question_tables()  # se puede repetir
+
+    columnas = {c["name"] for c in inspect(engine).get_columns("questions")}
+    assert {"question_type", "source_quote", "window_key"} <= columnas
+    with engine.connect() as conn:
+        fila = conn.execute(text("SELECT question_type, source_quote FROM questions WHERE id = 1")).one()
+    assert tuple(fila) == ("teoria", "")
