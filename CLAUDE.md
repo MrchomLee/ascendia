@@ -13,6 +13,6 @@ Rules:
 - Desde PowerShell, `graphify update .` falla con `can't open file '...\.local\bin\graphify'`:
   el comando se relanza para fijar `PYTHONHASHSEED` y el lanzador pierde el `.exe`.
   Se evita definiendo la variable antes: `$env:PYTHONHASHSEED = "0"; graphify update .`
-  (desde Git Bash funciona tal cual).
+  (en Git Bash pasa lo mismo: `PYTHONHASHSEED=0 graphify update .`).
 - Nunca `graphify update . --no-cluster` sobre el grafo versionado: reescribe `graph.json`
   sin comunidades.
