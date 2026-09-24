@@ -13,6 +13,7 @@ from typing import Any
 #: Familias de generación (spec §5): cambian el rol y el formato del prompt.
 FAMILIAS = ("militar", "civil")
 #: Tipos que un perfil puede permitir; "ejercicio" habilita ejercicio_libro y ejercicio_nuevo.
+#: "ejercicio" solo se permite en libros de matemáticas (``matematicas=True``).
 TIPOS = ("teoria", "ejercicio")
 
 
@@ -27,15 +28,22 @@ class DocumentRules:
     extra_instructions: str = ""
     familia: str = "militar"
     tipos: tuple[str, ...] = ("teoria",)
+    matematicas: bool = False
 
     def __post_init__(self) -> None:
         if self.familia not in FAMILIAS:
             raise ValueError(f"familia {self.familia!r} desconocida; debe ser una de {FAMILIAS}")
         if not self.tipos or any(t not in TIPOS for t in self.tipos):
             raise ValueError(f"tipos {self.tipos!r} inválidos; cada uno debe ser uno de {TIPOS}")
+        if "ejercicio" in self.tipos and not self.matematicas:
+            raise ValueError(
+                f"{self.name}: los ejercicios solo aplican a libros de matemáticas; "
+                "en un libro informativo usa tipos=('teoria',)"
+            )
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "DocumentRules":
+        tipos = tuple(d.get("tipos") or ("teoria",))
         return cls(
             name=d["name"],
             forbidden_topics=tuple(d.get("forbidden_topics") or ()),
@@ -43,7 +51,9 @@ class DocumentRules:
             style_guide=d.get("style_guide", "") or "",
             extra_instructions=d.get("extra_instructions", "") or "",
             familia=d.get("familia") or "militar",
-            tipos=tuple(d.get("tipos") or ("teoria",)),
+            tipos=tipos,
+            # Las fotos anteriores a este campo solo tenían ejercicios en libros de matemáticas.
+            matematicas=d.get("matematicas", "ejercicio" in tipos),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -55,6 +65,7 @@ class DocumentRules:
             "extra_instructions": self.extra_instructions,
             "familia": self.familia,
             "tipos": list(self.tipos),
+            "matematicas": self.matematicas,
         }
 
 
@@ -94,6 +105,7 @@ def merge_rules(default: DocumentRules, override: RulesOverride | None) -> Docum
         extra_instructions=override.extra_instructions if override.extra_instructions is not None else default.extra_instructions,
         familia=default.familia,
         tipos=default.tipos,
+        matematicas=default.matematicas,
     )
 
 

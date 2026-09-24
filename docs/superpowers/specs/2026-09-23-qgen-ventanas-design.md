@@ -81,20 +81,24 @@ se retoman.
 
 ## 5. Familias y tipos
 
-`DocumentRules` gana dos campos, con valor por perfil en `rules/defaults.py`:
+`DocumentRules` gana tres campos, con valor por perfil en `rules/defaults.py`:
 
 - `familia: Literal["militar", "civil"]`
 - `tipos: tuple[str, ...]`, subconjunto de `("teoria", "ejercicio")`
+- `matematicas: bool` (por defecto `False`)
 
-| Familia | Perfiles | Tipos |
-|---|---|---|
-| militar | `manual`, `codigo_legal`, `ley_organica` | teoria |
-| civil | `historia_universal`, `geografia_moderna_mexico` | teoria |
-| civil | `algebra_baldor`, `calculo_una_variable`, `algebra_trigonometria_geometria_analitica`, `taller_lectura_redaccion` | teoria, ejercicio |
+| Familia | Perfiles | Tipos | Matemáticas |
+|---|---|---|---|
+| militar | `manual`, `codigo_legal`, `ley_organica` | teoria | no |
+| civil | `historia_universal`, `geografia_moderna_mexico`, `taller_lectura_redaccion` | teoria | no |
+| civil | `algebra_baldor`, `calculo_una_variable`, `algebra_trigonometria_geometria_analitica` | teoria, ejercicio | sí |
 
 `ejercicio` habilita los dos tipos de pregunta de ejercicio: `ejercicio_libro` y
-`ejercicio_nuevo`. En el Taller, los ejercicios son aplicar las reglas de acentuación y
-puntuación a palabras u oraciones. `RulesOverride` no cambia la familia ni los tipos.
+`ejercicio_nuevo`. **Regla:** los ejercicios solo aplican a libros de matemáticas;
+`DocumentRules` rechaza `ejercicio` en `tipos` si `matematicas` es `False`. Los libros
+informativos (Taller, Historia, Geografía) generan solo teoría literal. Una foto de corrida
+anterior a este campo se lee como de matemáticas si tenía ejercicios. `RulesOverride` no
+cambia la familia, los tipos ni `matematicas`.
 
 ## 6. La llamada por ventana
 

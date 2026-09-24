@@ -91,11 +91,30 @@ def test_algebra_trigonometria_geometria_analitica_tiene_reglas_de_generacion():
     ("algebra_baldor", "civil", ("teoria", "ejercicio")),
     ("calculo_una_variable", "civil", ("teoria", "ejercicio")),
     ("algebra_trigonometria_geometria_analitica", "civil", ("teoria", "ejercicio")),
-    ("taller_lectura_redaccion", "civil", ("teoria", "ejercicio")),
+    ("taller_lectura_redaccion", "civil", ("teoria",)),
 ])
 def test_cada_perfil_tiene_su_familia_y_sus_tipos(perfil, familia, tipos):
     rules = get_default_rules(perfil)
     assert (rules.familia, rules.tipos) == (familia, tipos)
+
+
+def test_solo_los_libros_de_matematicas_tienen_ejercicios():
+    con_ejercicios = {name for name, r in PROFILE_RULES.items() if "ejercicio" in r.tipos}
+    matematicos = {name for name, r in PROFILE_RULES.items() if r.matematicas}
+    assert con_ejercicios == matematicos == {
+        "algebra_baldor", "calculo_una_variable", "algebra_trigonometria_geometria_analitica",
+    }
+
+
+def test_un_libro_que_no_es_de_matematicas_no_admite_ejercicios():
+    with pytest.raises(ValueError, match="matemáticas"):
+        DocumentRules(name="x", familia="civil", tipos=("teoria", "ejercicio"))
+    DocumentRules(name="x", familia="civil", tipos=("teoria", "ejercicio"), matematicas=True)
+
+
+def test_una_foto_antigua_con_ejercicios_se_lee_como_de_matematicas():
+    rules = rules_from_dict({"name": "algebra_baldor", "familia": "civil", "tipos": ["teoria", "ejercicio"]})
+    assert rules.matematicas
 
 
 def test_familia_y_tipos_viajan_en_la_foto_de_la_corrida():
@@ -110,7 +129,7 @@ def test_una_foto_antigua_sin_familia_se_lee_como_militar_de_teoria():
 
 def test_el_override_no_cambia_familia_ni_tipos():
     merged = merge_rules(get_default_rules("calculo_una_variable"), RulesOverride(style_guide="otro"))
-    assert (merged.familia, merged.tipos) == ("civil", ("teoria", "ejercicio"))
+    assert (merged.familia, merged.tipos, merged.matematicas) == ("civil", ("teoria", "ejercicio"), True)
 
 
 def test_familia_o_tipo_desconocido_se_rechaza():

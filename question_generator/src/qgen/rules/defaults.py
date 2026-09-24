@@ -84,6 +84,7 @@ _BALDOR_RULES = DocumentRules(
     name="algebra_baldor",
     familia="civil",
     tipos=("teoria", "ejercicio"),
+    matematicas=True,
     preferred_topics=(
         "leyes de signos",
         "leyes de exponentes y coeficientes",
@@ -119,7 +120,7 @@ _BALDOR_RULES = DocumentRules(
 _TALLER_LECTURA_REDACCION_RULES = DocumentRules(
     name="taller_lectura_redaccion",
     familia="civil",
-    tipos=("teoria", "ejercicio"),
+    tipos=("teoria",),
     preferred_topics=(
         "elementos del proceso comunicativo (emisor, receptor, mensaje, código, canal, contexto, ruido, retroalimentación)",
         "tipos de lenguaje",
@@ -212,6 +213,7 @@ _CALCULO_UNA_VARIABLE_RULES = DocumentRules(
     name="calculo_una_variable",
     familia="civil",
     tipos=("teoria", "ejercicio"),
+    matematicas=True,
     preferred_topics=(
         "funciones: dominio y rango, gráficas, funciones por partes, crecientes/decrecientes, pares e impares",
         "combinación y composición de funciones; traslación, cambio de escala y reflexión de gráficas",
@@ -246,6 +248,7 @@ _ALGEBRA_TRIGONOMETRIA_GEOMETRIA_ANALITICA_RULES = DocumentRules(
     name="algebra_trigonometria_geometria_analitica",
     familia="civil",
     tipos=("teoria", "ejercicio"),
+    matematicas=True,
     preferred_topics=(
         "plano cartesiano: distancia entre puntos, punto medio y regiones",
         "círculos: ecuación, centro y radio, completar el cuadrado; intersecciones y simetría",
