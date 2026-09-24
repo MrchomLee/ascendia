@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 import time
 from collections import Counter
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,7 +24,7 @@ from qgen.cost import WindowEstimate, actual_cost_usd, doc_token_estimate, estim
 from qgen.db.persistence import create_run, finalize_run, persist_question, remove_questions_for_windows
 from qgen.gemini.cache import build_or_get_cache, delete_cache
 from qgen.gemini.client import MODEL_FLASH, resolve_model
-from qgen.gemini.generate import generate_window, verify_exercise
+from qgen.gemini.generate import WindowOutcome, generate_window, verify_exercise
 from qgen.models.schema import GenerationRun, Question, QuestionOption
 from qgen.prompts.families import (
     SYSTEM_VERSION,
@@ -50,6 +51,10 @@ from qgen.validation.checks import (
 from qgen.windows import Window, build_windows
 
 logger = logging.getLogger(__name__)
+
+#: Motivo de revisión de un ejercicio nuevo que no pasó por la verificación a ciegas
+#: (las respuestas escritas desde Claude Code no la tienen).
+SIN_VERIFICACION = "ejercicio nuevo sin verificación independiente"
 
 
 @dataclass
@@ -230,19 +235,73 @@ def run_generation(
         finalize_run(session, run=run, nodes_completed=0, nodes_failed=0, cost_input_tokens=0, cost_output_tokens=0, cost_cached_tokens=0, cost_estimate_usd=0.0, status="succeeded")
         return RunSummary(run_id=run.id, mode=mode, model=run.model, profile=profile, nodes_total=0, nodes_completed=0, nodes_failed=0, cost_estimate_usd=0.0, actual_cost_usd=0.0)
 
-    manual_title = manual.title or manual.code
-    exemplars = get_reference_exemplars(session, profile=profile, manual_code=manual.code, limit=5)
-    instruction = build_window_instruction(rules, manual_title=manual_title, exemplars=exemplars or None)
+    instruction = window_instruction(session, manual, rules, profile)
+    run = _create_run(
+        session, manual, jobs, rules, profile, model_name=model_name, mode=mode,
+        metadata={"provider": "gemini", "limit": limit, "only_node_id": only_node_id, "regenerate": regenerate},
+    )
+    return _run_immediate(
+        session, run, manual, jobs, rules, progress_cb,
+        instruction=instruction, manual_title=_manual_title(manual),
+    )
 
-    run = create_run(
-        session, manual_id=manual_id, model=model_name, mode=mode, profile_used=profile,
-        rules_snapshot=rules_to_dict(rules), nodes_total=len(node_ids), cache_name="none",
+
+def run_from_responses(
+    session: Session,
+    *,
+    manual_id: int,
+    respuestas: Mapping[str, WindowOutcome],
+    model_name: str,
+    provider: str,
+    progress_cb=None,
+) -> RunSummary | None:
+    """Corrida con respuestas escritas fuera de qgen (p. ej. desde Claude Code), por
+    clave de ventana. Solo procesa las ventanas pendientes que tienen respuesta; las
+    demás siguen pendientes. Mismas revisiones que con Gemini, sin llamarlo.
+    Devuelve None (y no crea corrida) si ninguna ventana pendiente tiene respuesta."""
+    manual = session.get(Manual, manual_id)
+    if manual is None:
+        raise ValueError(f"Manual {manual_id} not found")
+    rules, profile = _resolve_rules(manual)
+    jobs = [job for job in plan_windows(session, manual_id=manual_id) if job.window.key in respuestas]
+    if not jobs:
+        return None
+    run = _create_run(
+        session, manual, jobs, rules, profile, model_name=model_name, mode="immediate", metadata={"provider": provider},
+    )
+    return _run_immediate(session, run, manual, jobs, rules, progress_cb, respuestas=respuestas)
+
+
+def _manual_title(manual: Manual) -> str:
+    return manual.title or manual.code
+
+
+def window_instruction(session: Session, manual: Manual, rules: DocumentRules, profile: str) -> str:
+    """La instrucción de sistema de la familia del manual, con sus ejemplos de referencia."""
+    exemplars = get_reference_exemplars(session, profile=profile, manual_code=manual.code, limit=5)
+    return build_window_instruction(rules, manual_title=_manual_title(manual), exemplars=exemplars or None)
+
+
+def _create_run(
+    session: Session,
+    manual: Manual,
+    jobs: list[WindowJob],
+    rules: DocumentRules,
+    profile: str,
+    *,
+    model_name: str,
+    mode: str,
+    metadata: dict,
+) -> GenerationRun:
+    """La corrida nace con todas sus ventanas `pendiente` (ver `_done_window_keys`)."""
+    return create_run(
+        session, manual_id=manual.id, model=model_name, mode=mode, profile_used=profile,
+        rules_snapshot=rules_to_dict(rules), nodes_total=len({job.node_id for job in jobs}), cache_name="none",
         metadata_json={
-            "system_version": SYSTEM_VERSION, "limit": limit, "only_node_id": only_node_id, "regenerate": regenerate,
+            "system_version": SYSTEM_VERSION, **metadata,
             "ventanas": {job.window.key: "pendiente" for job in jobs},
         },
     )
-    return _run_immediate(session, run, manual, jobs, rules, instruction, manual_title, progress_cb)
 
 
 # ---- Controlador de ejecución inmediata -----------------------------------
@@ -273,10 +332,15 @@ def _run_immediate(
     manual: Manual,
     jobs: list[WindowJob],
     rules: DocumentRules,
-    instruction: str,
-    manual_title: str,
     progress_cb,
+    *,
+    instruction: str = "",
+    manual_title: str = "",
+    respuestas: Mapping[str, WindowOutcome] | None = None,
 ) -> RunSummary:
+    """Procesa las ventanas: con `respuestas` las toma de ahí (sin Gemini, sin cache y
+    sin verificación de ejercicios nuevos); si no, llama a Gemini con `instruction`."""
+    provider = (run.metadata_json or {}).get("provider") or "gemini"
     total_in = total_out = total_cached = 0
     ventanas: dict[str, str] = {job.window.key: "pendiente" for job in jobs}
     failures: list[dict] = []  # por qué falló cada ventana: una corrida `partial` ya se pagó
@@ -335,34 +399,40 @@ def _run_immediate(
 
     try:
         # 1. Cache con el PDF (sin system_instruction global); si falla, se sigue sin él.
-        pdf_path = Path(manual.source_path)
-        if not pdf_path.exists():
-            pdf_path = Path(f"data/raw_pdfs/{manual.code}.pdf")
-        try:
-            cache = build_or_get_cache(
-                pdf_path=pdf_path,
-                model=run.model,
-                system_version=SYSTEM_VERSION,
-                display_name=f"Manual_{manual.code}",
-            )
-            cache_name = cache.name
-            cache_started = time.monotonic()
-        except Exception as e:
-            logger.warning("Error creando cache: %s", e)
+        if respuestas is None:
+            pdf_path = Path(manual.source_path)
+            if not pdf_path.exists():
+                pdf_path = Path(f"data/raw_pdfs/{manual.code}.pdf")
+            try:
+                cache = build_or_get_cache(
+                    pdf_path=pdf_path,
+                    model=run.model,
+                    system_version=SYSTEM_VERSION,
+                    display_name=f"Manual_{manual.code}",
+                )
+                cache_name = cache.name
+                cache_started = time.monotonic()
+            except Exception as e:
+                logger.warning("Error creando cache: %s", e)
         run.cache_name = cache_name
         session.commit()
 
         run_model = run.model  # string: seguro entre hilos
         verification_instruction = build_verification_instruction()
 
-        def process(job: WindowJob) -> _WindowResult:
-            """Hilo de trabajo: llamadas a Gemini y revisiones; no toca la sesión de SQLAlchemy."""
-            outcome = generate_window(
+        def obtain(job: WindowJob) -> WindowOutcome:
+            if respuestas is not None:
+                return respuestas[job.window.key]
+            return generate_window(
                 cache=cache,
                 model=run_model,
                 message=build_window_message(job.window, manual_title=manual_title, breadcrumb=job.node_breadcrumb),
                 system_instruction=instruction,
             )
+
+        def process(job: WindowJob) -> _WindowResult:
+            """Hilo de trabajo: respuesta de la ventana y revisiones; no toca la sesión de SQLAlchemy."""
+            outcome = obtain(job)
             result = _WindowResult(
                 job=job, input_tokens=outcome.input_tokens, output_tokens=outcome.output_tokens,
                 cached_tokens=outcome.cached_tokens, latency_s=outcome.latency_s,
@@ -378,7 +448,9 @@ def _run_immediate(
                     continue
                 verdict = review(q, job.window.text)
                 verificacion = None
-                if q.tipo == QuestionType.EJERCICIO_NUEVO:
+                if q.tipo == QuestionType.EJERCICIO_NUEVO and respuestas is not None:
+                    verdict = verdict.with_motivos((SIN_VERIFICACION,))
+                elif q.tipo == QuestionType.EJERCICIO_NUEVO:
                     textos, letra = verification_options(q)
                     check = verify_exercise(
                         model=run_model,
@@ -432,7 +504,7 @@ def _run_immediate(
                     payload=to_generated(q),
                     raw_response={"ventana": key, "item": q.model_dump(mode="json")},
                     metadata={
-                        "provider": "gemini",
+                        "provider": provider,
                         "paginas": [job.window.page_start, job.window.page_end],
                         "motivos": list(accepted.verdict.motivos),
                         "verificacion": accepted.verificacion,

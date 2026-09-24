@@ -80,6 +80,8 @@ class QuestionView(BaseModel):
     question_type: str = "teoria"
     source_quote: str = ""
     motivos: list[str] = Field(default_factory=list)
+    #: Veredicto de la revisión desde Claude Code (`qgen-claude importar-revision`).
+    revision: dict | None = None
     options: list[OptionView] = Field(default_factory=list)
 
     @property
@@ -121,6 +123,13 @@ class QuestionKPIs(BaseModel):
 
 
 @st.cache_data(ttl=30, show_spinner=False)
+def revision_label(revision: dict) -> str:
+    """Una línea con el veredicto de la revisión desde Claude Code y sus motivos."""
+    texto = f"Revisión de {revision.get('por', '?')}: {revision.get('veredicto', '?')} · {revision.get('calificacion', '?')}/5"
+    motivos = revision.get("motivos") or []
+    return texto + (" — " + "; ".join(motivos) if motivos else "")
+
+
 def questions_available() -> bool:
     """¿Existen ya las tablas de la fase 2 en esta base?
 
@@ -280,6 +289,7 @@ def list_questions(
                 question_type=q.question_type,
                 source_quote=q.source_quote,
                 motivos=list((q.metadata_json or {}).get("motivos") or []),
+                revision=(q.metadata_json or {}).get("revision"),
                 options=options_by_question.get(q.id, []),
             )
             for q, node in rows

@@ -25,6 +25,8 @@ data/processed/*
 !data/processed/.gitkeep
 data/bundles/*
 !data/bundles/.gitkeep
+# Intercambio con Claude Code (qgen-claude): ventanas exportadas y respuestas.
+data/claude_code/
 data/manuals.sqlite
 data/manuals.sqlite-journal
 data/manuals.sqlite-wal

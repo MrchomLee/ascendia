@@ -27,6 +27,7 @@ from explorer.questions_access import (
     list_runs,
     nodes_missing_questions,
     questions_available,
+    revision_label,
     set_validation_status,
 )
 from qgen.bundle.build import build_bundle, source_digest
@@ -141,6 +142,9 @@ def _render_question(question: QuestionView) -> None:
         st.caption(TYPE_LABEL.get(question.question_type, question.question_type))
         if question.motivos:
             st.warning("A revisar: " + "; ".join(question.motivos))
+        if question.revision:
+            aviso = st.error if question.revision.get("veredicto") == "rechazar" else st.info
+            aviso("🤖 " + revision_label(question.revision))
 
         for option in question.options:
             color = ROLE_COLOR.get(option.role, "gray")

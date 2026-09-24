@@ -20,6 +20,7 @@ qgen-batch-status = "qgen.cli.batch_status:app"
 qgen-inspect = "qgen.cli.inspect:app"
 qgen-stats = "qgen.cli.stats:app"
 qgen-import-examples = "qgen.cli.import_examples:app"
+qgen-claude = "qgen.cli.claude_code:app"
 
 [tool.uv.sources]
 etl = { workspace = true }

@@ -192,6 +192,35 @@ py -3.14 -m uv run qgen-generate <manual_id> --regenerate     # rehace las que y
 Sin `--regenerate`, volver a correr el comando genera **solo lo que falta**: es
 la forma de completar un manual que quedó a medias.
 
+#### Sin API: generar desde Claude Code
+
+```bash
+py -3.14 -m uv run qgen-claude exportar <manual_id>   # instrucción + ventanas pendientes
+# Claude Code escribe data/claude_code/<código>/respuestas/<ventana>.json
+py -3.14 -m uv run qgen-claude importar <manual_id>   # mismas revisiones, una corrida más
+```
+
+La carpeta `data/claude_code/<código>/` tiene la misma instrucción y los mismos
+mensajes que recibiría Gemini. Solo se importan las ventanas pendientes con
+respuesta; las demás siguen pendientes. La corrida queda con el modelo
+`claude-opus-5-5`, modo `immediate` y costo 0. Los ejercicios nuevos entran
+"a revisar": no hay verificación a ciegas.
+
+#### Revisión de calidad desde Claude Code
+
+```bash
+py -3.14 -m uv run qgen-claude exportar-revision <manual_id>   # rúbrica + un lote por ventana
+# Claude Code escribe data/claude_code/<código>/revision/veredictos/<ventana>.json
+py -3.14 -m uv run qgen-claude importar-revision <manual_id>   # aplica los veredictos
+```
+
+La rúbrica (`revision/instruccion.md`) rechaza las preguntas sin sentido, fuera
+de tema, con respuesta discutible, que no evalúan nada o repetidas en esencia.
+`aceptar` → `valid`, `rechazar` → `rejected`, `dudosa` → `needs_review`. Solo se
+revisan las preguntas sin decidir: lo que ya aprobó o rechazó una persona no se
+toca. El veredicto, la calificación (1–5) y los motivos quedan en
+`metadata_json["revision"]` y el explorador los muestra en cada pregunta.
+
 ### 3.6 Control de calidad
 
 Cada pregunta lleva un `validation_status`:

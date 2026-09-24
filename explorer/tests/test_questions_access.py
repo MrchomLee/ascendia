@@ -13,6 +13,7 @@ from qgen.prompts.schemas import GeneratedOption, GeneratedQuestion, OptionRole
 from explorer.questions_access import (
     get_question_kpis,
     list_questions,
+    revision_label,
     list_runs,
     nodes_missing_questions,
     questions_available,
@@ -180,3 +181,14 @@ def test_la_pregunta_trae_su_tipo_su_cita_y_sus_motivos():
     assert q.question_type == "ejercicio_nuevo"
     assert q.source_quote == "Texto relevante del manual sobre disciplina."
     assert q.motivos == ["la verificación eligió B; la clave es A"]
+
+
+def test_la_etiqueta_de_la_revision_lleva_veredicto_calificacion_y_motivos():
+    revision = {"por": "claude-opus-5-5", "veredicto": "rechazar", "calificacion": 1,
+                "motivos": ["fuera de tema", "sin sentido"]}
+    assert revision_label(revision) == (
+        "Revisión de claude-opus-5-5: rechazar · 1/5 — fuera de tema; sin sentido"
+    )
+    assert revision_label({**revision, "veredicto": "aceptar", "calificacion": 5, "motivos": []}) == (
+        "Revisión de claude-opus-5-5: aceptar · 5/5"
+    )

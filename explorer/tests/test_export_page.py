@@ -43,7 +43,12 @@ def _seed(*, run_status: str) -> int:
         persist_question(
             session, run=run, node_id=node.id, manual_id=manual.id, generation_order=0,
             source_quote=text,
-            question_type="ejercicio_nuevo", metadata={"motivos": ["supera la dificultad del PDF"]},
+            question_type="ejercicio_nuevo",
+            metadata={
+                "motivos": ["supera la dificultad del PDF"],
+                "revision": {"por": "claude-opus-5-5", "veredicto": "dudosa", "calificacion": 3,
+                             "motivos": ["depende de otra sección"], "fecha": "2026-09-24T00:00:00+00:00"},
+            },
             payload=GeneratedQuestion(
                 question="¿A quién corresponde la administración de la justicia militar?",
                 options=[
@@ -92,6 +97,12 @@ def test_la_pregunta_muestra_su_tipo_y_sus_motivos():
 
     assert any("Ejercicio nuevo" in c.value for c in at.caption)
     assert any("supera la dificultad del PDF" in w.value for w in at.warning)
+
+
+def test_la_pregunta_muestra_la_revision_de_claude_con_su_calificacion():
+    at = _open_page(_seed(run_status="succeeded"))
+
+    assert any("dudosa · 3/5 — depende de otra sección" in i.value for i in at.info)
 
 
 def test_la_cita_se_muestra_tal_cual():

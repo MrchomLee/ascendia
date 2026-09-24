@@ -444,15 +444,15 @@
     "semantic_hash": "0d555e847f57f01b0af3d8abe30c3b97"
   },
   "explorer/src/explorer/pages/6_\u2753_Preguntas.py": {
-    "mtime": 1790204665.0449047,
-    "seen": 1790204738.7197855,
-    "ast_hash": "7a7541239b5decb6f5361ed63e79617b",
+    "mtime": 1790265846.9371934,
+    "seen": 1790265905.5031674,
+    "ast_hash": "dc91ac3f64448a85def3d49ea83cc9aa",
     "semantic_hash": ""
   },
   "explorer/src/explorer/questions_access.py": {
-    "mtime": 1790203573.2547123,
-    "seen": 1790204738.7197883,
-    "ast_hash": "677a4da7a5d98108b533a01f55fec1a2",
+    "mtime": 1790265846.9369805,
+    "seen": 1790265905.503169,
+    "ast_hash": "c0c2581e2babf4ec95ffd7ac4305b0a5",
     "semantic_hash": ""
   },
   "explorer/src/explorer/search.py": {
@@ -462,9 +462,9 @@
     "semantic_hash": "91d9364ad644a8b641769f50cb3ad1c7"
   },
   "question_generator/pyproject.toml": {
-    "mtime": 1790092058.7025986,
-    "seen": 1790114307.6223311,
-    "ast_hash": "38c035b3b104f1242d64964966e14448",
+    "mtime": 1790262862.926859,
+    "seen": 1790263974.2825787,
+    "ast_hash": "da6e09f9295558e0ab340334c0ab54cb",
     "semantic_hash": ""
   },
   "question_generator/src/qgen/__init__.py": {
@@ -594,9 +594,9 @@
     "semantic_hash": ""
   },
   "question_generator/src/qgen/pipeline.py": {
-    "mtime": 1790204607.7341018,
-    "seen": 1790204738.7234843,
-    "ast_hash": "cd36a32f33cc9425f2555954b67b8c2b",
+    "mtime": 1790262833.618141,
+    "seen": 1790263974.2857957,
+    "ast_hash": "3f92b962a58315742140ccbdc0eebada",
     "semantic_hash": ""
   },
   "question_generator/src/qgen/prompts/__init__.py": {
@@ -678,9 +678,9 @@
     "semantic_hash": ""
   },
   "explorer/tests/test_questions_access.py": {
-    "mtime": 1790203532.1083975,
-    "seen": 1790204738.7202632,
-    "ast_hash": "f6164e2250019271b1f3a911f1ea9229",
+    "mtime": 1790265636.9915812,
+    "seen": 1790265905.5033863,
+    "ast_hash": "a60ad9edf7362aad40e56aab2d2c7c4c",
     "semantic_hash": ""
   },
   "question_generator/tests/test_qgen_persistence.py": {
@@ -708,9 +708,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1787072708.6167545,
-    "seen": 1788802056.6536338,
-    "ast_hash": "415a2b3a69fa1a3b7ba10cda149ca329",
+    "mtime": 1790265891.215207,
+    "seen": 1790265905.5075061,
+    "ast_hash": "6901360173df9a86627189f8629d38e1",
     "semantic_hash": ""
   },
   "etl/README.md": {
@@ -828,9 +828,9 @@
     "semantic_hash": ""
   },
   "explorer/tests/test_export_page.py": {
-    "mtime": 1790204638.3758886,
-    "seen": 1790204738.7202616,
-    "ast_hash": "a5c8972681711ff33dfbf3056453c4d4",
+    "mtime": 1790265630.1919906,
+    "seen": 1790265905.5033853,
+    "ast_hash": "60f583441771c6c3e8e9a5b2c4ce081f",
     "semantic_hash": ""
   },
   "etl/tests/test_geografia_moderna_mexico.py": {
@@ -921,6 +921,36 @@
     "mtime": 1790262367.5064855,
     "seen": 1790262379.887133,
     "ast_hash": "f3ed5ec9b9d72c6500a29c71dd32b269",
+    "semantic_hash": ""
+  },
+  "question_generator/src/qgen/claude_code.py": {
+    "mtime": 1790262853.5089362,
+    "seen": 1790263974.2831478,
+    "ast_hash": "f7d99ca80930226e59e78eb33012638c",
+    "semantic_hash": ""
+  },
+  "question_generator/src/qgen/cli/claude_code.py": {
+    "mtime": 1790265576.9856837,
+    "seen": 1790265905.503996,
+    "ast_hash": "95ac4ed3f80f9569fccecbc9c1848829",
+    "semantic_hash": ""
+  },
+  "question_generator/tests/test_claude_code.py": {
+    "mtime": 1790262774.4941077,
+    "seen": 1790263974.2887347,
+    "ast_hash": "6e3aaa1e26cb8d971e5a9a8bc8b769aa",
+    "semantic_hash": ""
+  },
+  "question_generator/src/qgen/claude_review.py": {
+    "mtime": 1790265617.8779495,
+    "seen": 1790265905.5038376,
+    "ast_hash": "1a9e93e497ec6148075749012dc0763d",
+    "semantic_hash": ""
+  },
+  "question_generator/tests/test_claude_review.py": {
+    "mtime": 1790265630.1909933,
+    "seen": 1790265905.5065424,
+    "ast_hash": "16b662095bc2fda9aa2af0188225ed05",
     "semantic_hash": ""
   }
 }
