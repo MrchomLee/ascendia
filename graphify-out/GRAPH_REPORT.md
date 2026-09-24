@@ -1,22 +1,22 @@
 # Graph Report - onmy-military-library-contenido  (2026-09-24)
 
 ## Corpus Check
-- 160 files · ~78,353 words
+- 160 files · ~78,780 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 8 file(s) not represented in the graph (top: (none) 6, .example 1, .lock 1)
 
 ## Summary
-- 1426 nodes · 3914 edges · 80 communities (71 shown, 9 thin omitted)
+- 1427 nodes · 3917 edges · 78 communities (69 shown, 9 thin omitted)
 - Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 463 edges (avg confidence: 0.94)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8e3a35f5`
+- Built from commit: `e7d30dce`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- pdf_preview.py
+- render_page
 - test_bundle_spec.py
 - test_pipeline.py
 - test_claude_code.py
@@ -33,7 +33,7 @@
 - bundle/__init__.py
 - BaldorExerciseExtractor
 - HeadingMatch
-- get_default_rules
+- build_window_instruction
 - test_claude_review.py
 - get_profile
 - debug_pymupdf.py
@@ -49,12 +49,12 @@
 - gemini/generate.py
 - _bundle
 - test_algebra_trigonometria_geometria_analitica.py
-- claude_review.py
+- Question
 - schemas.py
 - test_checks.py
 - `explorer/` — revisor visual del pipeline
 - run_ref
-- Review Focus
+- Window
 - qgen/pipeline.py
 - test_calculo_una_variable.py
 - export.py
@@ -69,9 +69,9 @@
 - plan_windows
 - checks.py
 - typing
-- Question
+- persist_question
 - Generación de preguntas por ventanas (qgen v2)
-- GeneratedQuestion
+- WindowQuestion
 - to_generated
 - test_plan_windows.py
 - 5_🔍_Search.py
@@ -83,13 +83,11 @@
 - defaults.py
 - 6_❓_Preguntas.py
 - os
-- parse_items
-- test_rules.py
 - cli/claude_code.py
+- get_default_rules
+- cli/generate.py
 - GenerationRun
-- estimate_only
-- OptionExemplarInput
-- questions_available
+- RunSummary
 - _normalize
 
 ## God Nodes (most connected - your core abstractions)
@@ -101,8 +99,8 @@
 6. `_run_immediate()` - 35 edges
 7. `Chunk` - 33 edges
 8. `build_bundle()` - 32 edges
-9. `FakeGemini` - 31 edges
-10. `GenerationRun` - 30 edges
+9. `get_default_rules()` - 31 edges
+10. `FakeGemini` - 31 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `4. Identidad: las claves estables` --references--> `manuals()`  [INFERRED]
@@ -119,19 +117,19 @@
 ## Import Cycles
 - None detected.
 
-## Communities (80 total, 9 thin omitted)
+## Communities (78 total, 9 thin omitted)
 
-### Community 0 - "pdf_preview.py"
-Cohesion: 0.33
-Nodes (6): cache_data, Render a single PDF page to PNG bytes via PyMuPDF., Return PNG bytes of the given page (1-based), or None if unavailable. Cached so…, Convenience: render and display in one call., render_page(), render_page_widget()
+### Community 0 - "render_page"
+Cohesion: 0.40
+Nodes (5): cache_data, Return PNG bytes of the given page (1-based), or None if unavailable. Cached so…, Convenience: render and display in one call., render_page(), render_page_widget()
 
 ### Community 1 - "test_bundle_spec.py"
 Cohesion: 0.11
 Nodes (35): copy, _errors(), _options(), El contrato del bundle: lo que se acepta y, sobre todo, lo que no. Cada caso de…, test_api_key_en_metadata_bloquea_la_entrega(), test_arbol_sin_raiz(), test_cadena_de_conexion_en_metadata_bloquea_la_entrega(), test_ciclo_en_el_arbol() (+27 more)
 
 ### Community 2 - "test_pipeline.py"
-Cohesion: 0.16
-Nodes (43): Las preguntas crudas de una ventana (sin validar) y lo que costó pedirlas., VerificationOutcome, WindowOutcome, Lo que devuelve la verificación de un ejercicio nuevo (spec §7)., VerificationResult, _ejercicio_nuevo(), _estimate(), FakeGemini (+35 more)
+Cohesion: 0.17
+Nodes (41): Las preguntas crudas de una ventana (sin validar) y lo que costó pedirlas., VerificationOutcome, WindowOutcome, _ejercicio_nuevo(), _estimate(), FakeGemini, _item(), _letra() (+33 more)
 
 ### Community 3 - "test_claude_code.py"
 Cohesion: 0.23
@@ -146,12 +144,12 @@ Cohesion: 0.16
 Nodes (25): HeadingCandidate, match_anexo(), match_baldor_capitulo(), match_baldor_caso(), match_baldor_subseccion_romana(), match_baldor_tema_mayusculas(), match_bloque(), match_capitulo() (+17 more)
 
 ### Community 6 - "questions_access.py"
-Cohesion: 0.10
-Nodes (31): datetime, Task 11: Explorador: tipo, cita y motivos, _render_question(), get_question_kpis(), list_questions(), list_runs(), nodes_missing_questions(), OptionView (+23 more)
+Cohesion: 0.09
+Nodes (33): datetime, Task 11: Explorador: tipo, cita y motivos, _render_question(), get_question_kpis(), list_questions(), list_runs(), OptionView, BaseModel (+25 more)
 
 ### Community 7 - "session_scope"
-Cohesion: 0.11
-Nodes (41): seed_questions(), session_scope(), build_bundle(), DuplicateNodeRef, DuplicateRunRef, _materia_hint(), _pipeline_commit(), Any (+33 more)
+Cohesion: 0.13
+Nodes (36): session_scope(), build_bundle(), DuplicateNodeRef, DuplicateRunRef, _materia_hint(), _pipeline_commit(), Any, Session (+28 more)
 
 ### Community 8 - "DocumentRules"
 Cohesion: 0.17
@@ -189,9 +187,9 @@ Nodes (18): BaldorExercise, BaldorExerciseExtractor, flush_current(), Extractor 
 Cohesion: 0.50
 Nodes (3): HeadingMatch, Profile-resolved heading match: kind + numeric depth., Return a profile-resolved HeadingMatch, or None if not a heading.
 
-### Community 17 - "get_default_rules"
-Cohesion: 0.17
-Nodes (21): build_window_instruction(), _conforme(), _ejemplos(), Any, Instrucción del sistema para la llamada por ventana: plantilla de la familia +…, "Conforme al Manual …" pero "Conforme a la Ley …": el artículo concuerda con el…, Ejemplos de referencia; si no hay, los militares de siempre solo en la familia…, get_default_rules() (+13 more)
+### Community 17 - "build_window_instruction"
+Cohesion: 0.15
+Nodes (19): build_window_instruction(), _conforme(), _ejemplos(), Any, Instrucción del sistema para la llamada por ventana: plantilla de la familia +…, "Conforme al Manual …" pero "Conforme a la Ley …": el artículo concuerda con el…, Ejemplos de referencia; si no hay, los militares de siempre solo en la familia…, Instrucciones de la llamada por ventana, por familia (spec §6). (+11 more)
 
 ### Community 18 - "test_claude_review.py"
 Cohesion: 0.12
@@ -206,8 +204,8 @@ Cohesion: 0.15
 Nodes (10): collections, One-off debug script: inspect characters used as TOC leaders., main(), Path, Quick visual inspection of an in-memory hierarchy without persisting., fitz, pymupdf, rapidocr (+2 more)
 
 ### Community 21 - "session.py"
-Cohesion: 0.10
-Nodes (20): contextlib, Inserta preguntas generadas directamente en el chat para el manual 11 (Álgebra…, Engine, init_db(), Create all tables. Idempotent — safe to run on existing DBs., _default_db_url(), get_engine(), get_session_factory() (+12 more)
+Cohesion: 0.09
+Nodes (23): contextlib, Inserta preguntas generadas directamente en el chat para el manual 11 (Álgebra…, Engine, init_db(), Create all tables. Idempotent — safe to run on existing DBs., _default_db_url(), get_engine(), get_session_factory() (+15 more)
 
 ### Community 22 - "build_windows"
 Cohesion: 0.20
@@ -239,7 +237,7 @@ Nodes (17): match_baldor_inciso(), Reconoce subcasos con inciso alfabético (ej.
 
 ### Community 30 - "gemini/generate.py"
 Cohesion: 0.06
-Nodes (56): dataclasses, 12. Organización del código, logging, BatchItemResult, BatchRequest, BatchSubmitResult, _build_inline_request(), parse_batch_results() (+48 more)
+Nodes (55): dataclasses, logging, BatchItemResult, BatchRequest, BatchSubmitResult, _build_inline_request(), parse_batch_results(), Batch-mode generation: submit one job for all nodes, poll, parse later. Trade-… (+47 more)
 
 ### Community 31 - "_bundle"
 Cohesion: 0.25
@@ -249,17 +247,17 @@ Nodes (8): _bundle(), `cost_input_tokens` contiene 'token': el detector no debe 
 Cohesion: 0.53
 Nodes (5): Perfil `algebra_trigonometria_geometria_analitica`: los cuatro capítulos de la…, test_el_arbol_son_los_cuatro_capitulos_de_la_imagen(), test_la_portada_queda_fuera(), test_secciones_ejemplos_y_teoremas_quedan_en_el_cuerpo_de_su_capitulo(), _tree()
 
-### Community 33 - "claude_review.py"
-Cohesion: 0.12
-Nodes (24): _aplicar(), ExportacionRevision, exportar_revision(), importar_revision(), _lote(), LoteRevision, _primer_error(), BaseModel (+16 more)
+### Community 33 - "Question"
+Cohesion: 0.15
+Nodes (22): _aplicar(), ExportacionRevision, exportar_revision(), importar_revision(), _lote(), LoteRevision, _primer_error(), BaseModel (+14 more)
 
 ### Community 34 - "schemas.py"
-Cohesion: 0.32
-Nodes (11): Task 4: Revisiones de cada pregunta, GeneratedOption, OptionRole, BaseModel, StrEnum, QuestionType, Structured-output schemas for Gemini/Ollama., WindowOption (+3 more)
+Cohesion: 0.18
+Nodes (23): Task 4: Revisiones de cada pregunta, Task 6: Llamadas a Gemini: ventana y verificación, 12. Organización del código, GeneratedOption, GeneratedQuestion, OptionRole, BaseModel, StrEnum (+15 more)
 
 ### Community 35 - "test_checks.py"
-Cohesion: 0.14
-Nodes (24): DuplicateIndex, Enunciados ya aceptados, por nodo, para descartar duplicadas (spec §7). En…, Revisión por tipo contra el texto de la ventana (spec §7, tabla de revisiones)., review(), Verdict, _q(), Revisiones de cada pregunta de una ventana (spec §7)., test_duplicadas_de_teoria_por_similitud_dentro_del_mismo_nodo() (+16 more)
+Cohesion: 0.12
+Nodes (29): DuplicateIndex, parse_items(), Enunciados ya aceptados, por nodo, para descartar duplicadas (spec §7). En…, Valida cada pregunta por separado: una mala no tumba a las demás., Revisión por tipo contra el texto de la ventana (spec §7, tabla de revisiones)., review(), Verdict, _item() (+21 more)
 
 ### Community 36 - "`explorer/` — revisor visual del pipeline"
 Cohesion: 0.29
@@ -269,13 +267,13 @@ Nodes (6): Cómo correr, El árbol y la cobertura, `explorer/` — revisor visua
 Cohesion: 0.29
 Nodes (8): 10. Contrato v2 del bundle, iso(), datetime, Clave estable de una corrida: `{model}--{mode}--{inicio compacto UTC}`., Fecha en el formato del contrato: ISO 8601 UTC con `Z`. SQLite devuelve los…, run_ref(), test_fecha_ingenua_se_lee_como_utc(), test_ref_de_corrida_es_estable()
 
-### Community 38 - "Review Focus"
+### Community 38 - "Window"
 Cohesion: 0.17
-Nodes (10): Generación de preguntas por ventanas (qgen v2) — Plan de implementación, Global Constraints, Review Focus, Task 10: Contrato v2 del bundle, Task 12: Verificación final y prueba real, Task 2: Ventanas, Task 3: Esquemas de salida de la llamada por ventana, Task 5: Instrucciones por familia (+2 more)
+Nodes (11): Generación de preguntas por ventanas (qgen v2) — Plan de implementación, Global Constraints, Review Focus, Task 10: Contrato v2 del bundle, Task 12: Verificación final y prueba real, Task 2: Ventanas, Task 3: Esquemas de salida de la llamada por ventana, Task 5: Instrucciones por familia (+3 more)
 
 ### Community 39 - "qgen/pipeline.py"
-Cohesion: 0.12
-Nodes (28): concurrent_futures, actual_cost_usd(), Compute actual cost from observed usage_metadata totals. `cache_create_tokens`…, finalize_run(), _Accepted, Orquestación de principio a fin (spec §4–§8). nodos → ventanas pendientes → una…, Procesa las ventanas: con `respuestas` las toma de ahí (sin Gemini, sin cache y…, Construye un RunSummary a partir de una corrida persistida en la base de datos. (+20 more)
+Cohesion: 0.11
+Nodes (30): concurrent_futures, actual_cost_usd(), doc_token_estimate(), estimate_windows(), Cost accounting: predictions before a run + actual after. Pricing (USD per 1M…, Compute actual cost from observed usage_metadata totals. `cache_create_tokens`…, Una llamada por ventana (instrucción + texto de la ventana + documento…, WindowEstimate (+22 more)
 
 ### Community 40 - "test_calculo_una_variable.py"
 Cohesion: 0.53
@@ -314,24 +312,24 @@ Cohesion: 0.12
 Nodes (17): difflib, pydantic, _literal(), norm_math(), norm_text(), _nucleo(), Revisiones de cada pregunta generada por ventana (spec §7). Todo es…, ¿Está `fragmento` literal en `texto`? Se acepta también con la notación… (+9 more)
 
 ### Community 57 - "typing"
-Cohesion: 0.09
-Nodes (30): csv, main(), command, Path, Carga un archivo de preguntas de ejemplo y las guarda en la base de datos., datetime, Esquema SQLAlchemy para preguntas de referencia (banco de ejemplos/exemplars).…, Retorna la fecha y hora actual en UTC. (+22 more)
+Cohesion: 0.08
+Nodes (35): csv, main(), command, Path, Carga un archivo de preguntas de ejemplo y las guarda en la base de datos., datetime, Esquema SQLAlchemy para preguntas de referencia (banco de ejemplos/exemplars).…, Retorna la fecha y hora actual en UTC. (+27 more)
 
-### Community 58 - "Question"
-Cohesion: 0.25
-Nodes (19): Task 7: Columnas nuevas, migración y persistencia, create_run(), load_manual(), persist_question(), Any, Session, Mapea GeneratedQuestion de Pydantic + metadatos de corrida a filas del ORM., --regenerate: borra las preguntas de las ventanas que se van a rehacer y las… (+11 more)
+### Community 58 - "persist_question"
+Cohesion: 0.36
+Nodes (13): seed_questions(), create_run(), persist_question(), Any, Session, _make_question(), Two different GenerationRuns for the same node are allowed (re-generation)., _seed_manual_and_node() (+5 more)
 
 ### Community 59 - "Generación de preguntas por ventanas (qgen v2)"
 Cohesion: 0.15
 Nodes (13): 11. Trabajo en la webapp (lo hace el usuario), 13. Errores, 14. Pruebas (TDD), 15. Riesgos, 1. Contexto, 2. Decisiones del usuario, 3. Alcance, 4. Ventanas (+5 more)
 
-### Community 60 - "GeneratedQuestion"
-Cohesion: 0.17
-Nodes (20): GeneratedQuestion, model_validator, Una pregunta completa tal como la devuelve la llamada por ventana., WindowQuestion, _make_options(), Build a list of options matching the canonical 1+1+2 distribution., test_duplicate_option_text_rejected(), test_empty_question_rejected() (+12 more)
+### Community 60 - "WindowQuestion"
+Cohesion: 0.25
+Nodes (11): model_validator, Una pregunta completa tal como la devuelve la llamada por ventana., WindowQuestion, test_la_respuesta_de_ventana_es_una_lista_de_preguntas(), test_una_pregunta_de_ventana_valida(), test_ventana_rechaza_cita_vacia(), test_ventana_rechaza_opciones_repetidas(), test_ventana_rechaza_reparto_de_roles_incorrecto() (+3 more)
 
 ### Community 61 - "to_generated"
-Cohesion: 0.29
-Nodes (7): _barajadas(), La pregunta lista para guardar, con las opciones barajadas de forma…, Textos de las opciones para la verificación (en otro orden, sin roles) y la…, to_generated(), verification_options(), test_to_generated_baraja_de_forma_reproducible(), test_verification_options_devuelve_la_letra_de_la_clave()
+Cohesion: 0.25
+Nodes (8): _barajadas(), La pregunta lista para guardar, con las opciones barajadas de forma…, Textos de las opciones para la verificación (en otro orden, sin roles) y la…, to_generated(), verification_options(), test_la_correcta_no_queda_siempre_primera(), test_to_generated_baraja_de_forma_reproducible(), test_verification_options_devuelve_la_letra_de_la_clave()
 
 ### Community 62 - "test_plan_windows.py"
 Cohesion: 0.39
@@ -359,47 +357,39 @@ Nodes (5): Perfil `historia_universal`: el temario de la imagen, como Capítulo 
 
 ### Community 68 - "migration.py"
 Cohesion: 0.15
-Nodes (15): Comando CLI para importar un banco de preguntas de referencia (ejemplos oro) a…, main(), command, main(), command, _add_missing_columns(), Idempotent creation of the question-generation tables. Importing…, datetime (+7 more)
+Nodes (15): Comando CLI para importar un banco de preguntas de referencia (ejemplos oro) a…, main(), command, _add_missing_columns(), Idempotent creation of the question-generation tables. Importing…, load_manual(), Mapea GeneratedQuestion de Pydantic + metadatos de corrida a filas del ORM., datetime (+7 more)
 
 ### Community 69 - "defaults.py"
-Cohesion: 0.33
-Nodes (4): Profile-default rules. Edit here to change defaults globally. Per-document…, Pruebas unitarias para las reglas y prompts de generación de preguntas de…, Verifica que el perfil 'algebra_baldor' está registrado en el catálogo de…, test_algebra_baldor_rules_registered()
+Cohesion: 0.25
+Nodes (6): Profile-default rules. Edit here to change defaults globally. Per-document…, Pruebas unitarias para las reglas y prompts de generación de preguntas de…, La instrucción por ventana lleva las reglas de Baldor y pide ejercicios., Verifica que el perfil 'algebra_baldor' está registrado en el catálogo de…, test_algebra_baldor_prompt_rendering(), test_algebra_baldor_rules_registered()
 
 ### Community 70 - "6_❓_Preguntas.py"
-Cohesion: 0.17
-Nodes (19): dotenv, kpi_row(), Render a row of `st.metric` cards. items is a list of (label, value,…, list_manuals(), Home page — list of ingested manuals + global KPIs., get_int(), link_to(), Helpers for query-param navigation between pages. Streamlit's `st.query_params`… (+11 more)
+Cohesion: 0.16
+Nodes (20): dotenv, kpi_row(), Render a row of `st.metric` cards. items is a list of (label, value,…, Render a single PDF page to PNG bytes via PyMuPDF., list_manuals(), Home page — list of ingested manuals + global KPIs., get_int(), link_to() (+12 more)
 
 ### Community 71 - "os"
 Cohesion: 0.29
 Nodes (4): google, os, requests, urllib_request
 
-### Community 72 - "parse_items"
-Cohesion: 0.50
-Nodes (5): parse_items(), Valida cada pregunta por separado: una mala no tumba a las demás., _item(), test_parse_items_corta_en_30(), test_parse_items_descarta_solo_lo_malo()
+### Community 72 - "cli/claude_code.py"
+Cohesion: 0.26
+Nodes (11): exportar_cmd(), exportar_revision_cmd(), importar_cmd(), command, Path, `qgen-claude`: generar preguntas desde Claude Code, sin API (ver…, Escribe la instrucción y las ventanas pendientes para que Claude Code las…, Revisa y guarda las respuestas de las ventanas pendientes, como una corrida más. (+3 more)
 
-### Community 73 - "test_rules.py"
-Cohesion: 0.13
-Nodes (12): parametrize, test_algebra_trigonometria_geometria_analitica_tiene_reglas_de_generacion(), test_cada_perfil_tiene_su_familia_y_sus_tipos(), test_calculo_una_variable_tiene_reglas_de_generacion(), test_familia_o_tipo_desconocido_se_rechaza(), test_geografia_moderna_mexico_tiene_reglas_de_generacion(), test_get_default_rules_known(), test_get_default_rules_unknown_raises() (+4 more)
+### Community 73 - "get_default_rules"
+Cohesion: 0.19
+Nodes (13): get_default_rules(), parametrize, test_algebra_trigonometria_geometria_analitica_tiene_reglas_de_generacion(), test_cada_perfil_tiene_su_familia_y_sus_tipos(), test_calculo_una_variable_tiene_reglas_de_generacion(), test_familia_o_tipo_desconocido_se_rechaza(), test_geografia_moderna_mexico_tiene_reglas_de_generacion(), test_get_default_rules_known() (+5 more)
 
-### Community 74 - "cli/claude_code.py"
-Cohesion: 0.24
-Nodes (12): Task 9: Corrida por ventanas, estimación y CLI (retira el flujo viejo), importar_cmd(), `qgen-claude`: generar preguntas desde Claude Code, sin API (ver…, Revisa y guarda las respuestas de las ventanas pendientes, como una corrida más., main(), _model_option(), _print_estimate(), _print_summary() (+4 more)
+### Community 74 - "cli/generate.py"
+Cohesion: 0.23
+Nodes (13): Task 7: Columnas nuevas, migración y persistencia, main(), _model_option(), _print_estimate(), command, --regenerate: borra las preguntas de las ventanas que se van a rehacer y las…, remove_questions_for_windows(), Accept short aliases ('flash', 'pro') or full names; return canonical model id. (+5 more)
 
 ### Community 75 - "GenerationRun"
 Cohesion: 0.34
 Nodes (13): _check_once(), main(), _print_run_card(), _print_running(), command, CLI for monitoring + finalizing batch runs. Usage patterns -------------- 1)…, _state_name(), _wait_loop() (+5 more)
 
-### Community 76 - "estimate_only"
-Cohesion: 0.31
-Nodes (8): doc_token_estimate(), estimate_windows(), Cost accounting: predictions before a run + actual after. Pricing (USD per 1M…, Una llamada por ventana (instrucción + texto de la ventana + documento…, WindowEstimate, _doc_token_estimate_from_chunks(), estimate_only(), Costo aproximado sin llamar a Gemini; el entero son las ventanas por procesar.
-
-### Community 77 - "OptionExemplarInput"
-Cohesion: 0.40
-Nodes (5): OptionExemplarInput, BaseModel, QuestionExemplarInput, Modelo Pydantic para validar una opción de respuesta de ejemplo., Modelo Pydantic para validar una pregunta de ejemplo completa.
-
-### Community 78 - "questions_available"
+### Community 76 - "RunSummary"
 Cohesion: 0.50
-Nodes (4): questions_available(), ¿Existen ya las tablas de la fase 2 en esta base? Un SQLite recién ingerido…, Verifica que detecta correctamente si las tablas de preguntas existen., test_questions_available()
+Nodes (4): Task 9: Corrida por ventanas, estimación y CLI (retira el flujo viejo), Construye un RunSummary a partir de una corrida persistida en la base de datos., _run_summary_from_db(), RunSummary
 
 ### Community 79 - "_normalize"
 Cohesion: 0.67
@@ -413,7 +403,7 @@ Nodes (3): _normalize(), Loose match: strip accents, lowercase, collapse whitesp
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `session_scope()` connect `session_scope` to `test_pipeline.py`, `test_claude_code.py`, `migration.py`, `Question`, `6_❓_Preguntas.py`, `questions_access.py`, `export.py`, `cli/claude_code.py`, `data_access.py`, `GenerationRun`, `etl/pipeline.py`, `test_claude_review.py`, `session.py`, `Manual`, `typing`, `_seed`, `test_plan_windows.py`, `5_🔍_Search.py`?**
+- **Why does `session_scope()` connect `session_scope` to `test_pipeline.py`, `test_claude_code.py`, `questions_access.py`, `data_access.py`, `test_claude_review.py`, `session.py`, `Manual`, `_seed`, `export.py`, `etl/pipeline.py`, `typing`, `persist_question`, `test_plan_windows.py`, `5_🔍_Search.py`, `migration.py`, `6_❓_Preguntas.py`, `cli/claude_code.py`, `cli/generate.py`, `GenerationRun`?**
   _High betweenness centrality (0.112) - this node is a cross-community bridge._
 - **Why does `manuals()` connect `Manual` to `Contrato: bundle de contenido v2`, `session_scope`?**
   _High betweenness centrality (0.047) - this node is a cross-community bridge._

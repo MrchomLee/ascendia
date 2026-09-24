@@ -212,19 +212,6 @@
       "source_location": "L55"
     },
     {
-      "id": "question_generator_src_qgen_prompts_schemas_verificationresult",
-      "label": "VerificationResult",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_pipeline.py",
-      "file_type": "code",
-      "norm_label": "verificationresult",
-      "source_file": "question_generator/src/qgen/prompts/schemas.py",
-      "source_location": "L96"
-    },
-    {
       "id": "question_generator_tests_test_pipeline_fakegemini",
       "label": "FakeGemini",
       "_callable": true,
@@ -504,7 +491,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "exportacionrevision",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -517,7 +504,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "loterevision",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -530,7 +517,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "resumenrevision",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -543,24 +530,24 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "veredicto",
       "source_file": "question_generator/src/qgen/claude_review.py",
       "source_location": "L39"
     },
     {
-      "id": "question_generator_src_qgen_windows_window",
-      "label": "Window",
+      "id": "question_generator_src_qgen_models_schema_question",
+      "label": "Question",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
-      "norm_label": "window",
-      "source_file": "question_generator/src/qgen/windows.py",
-      "source_location": "L34"
+      "norm_label": "question",
+      "source_file": "question_generator/src/qgen/models/schema.py",
+      "source_location": "L73"
     },
     {
       "id": "question_generator_src_qgen_prompts_schemas_generatedoption",
@@ -574,6 +561,19 @@
       "norm_label": "generatedoption",
       "source_file": "question_generator/src/qgen/prompts/schemas.py",
       "source_location": "L25"
+    },
+    {
+      "id": "question_generator_src_qgen_prompts_schemas_generatedquestion",
+      "label": "GeneratedQuestion",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "code",
+      "norm_label": "generatedquestion",
+      "source_file": "question_generator/src/qgen/prompts/schemas.py",
+      "source_location": "L30"
     },
     {
       "id": "question_generator_src_qgen_prompts_schemas_optionrole",
@@ -600,6 +600,19 @@
       "norm_label": "questiontype",
       "source_file": "question_generator/src/qgen/prompts/schemas.py",
       "source_location": "L58"
+    },
+    {
+      "id": "question_generator_src_qgen_prompts_schemas_verificationresult",
+      "label": "VerificationResult",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "code",
+      "norm_label": "verificationresult",
+      "source_file": "question_generator/src/qgen/prompts/schemas.py",
+      "source_location": "L96"
     },
     {
       "id": "question_generator_src_qgen_prompts_schemas_windowoption",
@@ -654,6 +667,32 @@
       "source_location": "L52"
     },
     {
+      "id": "question_generator_src_qgen_windows_window",
+      "label": "Window",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "Window",
+      "file_type": "code",
+      "norm_label": "window",
+      "source_file": "question_generator/src/qgen/windows.py",
+      "source_location": "L34"
+    },
+    {
+      "id": "question_generator_src_qgen_cost_windowestimate",
+      "label": "WindowEstimate",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "qgen/pipeline.py",
+      "file_type": "code",
+      "norm_label": "windowestimate",
+      "source_file": "question_generator/src/qgen/cost.py",
+      "source_location": "L35"
+    },
+    {
       "id": "question_generator_src_qgen_pipeline_accepted",
       "label": "_Accepted",
       "_callable": true,
@@ -665,19 +704,6 @@
       "norm_label": "_accepted",
       "source_file": "question_generator/src/qgen/pipeline.py",
       "source_location": "L311"
-    },
-    {
-      "id": "question_generator_src_qgen_pipeline_runsummary",
-      "label": "RunSummary",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "qgen/pipeline.py",
-      "file_type": "code",
-      "norm_label": "runsummary",
-      "source_file": "question_generator/src/qgen/pipeline.py",
-      "source_location": "L61"
     },
     {
       "id": "question_generator_src_qgen_pipeline_windowresult",
@@ -823,17 +849,30 @@
       "source_location": "L30"
     },
     {
-      "id": "question_generator_src_qgen_models_schema_question",
-      "label": "Question",
+      "id": "question_generator_src_qgen_reference_importer_optionexemplarinput",
+      "label": "OptionExemplarInput",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 58,
-      "community_name": "Question",
+      "community": 57,
+      "community_name": "typing",
       "file_type": "code",
-      "norm_label": "question",
-      "source_file": "question_generator/src/qgen/models/schema.py",
-      "source_location": "L73"
+      "norm_label": "optionexemplarinput",
+      "source_file": "question_generator/src/qgen/reference/importer.py",
+      "source_location": "L20"
+    },
+    {
+      "id": "question_generator_src_qgen_reference_importer_questionexemplarinput",
+      "label": "QuestionExemplarInput",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "typing",
+      "file_type": "code",
+      "norm_label": "questionexemplarinput",
+      "source_file": "question_generator/src/qgen/reference/importer.py",
+      "source_location": "L28"
     },
     {
       "id": "explorer_src_explorer_questions_access_optionview",
@@ -888,26 +927,13 @@
       "source_location": "L92"
     },
     {
-      "id": "question_generator_src_qgen_prompts_schemas_generatedquestion",
-      "label": "GeneratedQuestion",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "GeneratedQuestion",
-      "file_type": "code",
-      "norm_label": "generatedquestion",
-      "source_file": "question_generator/src/qgen/prompts/schemas.py",
-      "source_location": "L30"
-    },
-    {
       "id": "question_generator_src_qgen_prompts_schemas_windowquestion",
       "label": "WindowQuestion",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "windowquestion",
       "source_file": "question_generator/src/qgen/prompts/schemas.py",
@@ -992,43 +1018,17 @@
       "source_location": "L32"
     },
     {
-      "id": "question_generator_src_qgen_cost_windowestimate",
-      "label": "WindowEstimate",
+      "id": "question_generator_src_qgen_pipeline_runsummary",
+      "label": "RunSummary",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 76,
-      "community_name": "estimate_only",
+      "community_name": "RunSummary",
       "file_type": "code",
-      "norm_label": "windowestimate",
-      "source_file": "question_generator/src/qgen/cost.py",
-      "source_location": "L35"
-    },
-    {
-      "id": "question_generator_src_qgen_reference_importer_optionexemplarinput",
-      "label": "OptionExemplarInput",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 77,
-      "community_name": "OptionExemplarInput",
-      "file_type": "code",
-      "norm_label": "optionexemplarinput",
-      "source_file": "question_generator/src/qgen/reference/importer.py",
-      "source_location": "L20"
-    },
-    {
-      "id": "question_generator_src_qgen_reference_importer_questionexemplarinput",
-      "label": "QuestionExemplarInput",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 77,
-      "community_name": "OptionExemplarInput",
-      "file_type": "code",
-      "norm_label": "questionexemplarinput",
-      "source_file": "question_generator/src/qgen/reference/importer.py",
-      "source_location": "L28"
+      "norm_label": "runsummary",
+      "source_file": "question_generator/src/qgen/pipeline.py",
+      "source_location": "L61"
     },
     {
       "id": "question_generator_src_qgen_rules_base_documentrules",
@@ -1127,7 +1127,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 0,
-      "community_name": "pdf_preview.py",
+      "community_name": "render_page",
       "file_type": "code",
       "norm_label": "render_page()",
       "source_file": "explorer/src/explorer/components/pdf_preview.py",
@@ -1139,7 +1139,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 0,
-      "community_name": "pdf_preview.py",
+      "community_name": "render_page",
       "file_type": "code",
       "norm_label": "render_page_widget()",
       "source_file": "explorer/src/explorer/components/pdf_preview.py",
@@ -1890,16 +1890,16 @@
       "source_location": "L154"
     },
     {
-      "id": "explorer_tests_test_data_access_test_get_tree_y_get_node",
-      "label": "test_get_tree_y_get_node()",
+      "id": "explorer_src_explorer_questions_access_nodes_missing_questions",
+      "label": "nodes_missing_questions()",
       "_callable": true,
       "_origin": "ast",
       "community": 11,
       "community_name": "data_access.py",
       "file_type": "code",
-      "norm_label": "test_get_tree_y_get_node()",
-      "source_file": "explorer/tests/test_data_access.py",
-      "source_location": "L120"
+      "norm_label": "nodes_missing_questions()",
+      "source_file": "explorer/src/explorer/questions_access.py",
+      "source_location": "L316"
     },
     {
       "id": "etl_src_etl_extraction_toc_parser_tocresult_found",
@@ -2675,11 +2675,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "build_window_instruction()",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L110"
+      "source_location": "L122"
     },
     {
       "id": "question_generator_src_qgen_prompts_families_conforme",
@@ -2687,11 +2687,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "_conforme()",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L137"
+      "source_location": "L150"
     },
     {
       "id": "question_generator_src_qgen_prompts_families_ejemplos",
@@ -2699,35 +2699,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "_ejemplos()",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L143"
-    },
-    {
-      "id": "question_generator_src_qgen_rules_defaults_get_default_rules",
-      "label": "get_default_rules()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "get_default_rules",
-      "file_type": "code",
-      "norm_label": "get_default_rules()",
-      "source_file": "question_generator/src/qgen/rules/defaults.py",
-      "source_location": "L296"
-    },
-    {
-      "id": "question_generator_tests_test_baldor_rules_test_algebra_baldor_prompt_rendering",
-      "label": "test_algebra_baldor_prompt_rendering()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "get_default_rules",
-      "file_type": "code",
-      "norm_label": "test_algebra_baldor_prompt_rendering()",
-      "source_file": "question_generator/tests/test_baldor_rules.py",
-      "source_location": "L17"
+      "source_location": "L156"
     },
     {
       "id": "question_generator_tests_test_families_test_con_ejercicios_se_piden_el_del_libro_y_uno_nuevo_sin_subir_la_dificultad",
@@ -2735,7 +2711,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "test_con_ejercicios_se_piden_el_del_libro_y_uno_nuevo_sin_subir_la_dificultad()",
       "source_file": "question_generator/tests/test_families.py",
@@ -2747,11 +2723,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "test_el_prefijo_militar_concuerda_con_el_titulo()",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L75"
+      "source_location": "L88"
     },
     {
       "id": "question_generator_tests_test_families_test_la_familia_civil_no_lleva_nada_militar",
@@ -2759,7 +2735,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "test_la_familia_civil_no_lleva_nada_militar()",
       "source_file": "question_generator/tests/test_families.py",
@@ -2771,7 +2747,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "test_la_instruccion_militar_usa_el_titulo_real_del_manual()",
       "source_file": "question_generator/tests/test_families.py",
@@ -2783,11 +2759,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "test_la_respuesta_y_la_cita_copian_la_notacion_del_texto()",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L70"
+      "source_location": "L83"
     },
     {
       "id": "question_generator_tests_test_families_test_la_verificacion_presenta_opciones_con_letras",
@@ -2795,11 +2771,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "test_la_verificacion_presenta_opciones_con_letras()",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L65"
+      "source_location": "L78"
+    },
+    {
+      "id": "question_generator_tests_test_families_test_las_reglas_de_calidad_de_la_revision_llegan_a_las_dos_familias",
+      "label": "test_las_reglas_de_calidad_de_la_revision_llegan_a_las_dos_familias()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "build_window_instruction",
+      "file_type": "code",
+      "norm_label": "test_las_reglas_de_calidad_de_la_revision_llegan_a_las_dos_familias()",
+      "source_file": "question_generator/tests/test_families.py",
+      "source_location": "L45"
     },
     {
       "id": "question_generator_tests_test_families_test_las_reglas_del_perfil_entran_en_la_instruccion",
@@ -2807,11 +2795,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "test_las_reglas_del_perfil_entran_en_la_instruccion()",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L45"
+      "source_location": "L58"
     },
     {
       "id": "question_generator_tests_test_families_test_los_ejemplos_de_referencia_sustituyen_a_los_de_siempre",
@@ -2819,11 +2807,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "test_los_ejemplos_de_referencia_sustituyen_a_los_de_siempre()",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L51"
+      "source_location": "L64"
     },
     {
       "id": "question_generator_tests_test_families_test_sin_ejemplos_la_familia_militar_usa_los_de_siempre",
@@ -2831,7 +2819,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "test_sin_ejemplos_la_familia_militar_usa_los_de_siempre()",
       "source_file": "question_generator/tests/test_families.py",
@@ -2843,7 +2831,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "test_sin_ejercicios_en_el_perfil_se_prohiben()",
       "source_file": "question_generator/tests/test_families.py",
@@ -3786,6 +3774,18 @@
       "source_location": "L105"
     },
     {
+      "id": "explorer_tests_test_data_access_test_get_tree_y_get_node",
+      "label": "test_get_tree_y_get_node()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "session.py",
+      "file_type": "code",
+      "norm_label": "test_get_tree_y_get_node()",
+      "source_file": "explorer/tests/test_data_access.py",
+      "source_location": "L120"
+    },
+    {
       "id": "explorer_tests_test_data_access_test_list_manuals_y_global_kpis",
       "label": "test_list_manuals_y_global_kpis()",
       "_callable": true,
@@ -3796,6 +3796,18 @@
       "norm_label": "test_list_manuals_y_global_kpis()",
       "source_file": "explorer/tests/test_data_access.py",
       "source_location": "L86"
+    },
+    {
+      "id": "question_generator_tests_test_qgen_persistence_test_la_migracion_anade_las_columnas_nuevas_a_una_base_antigua",
+      "label": "test_la_migracion_anade_las_columnas_nuevas_a_una_base_antigua()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "session.py",
+      "file_type": "code",
+      "norm_label": "test_la_migracion_anade_las_columnas_nuevas_a_una_base_antigua()",
+      "source_file": "question_generator/tests/test_qgen_persistence.py",
+      "source_location": "L183"
     },
     {
       "id": "question_generator_src_qgen_windows_build_windows",
@@ -4902,6 +4914,18 @@
       "source_location": "L89"
     },
     {
+      "id": "question_generator_src_qgen_bundle_spec_report_error",
+      "label": ".error()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "gemini/generate.py",
+      "file_type": "code",
+      "norm_label": ".error()",
+      "source_file": "question_generator/src/qgen/bundle/spec.py",
+      "source_location": "L218"
+    },
+    {
       "id": "question_generator_src_qgen_gemini_batch_build_inline_request",
       "label": "_build_inline_request()",
       "_callable": true,
@@ -5435,7 +5459,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "_aplicar()",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -5447,7 +5471,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "exportar_revision()",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -5459,7 +5483,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "importar_revision()",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -5471,7 +5495,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "_lote()",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -5483,7 +5507,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "_primer_error()",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -5495,7 +5519,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "_revisables()",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -5507,7 +5531,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "_rubrica()",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -5519,47 +5543,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "._coherente()",
       "source_file": "question_generator/src/qgen/claude_review.py",
       "source_location": "L46"
-    },
-    {
-      "id": "question_generator_src_qgen_pipeline_resolve_rules",
-      "label": "_resolve_rules()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "claude_review.py",
-      "file_type": "code",
-      "norm_label": "_resolve_rules()",
-      "source_file": "question_generator/src/qgen/pipeline.py",
-      "source_location": "L161"
-    },
-    {
-      "id": "question_generator_src_qgen_windows_window_key",
-      "label": ".key()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "claude_review.py",
-      "file_type": "code",
-      "norm_label": ".key()",
-      "source_file": "question_generator/src/qgen/windows.py",
-      "source_location": "L43"
-    },
-    {
-      "id": "question_generator_tests_test_checks_test_la_correcta_no_queda_siempre_primera",
-      "label": "test_la_correcta_no_queda_siempre_primera()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "schemas.py",
-      "file_type": "code",
-      "norm_label": "test_la_correcta_no_queda_siempre_primera()",
-      "source_file": "question_generator/tests/test_checks.py",
-      "source_location": "L127"
     },
     {
       "id": "question_generator_tests_test_plan_windows_question",
@@ -5574,6 +5562,90 @@
       "source_location": "L45"
     },
     {
+      "id": "question_generator_tests_test_schemas_make_options",
+      "label": "_make_options()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "code",
+      "norm_label": "_make_options()",
+      "source_file": "question_generator/tests/test_schemas.py",
+      "source_location": "L7"
+    },
+    {
+      "id": "question_generator_tests_test_schemas_test_duplicate_option_text_rejected",
+      "label": "test_duplicate_option_text_rejected()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "code",
+      "norm_label": "test_duplicate_option_text_rejected()",
+      "source_file": "question_generator/tests/test_schemas.py",
+      "source_location": "L54"
+    },
+    {
+      "id": "question_generator_tests_test_schemas_test_empty_question_rejected",
+      "label": "test_empty_question_rejected()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "code",
+      "norm_label": "test_empty_question_rejected()",
+      "source_file": "question_generator/tests/test_schemas.py",
+      "source_location": "L61"
+    },
+    {
+      "id": "question_generator_tests_test_schemas_test_too_few_options_rejected",
+      "label": "test_too_few_options_rejected()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "code",
+      "norm_label": "test_too_few_options_rejected()",
+      "source_file": "question_generator/tests/test_schemas.py",
+      "source_location": "L33"
+    },
+    {
+      "id": "question_generator_tests_test_schemas_test_two_correct_options_rejected",
+      "label": "test_two_correct_options_rejected()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "code",
+      "norm_label": "test_two_correct_options_rejected()",
+      "source_file": "question_generator/tests/test_schemas.py",
+      "source_location": "L42"
+    },
+    {
+      "id": "question_generator_tests_test_schemas_test_valid_question_passes",
+      "label": "test_valid_question_passes()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "code",
+      "norm_label": "test_valid_question_passes()",
+      "source_file": "question_generator/tests/test_schemas.py",
+      "source_location": "L23"
+    },
+    {
+      "id": "question_generator_tests_test_schemas_test_zero_distractor_rejected",
+      "label": "test_zero_distractor_rejected()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "code",
+      "norm_label": "test_zero_distractor_rejected()",
+      "source_file": "question_generator/tests/test_schemas.py",
+      "source_location": "L48"
+    },
+    {
       "id": "question_generator_src_qgen_validation_checks_duplicateindex_init",
       "label": ".__init__()",
       "_callable": true,
@@ -5584,6 +5656,18 @@
       "norm_label": ".__init__()",
       "source_file": "question_generator/src/qgen/validation/checks.py",
       "source_location": "L167"
+    },
+    {
+      "id": "question_generator_src_qgen_validation_checks_parse_items",
+      "label": "parse_items()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 35,
+      "community_name": "test_checks.py",
+      "file_type": "code",
+      "norm_label": "parse_items()",
+      "source_file": "question_generator/src/qgen/validation/checks.py",
+      "source_location": "L65"
     },
     {
       "id": "question_generator_src_qgen_validation_checks_review",
@@ -5620,6 +5704,18 @@
       "norm_label": ".with_motivos()",
       "source_file": "question_generator/src/qgen/validation/checks.py",
       "source_location": "L61"
+    },
+    {
+      "id": "question_generator_tests_test_checks_item",
+      "label": "_item()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 35,
+      "community_name": "test_checks.py",
+      "file_type": "code",
+      "norm_label": "_item()",
+      "source_file": "question_generator/tests/test_checks.py",
+      "source_location": "L23"
     },
     {
       "id": "question_generator_tests_test_checks_q",
@@ -5716,6 +5812,30 @@
       "norm_label": "test_la_similitud_no_depende_del_orden()",
       "source_file": "question_generator/tests/test_checks.py",
       "source_location": "L199"
+    },
+    {
+      "id": "question_generator_tests_test_checks_test_parse_items_corta_en_30",
+      "label": "test_parse_items_corta_en_30()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 35,
+      "community_name": "test_checks.py",
+      "file_type": "code",
+      "norm_label": "test_parse_items_corta_en_30()",
+      "source_file": "question_generator/tests/test_checks.py",
+      "source_location": "L104"
+    },
+    {
+      "id": "question_generator_tests_test_checks_test_parse_items_descarta_solo_lo_malo",
+      "label": "test_parse_items_descarta_solo_lo_malo()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 35,
+      "community_name": "test_checks.py",
+      "file_type": "code",
+      "norm_label": "test_parse_items_descarta_solo_lo_malo()",
+      "source_file": "question_generator/tests/test_checks.py",
+      "source_location": "L98"
     },
     {
       "id": "question_generator_tests_test_checks_test_preguntas_militares_distintas_con_el_mismo_prefijo_no_son_duplicadas",
@@ -5886,16 +6006,16 @@
       "source_location": "L401"
     },
     {
-      "id": "question_generator_src_qgen_bundle_spec_report_error",
-      "label": ".error()",
+      "id": "question_generator_src_qgen_windows_window_key",
+      "label": ".key()",
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "Review Focus",
+      "community_name": "Window",
       "file_type": "code",
-      "norm_label": ".error()",
-      "source_file": "question_generator/src/qgen/bundle/spec.py",
-      "source_location": "L218"
+      "norm_label": ".key()",
+      "source_file": "question_generator/src/qgen/windows.py",
+      "source_location": "L43"
     },
     {
       "id": "question_generator_src_qgen_cost_actual_cost_usd",
@@ -5910,6 +6030,30 @@
       "source_location": "L99"
     },
     {
+      "id": "question_generator_src_qgen_cost_doc_token_estimate",
+      "label": "doc_token_estimate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "qgen/pipeline.py",
+      "file_type": "code",
+      "norm_label": "doc_token_estimate()",
+      "source_file": "question_generator/src/qgen/cost.py",
+      "source_location": "L129"
+    },
+    {
+      "id": "question_generator_src_qgen_cost_estimate_windows",
+      "label": "estimate_windows()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "qgen/pipeline.py",
+      "file_type": "code",
+      "norm_label": "estimate_windows()",
+      "source_file": "question_generator/src/qgen/cost.py",
+      "source_location": "L50"
+    },
+    {
       "id": "question_generator_src_qgen_db_persistence_finalize_run",
       "label": "finalize_run()",
       "_callable": true,
@@ -5922,6 +6066,18 @@
       "source_location": "L117"
     },
     {
+      "id": "question_generator_src_qgen_pipeline_doc_token_estimate_from_chunks",
+      "label": "_doc_token_estimate_from_chunks()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "qgen/pipeline.py",
+      "file_type": "code",
+      "norm_label": "_doc_token_estimate_from_chunks()",
+      "source_file": "question_generator/src/qgen/pipeline.py",
+      "source_location": "L169"
+    },
+    {
       "id": "question_generator_src_qgen_pipeline_run_batch_submit",
       "label": "_run_batch_submit()",
       "_callable": true,
@@ -5932,18 +6088,6 @@
       "norm_label": "_run_batch_submit()",
       "source_file": "question_generator/src/qgen/pipeline.py",
       "source_location": "L553"
-    },
-    {
-      "id": "question_generator_src_qgen_pipeline_run_generation",
-      "label": "run_generation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "qgen/pipeline.py",
-      "file_type": "code",
-      "norm_label": "run_generation()",
-      "source_file": "question_generator/src/qgen/pipeline.py",
-      "source_location": "L207"
     },
     {
       "id": "question_generator_src_qgen_pipeline_run_immediate",
@@ -5994,18 +6138,6 @@
       "source_location": "L433"
     },
     {
-      "id": "question_generator_src_qgen_pipeline_run_summary_from_db",
-      "label": "_run_summary_from_db()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "qgen/pipeline.py",
-      "file_type": "code",
-      "norm_label": "_run_summary_from_db()",
-      "source_file": "question_generator/src/qgen/pipeline.py",
-      "source_location": "L557"
-    },
-    {
       "id": "question_generator_src_qgen_prompts_families_build_verification_instruction",
       "label": "build_verification_instruction()",
       "_callable": true,
@@ -6015,7 +6147,7 @@
       "file_type": "code",
       "norm_label": "build_verification_instruction()",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L175"
+      "source_location": "L188"
     },
     {
       "id": "question_generator_src_qgen_prompts_families_build_verification_message",
@@ -6027,7 +6159,7 @@
       "file_type": "code",
       "norm_label": "build_verification_message()",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L179"
+      "source_location": "L192"
     },
     {
       "id": "question_generator_src_qgen_prompts_families_build_window_message",
@@ -6039,7 +6171,7 @@
       "file_type": "code",
       "norm_label": "build_window_message()",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L159"
+      "source_location": "L172"
     },
     {
       "id": "question_generator_src_qgen_validation_checks_correct_answer",
@@ -6087,7 +6219,7 @@
       "file_type": "code",
       "norm_label": "test_el_mensaje_lleva_ruta_paginas_y_texto()",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L59"
+      "source_location": "L72"
     },
     {
       "id": "etl_tests_test_calculo_una_variable_test_el_arbol_son_los_tres_capitulos_de_la_imagen",
@@ -7050,28 +7182,28 @@
       "source_location": "L12"
     },
     {
+      "id": "data_scratch_seed_questions_manual_11_seed_questions",
+      "label": "seed_questions()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 58,
+      "community_name": "persist_question",
+      "file_type": "code",
+      "norm_label": "seed_questions()",
+      "source_file": "data/scratch/seed_questions_manual_11.py",
+      "source_location": "L161"
+    },
+    {
       "id": "question_generator_src_qgen_db_persistence_create_run",
       "label": "create_run()",
       "_callable": true,
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "create_run()",
       "source_file": "question_generator/src/qgen/db/persistence.py",
       "source_location": "L16"
-    },
-    {
-      "id": "question_generator_src_qgen_db_persistence_load_manual",
-      "label": "load_manual()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "Question",
-      "file_type": "code",
-      "norm_label": "load_manual()",
-      "source_file": "question_generator/src/qgen/db/persistence.py",
-      "source_location": "L140"
     },
     {
       "id": "question_generator_src_qgen_db_persistence_persist_question",
@@ -7079,23 +7211,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "persist_question()",
       "source_file": "question_generator/src/qgen/db/persistence.py",
       "source_location": "L46"
-    },
-    {
-      "id": "question_generator_src_qgen_db_persistence_remove_questions_for_windows",
-      "label": "remove_questions_for_windows()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "Question",
-      "file_type": "code",
-      "norm_label": "remove_questions_for_windows()",
-      "source_file": "question_generator/src/qgen/db/persistence.py",
-      "source_location": "L91"
     },
     {
       "id": "question_generator_tests_test_qgen_persistence_make_question",
@@ -7103,7 +7223,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "_make_question()",
       "source_file": "question_generator/tests/test_qgen_persistence.py",
@@ -7115,23 +7235,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "_seed_manual_and_node()",
       "source_file": "question_generator/tests/test_qgen_persistence.py",
       "source_location": "L18"
-    },
-    {
-      "id": "question_generator_tests_test_qgen_persistence_test_la_migracion_anade_las_columnas_nuevas_a_una_base_antigua",
-      "label": "test_la_migracion_anade_las_columnas_nuevas_a_una_base_antigua()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "Question",
-      "file_type": "code",
-      "norm_label": "test_la_migracion_anade_las_columnas_nuevas_a_una_base_antigua()",
-      "source_file": "question_generator/tests/test_qgen_persistence.py",
-      "source_location": "L183"
     },
     {
       "id": "question_generator_tests_test_qgen_persistence_test_la_pregunta_guarda_tipo_cita_y_ventana",
@@ -7139,7 +7247,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "test_la_pregunta_guarda_tipo_cita_y_ventana()",
       "source_file": "question_generator/tests/test_qgen_persistence.py",
@@ -7151,7 +7259,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "test_por_defecto_una_pregunta_es_de_teoria_sin_cita()",
       "source_file": "question_generator/tests/test_qgen_persistence.py",
@@ -7163,7 +7271,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "test_regenerar_borra_solo_las_ventanas_que_se_rehacen()",
       "source_file": "question_generator/tests/test_qgen_persistence.py",
@@ -7175,7 +7283,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "test_round_trip_run_and_question()",
       "source_file": "question_generator/tests/test_qgen_persistence.py",
@@ -7187,7 +7295,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "test_two_runs_can_share_a_node()",
       "source_file": "question_generator/tests/test_qgen_persistence.py",
@@ -7254,18 +7362,6 @@
       "source_location": "L179"
     },
     {
-      "id": "explorer_src_explorer_questions_access_nodes_missing_questions",
-      "label": "nodes_missing_questions()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "questions_access.py",
-      "file_type": "code",
-      "norm_label": "nodes_missing_questions()",
-      "source_file": "explorer/src/explorer/questions_access.py",
-      "source_location": "L316"
-    },
-    {
       "id": "explorer_src_explorer_questions_access_questionkpis_coverage_pct",
       "label": ".coverage_pct()",
       "_callable": true,
@@ -7288,6 +7384,18 @@
       "norm_label": ".served()",
       "source_file": "explorer/src/explorer/questions_access.py",
       "source_location": "L115"
+    },
+    {
+      "id": "explorer_src_explorer_questions_access_questions_available",
+      "label": "questions_available()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "questions_access.py",
+      "file_type": "code",
+      "norm_label": "questions_available()",
+      "source_file": "explorer/src/explorer/questions_access.py",
+      "source_location": "L133"
     },
     {
       "id": "explorer_src_explorer_questions_access_questionview_served",
@@ -7386,6 +7494,18 @@
       "source_location": "L175"
     },
     {
+      "id": "explorer_tests_test_questions_access_test_questions_available",
+      "label": "test_questions_available()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "questions_access.py",
+      "file_type": "code",
+      "norm_label": "test_questions_available()",
+      "source_file": "explorer/tests/test_questions_access.py",
+      "source_location": "L118"
+    },
+    {
       "id": "explorer_tests_test_questions_access_test_set_validation_status",
       "label": "test_set_validation_status()",
       "_callable": true,
@@ -7403,7 +7523,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "._check_role_counts()",
       "source_file": "question_generator/src/qgen/prompts/schemas.py",
@@ -7415,47 +7535,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "._check()",
       "source_file": "question_generator/src/qgen/prompts/schemas.py",
       "source_location": "L79"
-    },
-    {
-      "id": "question_generator_tests_test_schemas_make_options",
-      "label": "_make_options()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "GeneratedQuestion",
-      "file_type": "code",
-      "norm_label": "_make_options()",
-      "source_file": "question_generator/tests/test_schemas.py",
-      "source_location": "L7"
-    },
-    {
-      "id": "question_generator_tests_test_schemas_test_duplicate_option_text_rejected",
-      "label": "test_duplicate_option_text_rejected()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "GeneratedQuestion",
-      "file_type": "code",
-      "norm_label": "test_duplicate_option_text_rejected()",
-      "source_file": "question_generator/tests/test_schemas.py",
-      "source_location": "L54"
-    },
-    {
-      "id": "question_generator_tests_test_schemas_test_empty_question_rejected",
-      "label": "test_empty_question_rejected()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "GeneratedQuestion",
-      "file_type": "code",
-      "norm_label": "test_empty_question_rejected()",
-      "source_file": "question_generator/tests/test_schemas.py",
-      "source_location": "L61"
     },
     {
       "id": "question_generator_tests_test_schemas_test_la_respuesta_de_ventana_es_una_lista_de_preguntas",
@@ -7463,35 +7547,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "test_la_respuesta_de_ventana_es_una_lista_de_preguntas()",
       "source_file": "question_generator/tests/test_schemas.py",
       "source_location": "L121"
-    },
-    {
-      "id": "question_generator_tests_test_schemas_test_too_few_options_rejected",
-      "label": "test_too_few_options_rejected()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "GeneratedQuestion",
-      "file_type": "code",
-      "norm_label": "test_too_few_options_rejected()",
-      "source_file": "question_generator/tests/test_schemas.py",
-      "source_location": "L33"
-    },
-    {
-      "id": "question_generator_tests_test_schemas_test_two_correct_options_rejected",
-      "label": "test_two_correct_options_rejected()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "GeneratedQuestion",
-      "file_type": "code",
-      "norm_label": "test_two_correct_options_rejected()",
-      "source_file": "question_generator/tests/test_schemas.py",
-      "source_location": "L42"
     },
     {
       "id": "question_generator_tests_test_schemas_test_una_pregunta_de_ventana_valida",
@@ -7499,23 +7559,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "test_una_pregunta_de_ventana_valida()",
       "source_file": "question_generator/tests/test_schemas.py",
       "source_location": "L92"
-    },
-    {
-      "id": "question_generator_tests_test_schemas_test_valid_question_passes",
-      "label": "test_valid_question_passes()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "GeneratedQuestion",
-      "file_type": "code",
-      "norm_label": "test_valid_question_passes()",
-      "source_file": "question_generator/tests/test_schemas.py",
-      "source_location": "L23"
     },
     {
       "id": "question_generator_tests_test_schemas_test_ventana_rechaza_cita_vacia",
@@ -7523,7 +7571,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "test_ventana_rechaza_cita_vacia()",
       "source_file": "question_generator/tests/test_schemas.py",
@@ -7535,7 +7583,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "test_ventana_rechaza_opciones_repetidas()",
       "source_file": "question_generator/tests/test_schemas.py",
@@ -7547,7 +7595,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "test_ventana_rechaza_reparto_de_roles_incorrecto()",
       "source_file": "question_generator/tests/test_schemas.py",
@@ -7559,7 +7607,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "test_ventana_rechaza_tipo_desconocido()",
       "source_file": "question_generator/tests/test_schemas.py",
@@ -7571,23 +7619,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "test_verificacion_solo_admite_letras_ninguna_o_varias()",
       "source_file": "question_generator/tests/test_schemas.py",
       "source_location": "L126"
-    },
-    {
-      "id": "question_generator_tests_test_schemas_test_zero_distractor_rejected",
-      "label": "test_zero_distractor_rejected()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "GeneratedQuestion",
-      "file_type": "code",
-      "norm_label": "test_zero_distractor_rejected()",
-      "source_file": "question_generator/tests/test_schemas.py",
-      "source_location": "L48"
     },
     {
       "id": "question_generator_tests_test_schemas_window_item",
@@ -7595,7 +7631,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "_window_item()",
       "source_file": "question_generator/tests/test_schemas.py",
@@ -7636,6 +7672,18 @@
       "norm_label": "verification_options()",
       "source_file": "question_generator/src/qgen/validation/checks.py",
       "source_location": "L131"
+    },
+    {
+      "id": "question_generator_tests_test_checks_test_la_correcta_no_queda_siempre_primera",
+      "label": "test_la_correcta_no_queda_siempre_primera()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 61,
+      "community_name": "to_generated",
+      "file_type": "code",
+      "norm_label": "test_la_correcta_no_queda_siempre_primera()",
+      "source_file": "question_generator/tests/test_checks.py",
+      "source_location": "L127"
     },
     {
       "id": "question_generator_tests_test_checks_test_to_generated_baraja_de_forma_reproducible",
@@ -8106,18 +8154,6 @@
       "source_location": "L21"
     },
     {
-      "id": "question_generator_src_qgen_cli_stats_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "migration.py",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "question_generator/src/qgen/cli/stats.py",
-      "source_location": "L21"
-    },
-    {
       "id": "question_generator_src_qgen_db_migration_add_missing_columns",
       "label": "_add_missing_columns()",
       "_callable": true,
@@ -8128,6 +8164,18 @@
       "norm_label": "_add_missing_columns()",
       "source_file": "question_generator/src/qgen/db/migration.py",
       "source_location": "L34"
+    },
+    {
+      "id": "question_generator_src_qgen_db_persistence_load_manual",
+      "label": "load_manual()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 68,
+      "community_name": "migration.py",
+      "file_type": "code",
+      "norm_label": "load_manual()",
+      "source_file": "question_generator/src/qgen/db/persistence.py",
+      "source_location": "L140"
     },
     {
       "id": "question_generator_src_qgen_models_schema_utcnow",
@@ -8142,6 +8190,18 @@
       "source_location": "L28"
     },
     {
+      "id": "question_generator_tests_test_baldor_rules_test_algebra_baldor_prompt_rendering",
+      "label": "test_algebra_baldor_prompt_rendering()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "defaults.py",
+      "file_type": "code",
+      "norm_label": "test_algebra_baldor_prompt_rendering()",
+      "source_file": "question_generator/tests/test_baldor_rules.py",
+      "source_location": "L17"
+    },
+    {
       "id": "question_generator_tests_test_baldor_rules_test_algebra_baldor_rules_registered",
       "label": "test_algebra_baldor_rules_registered()",
       "_callable": true,
@@ -8152,18 +8212,6 @@
       "norm_label": "test_algebra_baldor_rules_registered()",
       "source_file": "question_generator/tests/test_baldor_rules.py",
       "source_location": "L7"
-    },
-    {
-      "id": "data_scratch_seed_questions_manual_11_seed_questions",
-      "label": "seed_questions()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "session_scope",
-      "file_type": "code",
-      "norm_label": "seed_questions()",
-      "source_file": "data/scratch/seed_questions_manual_11.py",
-      "source_location": "L161"
     },
     {
       "id": "etl_src_etl_db_session_session_scope",
@@ -8226,30 +8274,6 @@
       "source_location": "L43"
     },
     {
-      "id": "question_generator_src_qgen_cli_claude_code_exportar_cmd",
-      "label": "exportar_cmd()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "session_scope",
-      "file_type": "code",
-      "norm_label": "exportar_cmd()",
-      "source_file": "question_generator/src/qgen/cli/claude_code.py",
-      "source_location": "L21"
-    },
-    {
-      "id": "question_generator_src_qgen_cli_claude_code_exportar_revision_cmd",
-      "label": "exportar_revision_cmd()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "session_scope",
-      "file_type": "code",
-      "norm_label": "exportar_revision_cmd()",
-      "source_file": "question_generator/src/qgen/cli/claude_code.py",
-      "source_location": "L49"
-    },
-    {
       "id": "question_generator_src_qgen_cli_claude_code_importar_revision_cmd",
       "label": "importar_revision_cmd()",
       "_callable": true,
@@ -8260,6 +8284,18 @@
       "norm_label": "importar_revision_cmd()",
       "source_file": "question_generator/src/qgen/cli/claude_code.py",
       "source_location": "L61"
+    },
+    {
+      "id": "question_generator_src_qgen_cli_stats_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "session_scope",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "question_generator/src/qgen/cli/stats.py",
+      "source_location": "L21"
     },
     {
       "id": "question_generator_src_qgen_db_migration_init_question_tables",
@@ -8526,215 +8562,35 @@
       "source_location": "L62"
     },
     {
-      "id": "question_generator_src_qgen_validation_checks_parse_items",
-      "label": "parse_items()",
+      "id": "question_generator_src_qgen_cli_claude_code_exportar_cmd",
+      "label": "exportar_cmd()",
       "_callable": true,
       "_origin": "ast",
       "community": 72,
-      "community_name": "parse_items",
+      "community_name": "cli/claude_code.py",
       "file_type": "code",
-      "norm_label": "parse_items()",
-      "source_file": "question_generator/src/qgen/validation/checks.py",
-      "source_location": "L65"
+      "norm_label": "exportar_cmd()",
+      "source_file": "question_generator/src/qgen/cli/claude_code.py",
+      "source_location": "L21"
     },
     {
-      "id": "question_generator_tests_test_checks_item",
-      "label": "_item()",
+      "id": "question_generator_src_qgen_cli_claude_code_exportar_revision_cmd",
+      "label": "exportar_revision_cmd()",
       "_callable": true,
       "_origin": "ast",
       "community": 72,
-      "community_name": "parse_items",
+      "community_name": "cli/claude_code.py",
       "file_type": "code",
-      "norm_label": "_item()",
-      "source_file": "question_generator/tests/test_checks.py",
-      "source_location": "L23"
-    },
-    {
-      "id": "question_generator_tests_test_checks_test_parse_items_corta_en_30",
-      "label": "test_parse_items_corta_en_30()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 72,
-      "community_name": "parse_items",
-      "file_type": "code",
-      "norm_label": "test_parse_items_corta_en_30()",
-      "source_file": "question_generator/tests/test_checks.py",
-      "source_location": "L104"
-    },
-    {
-      "id": "question_generator_tests_test_checks_test_parse_items_descarta_solo_lo_malo",
-      "label": "test_parse_items_descarta_solo_lo_malo()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 72,
-      "community_name": "parse_items",
-      "file_type": "code",
-      "norm_label": "test_parse_items_descarta_solo_lo_malo()",
-      "source_file": "question_generator/tests/test_checks.py",
-      "source_location": "L98"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_algebra_trigonometria_geometria_analitica_tiene_reglas_de_generacion",
-      "label": "test_algebra_trigonometria_geometria_analitica_tiene_reglas_de_generacion()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_algebra_trigonometria_geometria_analitica_tiene_reglas_de_generacion()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L79"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_cada_perfil_tiene_su_familia_y_sus_tipos",
-      "label": "test_cada_perfil_tiene_su_familia_y_sus_tipos()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_cada_perfil_tiene_su_familia_y_sus_tipos()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L96"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_calculo_una_variable_tiene_reglas_de_generacion",
-      "label": "test_calculo_una_variable_tiene_reglas_de_generacion()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_calculo_una_variable_tiene_reglas_de_generacion()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L73"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_familia_o_tipo_desconocido_se_rechaza",
-      "label": "test_familia_o_tipo_desconocido_se_rechaza()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_familia_o_tipo_desconocido_se_rechaza()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L135"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_geografia_moderna_mexico_tiene_reglas_de_generacion",
-      "label": "test_geografia_moderna_mexico_tiene_reglas_de_generacion()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_geografia_moderna_mexico_tiene_reglas_de_generacion()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L67"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_get_default_rules_known",
-      "label": "test_get_default_rules_known()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_get_default_rules_known()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L11"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_get_default_rules_unknown_raises",
-      "label": "test_get_default_rules_unknown_raises()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_get_default_rules_unknown_raises()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L17"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_historia_universal_tiene_reglas_de_generacion",
-      "label": "test_historia_universal_tiene_reglas_de_generacion()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_historia_universal_tiene_reglas_de_generacion()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L61"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_merge_with_none_override_returns_default",
-      "label": "test_merge_with_none_override_returns_default()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_merge_with_none_override_returns_default()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L22"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_profile_registry_has_keys",
-      "label": "test_profile_registry_has_keys()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_profile_registry_has_keys()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L7"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_solo_los_libros_de_matematicas_tienen_ejercicios",
-      "label": "test_solo_los_libros_de_matematicas_tienen_ejercicios()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_solo_los_libros_de_matematicas_tienen_ejercicios()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L101"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_taller_lectura_redaccion_tiene_reglas_de_generacion",
-      "label": "test_taller_lectura_redaccion_tiene_reglas_de_generacion()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_taller_lectura_redaccion_tiene_reglas_de_generacion()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L54"
-    },
-    {
-      "id": "question_generator_tests_test_rules_test_un_libro_que_no_es_de_matematicas_no_admite_ejercicios",
-      "label": "test_un_libro_que_no_es_de_matematicas_no_admite_ejercicios()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "test_rules.py",
-      "file_type": "code",
-      "norm_label": "test_un_libro_que_no_es_de_matematicas_no_admite_ejercicios()",
-      "source_file": "question_generator/tests/test_rules.py",
-      "source_location": "L109"
+      "norm_label": "exportar_revision_cmd()",
+      "source_file": "question_generator/src/qgen/cli/claude_code.py",
+      "source_location": "L49"
     },
     {
       "id": "question_generator_src_qgen_cli_claude_code_importar_cmd",
       "label": "importar_cmd()",
       "_callable": true,
       "_origin": "ast",
-      "community": 74,
+      "community": 72,
       "community_name": "cli/claude_code.py",
       "file_type": "code",
       "norm_label": "importar_cmd()",
@@ -8742,47 +8598,11 @@
       "source_location": "L34"
     },
     {
-      "id": "question_generator_src_qgen_cli_generate_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 74,
-      "community_name": "cli/claude_code.py",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "question_generator/src/qgen/cli/generate.py",
-      "source_location": "L26"
-    },
-    {
-      "id": "question_generator_src_qgen_cli_generate_model_option",
-      "label": "_model_option()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 74,
-      "community_name": "cli/claude_code.py",
-      "file_type": "code",
-      "norm_label": "_model_option()",
-      "source_file": "question_generator/src/qgen/cli/generate.py",
-      "source_location": "L18"
-    },
-    {
-      "id": "question_generator_src_qgen_cli_generate_print_estimate",
-      "label": "_print_estimate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 74,
-      "community_name": "cli/claude_code.py",
-      "file_type": "code",
-      "norm_label": "_print_estimate()",
-      "source_file": "question_generator/src/qgen/cli/generate.py",
-      "source_location": "L77"
-    },
-    {
       "id": "question_generator_src_qgen_cli_generate_print_summary",
       "label": "_print_summary()",
       "_callable": true,
       "_origin": "ast",
-      "community": 74,
+      "community": 72,
       "community_name": "cli/claude_code.py",
       "file_type": "code",
       "norm_label": "_print_summary()",
@@ -8794,7 +8614,7 @@
       "label": "_progress_cb()",
       "_callable": true,
       "_origin": "ast",
-      "community": 74,
+      "community": 72,
       "community_name": "cli/claude_code.py",
       "file_type": "code",
       "norm_label": "_progress_cb()",
@@ -8802,16 +8622,268 @@
       "source_location": "L66"
     },
     {
+      "id": "question_generator_src_qgen_rules_defaults_get_default_rules",
+      "label": "get_default_rules()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "get_default_rules()",
+      "source_file": "question_generator/src/qgen/rules/defaults.py",
+      "source_location": "L296"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_algebra_trigonometria_geometria_analitica_tiene_reglas_de_generacion",
+      "label": "test_algebra_trigonometria_geometria_analitica_tiene_reglas_de_generacion()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_algebra_trigonometria_geometria_analitica_tiene_reglas_de_generacion()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L79"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_cada_perfil_tiene_su_familia_y_sus_tipos",
+      "label": "test_cada_perfil_tiene_su_familia_y_sus_tipos()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_cada_perfil_tiene_su_familia_y_sus_tipos()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L96"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_calculo_una_variable_tiene_reglas_de_generacion",
+      "label": "test_calculo_una_variable_tiene_reglas_de_generacion()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_calculo_una_variable_tiene_reglas_de_generacion()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L73"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_familia_o_tipo_desconocido_se_rechaza",
+      "label": "test_familia_o_tipo_desconocido_se_rechaza()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_familia_o_tipo_desconocido_se_rechaza()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L135"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_geografia_moderna_mexico_tiene_reglas_de_generacion",
+      "label": "test_geografia_moderna_mexico_tiene_reglas_de_generacion()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_geografia_moderna_mexico_tiene_reglas_de_generacion()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L67"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_get_default_rules_known",
+      "label": "test_get_default_rules_known()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_get_default_rules_known()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L11"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_get_default_rules_unknown_raises",
+      "label": "test_get_default_rules_unknown_raises()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_get_default_rules_unknown_raises()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L17"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_historia_universal_tiene_reglas_de_generacion",
+      "label": "test_historia_universal_tiene_reglas_de_generacion()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_historia_universal_tiene_reglas_de_generacion()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L61"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_merge_with_none_override_returns_default",
+      "label": "test_merge_with_none_override_returns_default()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_merge_with_none_override_returns_default()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L22"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_profile_registry_has_keys",
+      "label": "test_profile_registry_has_keys()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_profile_registry_has_keys()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L7"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_solo_los_libros_de_matematicas_tienen_ejercicios",
+      "label": "test_solo_los_libros_de_matematicas_tienen_ejercicios()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_solo_los_libros_de_matematicas_tienen_ejercicios()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L101"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_taller_lectura_redaccion_tiene_reglas_de_generacion",
+      "label": "test_taller_lectura_redaccion_tiene_reglas_de_generacion()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_taller_lectura_redaccion_tiene_reglas_de_generacion()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L54"
+    },
+    {
+      "id": "question_generator_tests_test_rules_test_un_libro_que_no_es_de_matematicas_no_admite_ejercicios",
+      "label": "test_un_libro_que_no_es_de_matematicas_no_admite_ejercicios()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "get_default_rules",
+      "file_type": "code",
+      "norm_label": "test_un_libro_que_no_es_de_matematicas_no_admite_ejercicios()",
+      "source_file": "question_generator/tests/test_rules.py",
+      "source_location": "L109"
+    },
+    {
+      "id": "question_generator_src_qgen_cli_generate_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 74,
+      "community_name": "cli/generate.py",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "question_generator/src/qgen/cli/generate.py",
+      "source_location": "L26"
+    },
+    {
+      "id": "question_generator_src_qgen_cli_generate_model_option",
+      "label": "_model_option()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 74,
+      "community_name": "cli/generate.py",
+      "file_type": "code",
+      "norm_label": "_model_option()",
+      "source_file": "question_generator/src/qgen/cli/generate.py",
+      "source_location": "L18"
+    },
+    {
+      "id": "question_generator_src_qgen_cli_generate_print_estimate",
+      "label": "_print_estimate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 74,
+      "community_name": "cli/generate.py",
+      "file_type": "code",
+      "norm_label": "_print_estimate()",
+      "source_file": "question_generator/src/qgen/cli/generate.py",
+      "source_location": "L77"
+    },
+    {
+      "id": "question_generator_src_qgen_db_persistence_remove_questions_for_windows",
+      "label": "remove_questions_for_windows()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 74,
+      "community_name": "cli/generate.py",
+      "file_type": "code",
+      "norm_label": "remove_questions_for_windows()",
+      "source_file": "question_generator/src/qgen/db/persistence.py",
+      "source_location": "L91"
+    },
+    {
       "id": "question_generator_src_qgen_gemini_client_resolve_model",
       "label": "resolve_model()",
       "_callable": true,
       "_origin": "ast",
       "community": 74,
-      "community_name": "cli/claude_code.py",
+      "community_name": "cli/generate.py",
       "file_type": "code",
       "norm_label": "resolve_model()",
       "source_file": "question_generator/src/qgen/gemini/client.py",
       "source_location": "L20"
+    },
+    {
+      "id": "question_generator_src_qgen_pipeline_estimate_only",
+      "label": "estimate_only()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 74,
+      "community_name": "cli/generate.py",
+      "file_type": "code",
+      "norm_label": "estimate_only()",
+      "source_file": "question_generator/src/qgen/pipeline.py",
+      "source_location": "L174"
+    },
+    {
+      "id": "question_generator_src_qgen_pipeline_resolve_rules",
+      "label": "_resolve_rules()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 74,
+      "community_name": "cli/generate.py",
+      "file_type": "code",
+      "norm_label": "_resolve_rules()",
+      "source_file": "question_generator/src/qgen/pipeline.py",
+      "source_location": "L161"
+    },
+    {
+      "id": "question_generator_src_qgen_pipeline_run_generation",
+      "label": "run_generation()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 74,
+      "community_name": "cli/generate.py",
+      "file_type": "code",
+      "norm_label": "run_generation()",
+      "source_file": "question_generator/src/qgen/pipeline.py",
+      "source_location": "L207"
     },
     {
       "id": "question_generator_src_qgen_cli_batch_status_check_once",
@@ -8922,76 +8994,16 @@
       "source_location": "L554"
     },
     {
-      "id": "question_generator_src_qgen_cost_doc_token_estimate",
-      "label": "doc_token_estimate()",
+      "id": "question_generator_src_qgen_pipeline_run_summary_from_db",
+      "label": "_run_summary_from_db()",
       "_callable": true,
       "_origin": "ast",
       "community": 76,
-      "community_name": "estimate_only",
+      "community_name": "RunSummary",
       "file_type": "code",
-      "norm_label": "doc_token_estimate()",
-      "source_file": "question_generator/src/qgen/cost.py",
-      "source_location": "L129"
-    },
-    {
-      "id": "question_generator_src_qgen_cost_estimate_windows",
-      "label": "estimate_windows()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 76,
-      "community_name": "estimate_only",
-      "file_type": "code",
-      "norm_label": "estimate_windows()",
-      "source_file": "question_generator/src/qgen/cost.py",
-      "source_location": "L50"
-    },
-    {
-      "id": "question_generator_src_qgen_pipeline_doc_token_estimate_from_chunks",
-      "label": "_doc_token_estimate_from_chunks()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 76,
-      "community_name": "estimate_only",
-      "file_type": "code",
-      "norm_label": "_doc_token_estimate_from_chunks()",
+      "norm_label": "_run_summary_from_db()",
       "source_file": "question_generator/src/qgen/pipeline.py",
-      "source_location": "L169"
-    },
-    {
-      "id": "question_generator_src_qgen_pipeline_estimate_only",
-      "label": "estimate_only()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 76,
-      "community_name": "estimate_only",
-      "file_type": "code",
-      "norm_label": "estimate_only()",
-      "source_file": "question_generator/src/qgen/pipeline.py",
-      "source_location": "L174"
-    },
-    {
-      "id": "explorer_src_explorer_questions_access_questions_available",
-      "label": "questions_available()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 78,
-      "community_name": "questions_available",
-      "file_type": "code",
-      "norm_label": "questions_available()",
-      "source_file": "explorer/src/explorer/questions_access.py",
-      "source_location": "L133"
-    },
-    {
-      "id": "explorer_tests_test_questions_access_test_questions_available",
-      "label": "test_questions_available()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 78,
-      "community_name": "questions_available",
-      "file_type": "code",
-      "norm_label": "test_questions_available()",
-      "source_file": "explorer/tests/test_questions_access.py",
-      "source_location": "L118"
+      "source_location": "L557"
     },
     {
       "id": "explorer_src_explorer_pages_3_toc_normalize",
@@ -9318,44 +9330,22 @@
       "source_location": "L33"
     },
     {
-      "id": "explorer_src_explorer_components_pdf_preview",
-      "label": "pdf_preview.py",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "pdf_preview.py",
-      "file_type": "code",
-      "norm_label": "pdf_preview.py",
-      "source_file": "explorer/src/explorer/components/pdf_preview.py",
-      "source_location": "L1"
-    },
-    {
       "id": "explorer_src_explorer_components_pdf_preview_py_cache_data",
       "label": "cache_data",
       "_origin": "ast",
       "community": 0,
-      "community_name": "pdf_preview.py",
+      "community_name": "render_page",
       "file_type": "code",
       "norm_label": "cache_data",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "explorer_src_explorer_components_pdf_preview_rationale_1",
-      "label": "Render a single PDF page to PNG bytes via PyMuPDF.",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "pdf_preview.py",
-      "file_type": "rationale",
-      "norm_label": "render a single pdf page to png bytes via pymupdf.",
-      "source_file": "explorer/src/explorer/components/pdf_preview.py",
-      "source_location": "L1"
-    },
-    {
       "id": "explorer_src_explorer_components_pdf_preview_rationale_12",
       "label": "Return PNG bytes of the given page (1-based), or None if unavailable. Cached so\u2026",
       "_origin": "ast",
       "community": 0,
-      "community_name": "pdf_preview.py",
+      "community_name": "render_page",
       "file_type": "rationale",
       "norm_label": "return png bytes of the given page (1-based), or none if unavailable. cached so...",
       "source_file": "explorer/src/explorer/components/pdf_preview.py",
@@ -9366,7 +9356,7 @@
       "label": "Convenience: render and display in one call.",
       "_origin": "ast",
       "community": 0,
-      "community_name": "pdf_preview.py",
+      "community_name": "render_page",
       "file_type": "rationale",
       "norm_label": "convenience: render and display in one call.",
       "source_file": "explorer/src/explorer/components/pdf_preview.py",
@@ -9775,15 +9765,15 @@
       "source_location": "L1"
     },
     {
-      "id": "explorer_tests_test_data_access_rationale_121",
-      "label": "Verifica la obtenci\u00f3n de la jerarqu\u00eda de \u00e1rbol y nodos individuales.",
+      "id": "explorer_src_explorer_questions_access_rationale_317",
+      "label": "Nodos con texto que se quedaron sin ninguna pregunta. Es la lista de trabajo\u2026",
       "_origin": "ast",
       "community": 11,
       "community_name": "data_access.py",
       "file_type": "rationale",
-      "norm_label": "verifica la obtencion de la jerarquia de arbol y nodos individuales.",
-      "source_file": "explorer/tests/test_data_access.py",
-      "source_location": "L121"
+      "norm_label": "nodos con texto que se quedaron sin ninguna pregunta. es la lista de trabajo...",
+      "source_file": "explorer/src/explorer/questions_access.py",
+      "source_location": "L317"
     },
     {
       "id": "etl_src_etl_extraction_types_rationale_38",
@@ -10131,7 +10121,7 @@
       "label": "Any",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "any",
       "source_file": "",
@@ -10142,62 +10132,51 @@
       "label": "test_families.py",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "code",
       "norm_label": "test_families.py",
       "source_file": "question_generator/tests/test_families.py",
       "source_location": "L1"
     },
     {
-      "id": "question_generator_src_qgen_prompts_families_rationale_116",
+      "id": "question_generator_src_qgen_prompts_families_rationale_128",
       "label": "Instrucci\u00f3n del sistema para la llamada por ventana: plantilla de la familia +\u2026",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "rationale",
       "norm_label": "instruccion del sistema para la llamada por ventana: plantilla de la familia +...",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L116"
+      "source_location": "L128"
     },
     {
-      "id": "question_generator_src_qgen_prompts_families_rationale_138",
+      "id": "question_generator_src_qgen_prompts_families_rationale_151",
       "label": "\"Conforme al Manual \u2026\" pero \"Conforme a la Ley \u2026\": el art\u00edculo concuerda con el\u2026",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "rationale",
       "norm_label": "\"conforme al manual ...\" pero \"conforme a la ley ...\": el articulo concuerda con el...",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L138"
+      "source_location": "L151"
     },
     {
-      "id": "question_generator_src_qgen_prompts_families_rationale_144",
+      "id": "question_generator_src_qgen_prompts_families_rationale_157",
       "label": "Ejemplos de referencia; si no hay, los militares de siempre solo en la familia\u2026",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "rationale",
       "norm_label": "ejemplos de referencia; si no hay, los militares de siempre solo en la familia...",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L144"
-    },
-    {
-      "id": "question_generator_tests_test_baldor_rules_rationale_18",
-      "label": "La instrucci\u00f3n por ventana lleva las reglas de Baldor y pide ejercicios.",
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "get_default_rules",
-      "file_type": "rationale",
-      "norm_label": "la instruccion por ventana lleva las reglas de baldor y pide ejercicios.",
-      "source_file": "question_generator/tests/test_baldor_rules.py",
-      "source_location": "L18"
+      "source_location": "L157"
     },
     {
       "id": "question_generator_tests_test_families_rationale_1",
       "label": "Instrucciones de la llamada por ventana, por familia (spec \u00a76).",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_default_rules",
+      "community_name": "build_window_instruction",
       "file_type": "rationale",
       "norm_label": "instrucciones de la llamada por ventana, por familia (spec \u00a76).",
       "source_file": "question_generator/tests/test_families.py",
@@ -10422,17 +10401,6 @@
       "norm_label": "las preguntas crudas de una ventana (sin validar) y lo que costo pedirlas.",
       "source_file": "question_generator/src/qgen/gemini/generate.py",
       "source_location": "L56"
-    },
-    {
-      "id": "question_generator_src_qgen_prompts_schemas_rationale_97",
-      "label": "Lo que devuelve la verificaci\u00f3n de un ejercicio nuevo (spec \u00a77).",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_pipeline.py",
-      "file_type": "rationale",
-      "norm_label": "lo que devuelve la verificacion de un ejercicio nuevo (spec \u00a77).",
-      "source_file": "question_generator/src/qgen/prompts/schemas.py",
-      "source_location": "L97"
     },
     {
       "id": "question_generator_tests_test_pipeline_rationale_1",
@@ -10686,6 +10654,17 @@
       "norm_label": "verifica la consulta de detalles de un manual especifico.",
       "source_file": "explorer/tests/test_data_access.py",
       "source_location": "L106"
+    },
+    {
+      "id": "explorer_tests_test_data_access_rationale_121",
+      "label": "Verifica la obtenci\u00f3n de la jerarqu\u00eda de \u00e1rbol y nodos individuales.",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "session.py",
+      "file_type": "rationale",
+      "norm_label": "verifica la obtencion de la jerarquia de arbol y nodos individuales.",
+      "source_file": "explorer/tests/test_data_access.py",
+      "source_location": "L121"
     },
     {
       "id": "explorer_tests_test_data_access_rationale_87",
@@ -11634,18 +11613,6 @@
       "source_location": ""
     },
     {
-      "id": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_12_organizaci\u00f3n_del_c\u00f3digo",
-      "label": "12. Organizaci\u00f3n del c\u00f3digo",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "gemini/generate.py",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "12. organizacion del codigo",
-      "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L260"
-    },
-    {
       "id": "question_generator_src_qgen_gemini_batch_rationale_1",
       "label": "Batch-mode generation: submit one job for all nodes, poll, parse later. Trade-\u2026",
       "_origin": "ast",
@@ -11870,7 +11837,7 @@
       "label": "claude_review.py",
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "claude_review.py",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -11881,7 +11848,7 @@
       "label": "BaseModel",
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "basemodel",
       "source_file": "",
@@ -11892,7 +11859,7 @@
       "label": "datetime",
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "datetime",
       "source_file": "",
@@ -11903,7 +11870,7 @@
       "label": "Exception",
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "exception",
       "source_file": "",
@@ -11914,7 +11881,7 @@
       "label": "model_validator",
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "model_validator",
       "source_file": "",
@@ -11925,7 +11892,7 @@
       "label": "Path",
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "path",
       "source_file": "",
@@ -11936,7 +11903,7 @@
       "label": "Session",
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "code",
       "norm_label": "session",
       "source_file": "",
@@ -11947,7 +11914,7 @@
       "label": "Revisi\u00f3n de calidad desde Claude Code: exportar lotes, calificar, importar\u2026",
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "rationale",
       "norm_label": "revision de calidad desde claude code: exportar lotes, calificar, importar...",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -11958,7 +11925,7 @@
       "label": "Aplica los veredictos. Un lote que no se puede leer o validar no aplica nada;\u2026",
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "rationale",
       "norm_label": "aplica los veredictos. un lote que no se puede leer o validar no aplica nada;...",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -11969,7 +11936,7 @@
       "label": "Los motivos del veredicto van en `revision`, aparte de los `motivos` de la\u2026",
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "rationale",
       "norm_label": "los motivos del veredicto van en `revision`, aparte de los `motivos` de la...",
       "source_file": "question_generator/src/qgen/claude_review.py",
@@ -11980,22 +11947,11 @@
       "label": "Escribe la r\u00fabrica y un lote por ventana con las preguntas sin decidir que\u2026",
       "_origin": "ast",
       "community": 33,
-      "community_name": "claude_review.py",
+      "community_name": "Question",
       "file_type": "rationale",
       "norm_label": "escribe la rubrica y un lote por ventana con las preguntas sin decidir que...",
       "source_file": "question_generator/src/qgen/claude_review.py",
       "source_location": "L77"
-    },
-    {
-      "id": "question_generator_src_qgen_windows_rationale_44",
-      "label": "Identidad estable de la ventana: `<node_id>:<ordinal_desde>-<ordinal_hasta>`.",
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "claude_review.py",
-      "file_type": "rationale",
-      "norm_label": "identidad estable de la ventana: `<node_id>:<ordinal_desde>-<ordinal_hasta>`.",
-      "source_file": "question_generator/src/qgen/windows.py",
-      "source_location": "L44"
     },
     {
       "id": "question_generator_src_qgen_prompts_init",
@@ -12054,6 +12010,30 @@
       "source_location": "L593"
     },
     {
+      "id": "docs_superpowers_plans_2026_09_23_qgen_ventanas_task_6_llamadas_a_gemini_ventana_y_verificaci\u00f3n",
+      "label": "Task 6: Llamadas a Gemini: ventana y verificaci\u00f3n",
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "task 6: llamadas a gemini: ventana y verificacion",
+      "source_file": "docs/superpowers/plans/2026-09-23-qgen-ventanas.md",
+      "source_location": "L1262"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_12_organizaci\u00f3n_del_c\u00f3digo",
+      "label": "12. Organizaci\u00f3n del c\u00f3digo",
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "12. organizacion del codigo",
+      "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
+      "source_location": "L272"
+    },
+    {
       "id": "question_generator_src_qgen_prompts_schemas_rationale_1",
       "label": "Structured-output schemas for Gemini/Ollama.",
       "_origin": "ast",
@@ -12063,6 +12043,28 @@
       "norm_label": "structured-output schemas for gemini/ollama.",
       "source_file": "question_generator/src/qgen/prompts/schemas.py",
       "source_location": "L1"
+    },
+    {
+      "id": "question_generator_src_qgen_prompts_schemas_rationale_97",
+      "label": "Lo que devuelve la verificaci\u00f3n de un ejercicio nuevo (spec \u00a77).",
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "rationale",
+      "norm_label": "lo que devuelve la verificacion de un ejercicio nuevo (spec \u00a77).",
+      "source_file": "question_generator/src/qgen/prompts/schemas.py",
+      "source_location": "L97"
+    },
+    {
+      "id": "question_generator_tests_test_schemas_rationale_8",
+      "label": "Build a list of options matching the canonical 1+1+2 distribution.",
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "schemas.py",
+      "file_type": "rationale",
+      "norm_label": "build a list of options matching the canonical 1+1+2 distribution.",
+      "source_file": "question_generator/tests/test_schemas.py",
+      "source_location": "L8"
     },
     {
       "id": "question_generator_tests_test_checks",
@@ -12085,6 +12087,17 @@
       "norm_label": "enunciados ya aceptados, por nodo, para descartar duplicadas (spec \u00a77). en...",
       "source_file": "question_generator/src/qgen/validation/checks.py",
       "source_location": "L158"
+    },
+    {
+      "id": "question_generator_src_qgen_validation_checks_rationale_66",
+      "label": "Valida cada pregunta por separado: una mala no tumba a las dem\u00e1s.",
+      "_origin": "ast",
+      "community": 35,
+      "community_name": "test_checks.py",
+      "file_type": "rationale",
+      "norm_label": "valida cada pregunta por separado: una mala no tumba a las demas.",
+      "source_file": "question_generator/src/qgen/validation/checks.py",
+      "source_location": "L66"
     },
     {
       "id": "question_generator_src_qgen_validation_checks_rationale_90",
@@ -12213,7 +12226,7 @@
       "node_kind": "heading",
       "norm_label": "10. contrato v2 del bundle",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L235"
+      "source_location": "L247"
     },
     {
       "id": "question_generator_src_qgen_bundle_spec_rationale_108",
@@ -12242,7 +12255,7 @@
       "label": "2026-09-23-qgen-ventanas.md",
       "_origin": "ast",
       "community": 38,
-      "community_name": "Review Focus",
+      "community_name": "Window",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "2026-09-23-qgen-ventanas.md",
@@ -12254,7 +12267,7 @@
       "label": "Generaci\u00f3n de preguntas por ventanas (qgen v2) \u2014 Plan de implementaci\u00f3n",
       "_origin": "ast",
       "community": 38,
-      "community_name": "Review Focus",
+      "community_name": "Window",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "generacion de preguntas por ventanas (qgen v2) \u2014 plan de implementacion",
@@ -12266,7 +12279,7 @@
       "label": "Global Constraints",
       "_origin": "ast",
       "community": 38,
-      "community_name": "Review Focus",
+      "community_name": "Window",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "global constraints",
@@ -12278,7 +12291,7 @@
       "label": "Review Focus",
       "_origin": "ast",
       "community": 38,
-      "community_name": "Review Focus",
+      "community_name": "Window",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "review focus",
@@ -12290,7 +12303,7 @@
       "label": "Task 10: Contrato v2 del bundle",
       "_origin": "ast",
       "community": 38,
-      "community_name": "Review Focus",
+      "community_name": "Window",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "task 10: contrato v2 del bundle",
@@ -12302,7 +12315,7 @@
       "label": "Task 12: Verificaci\u00f3n final y prueba real",
       "_origin": "ast",
       "community": 38,
-      "community_name": "Review Focus",
+      "community_name": "Window",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "task 12: verificacion final y prueba real",
@@ -12314,7 +12327,7 @@
       "label": "Task 2: Ventanas",
       "_origin": "ast",
       "community": 38,
-      "community_name": "Review Focus",
+      "community_name": "Window",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "task 2: ventanas",
@@ -12326,7 +12339,7 @@
       "label": "Task 3: Esquemas de salida de la llamada por ventana",
       "_origin": "ast",
       "community": 38,
-      "community_name": "Review Focus",
+      "community_name": "Window",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "task 3: esquemas de salida de la llamada por ventana",
@@ -12338,7 +12351,7 @@
       "label": "Task 5: Instrucciones por familia",
       "_origin": "ast",
       "community": 38,
-      "community_name": "Review Focus",
+      "community_name": "Window",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "task 5: instrucciones por familia",
@@ -12346,28 +12359,38 @@
       "source_location": "L983"
     },
     {
-      "id": "docs_superpowers_plans_2026_09_23_qgen_ventanas_task_6_llamadas_a_gemini_ventana_y_verificaci\u00f3n",
-      "label": "Task 6: Llamadas a Gemini: ventana y verificaci\u00f3n",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Review Focus",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "task 6: llamadas a gemini: ventana y verificacion",
-      "source_file": "docs/superpowers/plans/2026-09-23-qgen-ventanas.md",
-      "source_location": "L1262"
-    },
-    {
       "id": "docs_superpowers_plans_2026_09_23_qgen_ventanas_task_8_planificaci\u00f3n_de_ventanas_y_reanudaci\u00f3n",
       "label": "Task 8: Planificaci\u00f3n de ventanas y reanudaci\u00f3n",
       "_origin": "ast",
       "community": 38,
-      "community_name": "Review Focus",
+      "community_name": "Window",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "task 8: planificacion de ventanas y reanudacion",
       "source_file": "docs/superpowers/plans/2026-09-23-qgen-ventanas.md",
       "source_location": "L1778"
+    },
+    {
+      "id": "question_generator_src_qgen_windows_rationale_44",
+      "label": "Identidad estable de la ventana: `<node_id>:<ordinal_desde>-<ordinal_hasta>`.",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "Window",
+      "file_type": "rationale",
+      "norm_label": "identidad estable de la ventana: `<node_id>:<ordinal_desde>-<ordinal_hasta>`.",
+      "source_file": "question_generator/src/qgen/windows.py",
+      "source_location": "L44"
+    },
+    {
+      "id": "question_generator_src_qgen_cost",
+      "label": "cost.py",
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "qgen/pipeline.py",
+      "file_type": "code",
+      "norm_label": "cost.py",
+      "source_file": "question_generator/src/qgen/cost.py",
+      "source_location": "L1"
     },
     {
       "id": "question_generator_src_qgen_pipeline",
@@ -12392,6 +12415,17 @@
       "source_location": "L1"
     },
     {
+      "id": "question_generator_src_qgen_cost_rationale_1",
+      "label": "Cost accounting: predictions before a run + actual after. Pricing (USD per 1M\u2026",
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "qgen/pipeline.py",
+      "file_type": "rationale",
+      "norm_label": "cost accounting: predictions before a run + actual after. pricing (usd per 1m...",
+      "source_file": "question_generator/src/qgen/cost.py",
+      "source_location": "L1"
+    },
+    {
       "id": "question_generator_src_qgen_cost_rationale_109",
       "label": "Compute actual cost from observed usage_metadata totals. `cache_create_tokens`\u2026",
       "_origin": "ast",
@@ -12401,6 +12435,17 @@
       "norm_label": "compute actual cost from observed usage_metadata totals. `cache_create_tokens`...",
       "source_file": "question_generator/src/qgen/cost.py",
       "source_location": "L109"
+    },
+    {
+      "id": "question_generator_src_qgen_cost_rationale_60",
+      "label": "Una llamada por ventana (instrucci\u00f3n + texto de la ventana + documento\u2026",
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "qgen/pipeline.py",
+      "file_type": "rationale",
+      "norm_label": "una llamada por ventana (instruccion + texto de la ventana + documento...",
+      "source_file": "question_generator/src/qgen/cost.py",
+      "source_location": "L60"
     },
     {
       "id": "question_generator_src_qgen_pipeline_rationale_1",
@@ -12425,17 +12470,6 @@
       "source_location": "L341"
     },
     {
-      "id": "question_generator_src_qgen_pipeline_rationale_558",
-      "label": "Construye un RunSummary a partir de una corrida persistida en la base de datos.",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "qgen/pipeline.py",
-      "file_type": "rationale",
-      "norm_label": "construye un runsummary a partir de una corrida persistida en la base de datos.",
-      "source_file": "question_generator/src/qgen/pipeline.py",
-      "source_location": "L558"
-    },
-    {
       "id": "question_generator_src_qgen_prompts_families_rationale_1",
       "label": "Instrucciones de la llamada por ventana y de la verificaci\u00f3n (spec \u00a76 y \u00a77).\u2026",
       "_origin": "ast",
@@ -12447,7 +12481,7 @@
       "source_location": "L1"
     },
     {
-      "id": "question_generator_src_qgen_prompts_families_rationale_160",
+      "id": "question_generator_src_qgen_prompts_families_rationale_173",
       "label": "Mensaje de la llamada: el manual, la ruta del nodo, las p\u00e1ginas y el texto de\u2026",
       "_origin": "ast",
       "community": 39,
@@ -12455,10 +12489,10 @@
       "file_type": "rationale",
       "norm_label": "mensaje de la llamada: el manual, la ruta del nodo, las paginas y el texto de...",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L160"
+      "source_location": "L173"
     },
     {
-      "id": "question_generator_src_qgen_prompts_families_rationale_180",
+      "id": "question_generator_src_qgen_prompts_families_rationale_193",
       "label": "Mensaje de la verificaci\u00f3n: el ejemplo del libro, el ejercicio y sus opciones\u2026",
       "_origin": "ast",
       "community": 39,
@@ -12466,7 +12500,7 @@
       "file_type": "rationale",
       "norm_label": "mensaje de la verificacion: el ejemplo del libro, el ejercicio y sus opciones...",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L180"
+      "source_location": "L193"
     },
     {
       "id": "question_generator_src_qgen_validation_checks_rationale_141",
@@ -14063,6 +14097,17 @@
       "source_location": ""
     },
     {
+      "id": "question_generator_src_qgen_reference_importer_py_basemodel",
+      "label": "BaseModel",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "typing",
+      "file_type": "code",
+      "norm_label": "basemodel",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "question_generator_src_qgen_reference_importer_py_path",
       "label": "Path",
       "_origin": "ast",
@@ -14184,6 +14229,28 @@
       "source_location": "L1"
     },
     {
+      "id": "question_generator_src_qgen_reference_importer_rationale_21",
+      "label": "Modelo Pydantic para validar una opci\u00f3n de respuesta de ejemplo.",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "typing",
+      "file_type": "rationale",
+      "norm_label": "modelo pydantic para validar una opcion de respuesta de ejemplo.",
+      "source_file": "question_generator/src/qgen/reference/importer.py",
+      "source_location": "L21"
+    },
+    {
+      "id": "question_generator_src_qgen_reference_importer_rationale_29",
+      "label": "Modelo Pydantic para validar una pregunta de ejemplo completa.",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "typing",
+      "file_type": "rationale",
+      "norm_label": "modelo pydantic para validar una pregunta de ejemplo completa.",
+      "source_file": "question_generator/src/qgen/reference/importer.py",
+      "source_location": "L29"
+    },
+    {
       "id": "question_generator_src_qgen_reference_importer_rationale_46",
       "label": "Valida y persiste una lista de preguntas de ejemplo en la BD. Args: session:\u2026",
       "_origin": "ast",
@@ -14239,22 +14306,11 @@
       "source_location": "L13"
     },
     {
-      "id": "question_generator_src_qgen_db_persistence",
-      "label": "qgen/db/persistence.py",
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "Question",
-      "file_type": "code",
-      "norm_label": "qgen/db/persistence.py",
-      "source_file": "question_generator/src/qgen/db/persistence.py",
-      "source_location": "L1"
-    },
-    {
       "id": "question_generator_src_qgen_db_persistence_py_any",
       "label": "Any",
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "any",
       "source_file": "",
@@ -14265,7 +14321,7 @@
       "label": "Session",
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "session",
       "source_file": "",
@@ -14276,52 +14332,18 @@
       "label": "test_qgen_persistence.py",
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "code",
       "norm_label": "test_qgen_persistence.py",
       "source_file": "question_generator/tests/test_qgen_persistence.py",
       "source_location": "L1"
     },
     {
-      "id": "docs_superpowers_plans_2026_09_23_qgen_ventanas_task_7_columnas_nuevas_migraci\u00f3n_y_persistencia",
-      "label": "Task 7: Columnas nuevas, migraci\u00f3n y persistencia",
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "Question",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "task 7: columnas nuevas, migracion y persistencia",
-      "source_file": "docs/superpowers/plans/2026-09-23-qgen-ventanas.md",
-      "source_location": "L1545"
-    },
-    {
-      "id": "question_generator_src_qgen_db_persistence_rationale_1",
-      "label": "Mapea GeneratedQuestion de Pydantic + metadatos de corrida a filas del ORM.",
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "Question",
-      "file_type": "rationale",
-      "norm_label": "mapea generatedquestion de pydantic + metadatos de corrida a filas del orm.",
-      "source_file": "question_generator/src/qgen/db/persistence.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "question_generator_src_qgen_db_persistence_rationale_94",
-      "label": "--regenerate: borra las preguntas de las ventanas que se van a rehacer y las\u2026",
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "Question",
-      "file_type": "rationale",
-      "norm_label": "--regenerate: borra las preguntas de las ventanas que se van a rehacer y las...",
-      "source_file": "question_generator/src/qgen/db/persistence.py",
-      "source_location": "L94"
-    },
-    {
       "id": "question_generator_tests_test_qgen_persistence_rationale_98",
       "label": "Two different GenerationRuns for the same node are allowed (re-generation).",
       "_origin": "ast",
       "community": 58,
-      "community_name": "Question",
+      "community_name": "persist_question",
       "file_type": "rationale",
       "norm_label": "two different generationruns for the same node are allowed (re-generation).",
       "source_file": "question_generator/tests/test_qgen_persistence.py",
@@ -14349,7 +14371,7 @@
       "node_kind": "heading",
       "norm_label": "11. trabajo en la webapp (lo hace el usuario)",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L253"
+      "source_location": "L265"
     },
     {
       "id": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_13_errores",
@@ -14361,7 +14383,7 @@
       "node_kind": "heading",
       "norm_label": "13. errores",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L280"
+      "source_location": "L292"
     },
     {
       "id": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_14_pruebas_tdd",
@@ -14373,7 +14395,7 @@
       "node_kind": "heading",
       "norm_label": "14. pruebas (tdd)",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L289"
+      "source_location": "L301"
     },
     {
       "id": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_15_riesgos",
@@ -14385,7 +14407,7 @@
       "node_kind": "heading",
       "norm_label": "15. riesgos",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L308"
+      "source_location": "L320"
     },
     {
       "id": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_1_contexto",
@@ -14457,7 +14479,7 @@
       "node_kind": "heading",
       "norm_label": "7. validacion y verificacion",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L156"
+      "source_location": "L168"
     },
     {
       "id": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_8_persistencia",
@@ -14469,7 +14491,7 @@
       "node_kind": "heading",
       "norm_label": "8. persistencia",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L202"
+      "source_location": "L214"
     },
     {
       "id": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_9_cli_estimaci\u00f3n_y_explorador",
@@ -14481,7 +14503,7 @@
       "node_kind": "heading",
       "norm_label": "9. cli, estimacion y explorador",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L223"
+      "source_location": "L235"
     },
     {
       "id": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_generaci\u00f3n_de_preguntas_por_ventanas_qgen_v2",
@@ -14574,6 +14596,17 @@
       "source_location": "L127"
     },
     {
+      "id": "explorer_src_explorer_questions_access_rationale_134",
+      "label": "\u00bfExisten ya las tablas de la fase 2 en esta base? Un SQLite reci\u00e9n ingerido\u2026",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "questions_access.py",
+      "file_type": "rationale",
+      "norm_label": "\u00bfexisten ya las tablas de la fase 2 en esta base? un sqlite recien ingerido...",
+      "source_file": "explorer/src/explorer/questions_access.py",
+      "source_location": "L134"
+    },
+    {
       "id": "explorer_src_explorer_questions_access_rationale_228",
       "label": "Preguntas de un manual, con su nodo y sus opciones ya resueltos.",
       "_origin": "ast",
@@ -14596,17 +14629,6 @@
       "source_location": "L301"
     },
     {
-      "id": "explorer_src_explorer_questions_access_rationale_317",
-      "label": "Nodos con texto que se quedaron sin ninguna pregunta. Es la lista de trabajo\u2026",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "questions_access.py",
-      "file_type": "rationale",
-      "norm_label": "nodos con texto que se quedaron sin ninguna pregunta. es la lista de trabajo...",
-      "source_file": "explorer/src/explorer/questions_access.py",
-      "source_location": "L317"
-    },
-    {
       "id": "explorer_src_explorer_questions_access_rationale_327",
       "label": "Marca una pregunta. **Escribe** en el SQLite local. Es lo \u00fanico que este\u2026",
       "_origin": "ast",
@@ -14627,6 +14649,17 @@
       "norm_label": "pruebas unitarias para la capa de acceso a preguntas del explorador...",
       "source_file": "explorer/tests/test_questions_access.py",
       "source_location": "L1"
+    },
+    {
+      "id": "explorer_tests_test_questions_access_rationale_119",
+      "label": "Verifica que detecta correctamente si las tablas de preguntas existen.",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "questions_access.py",
+      "file_type": "rationale",
+      "norm_label": "verifica que detecta correctamente si las tablas de preguntas existen.",
+      "source_file": "explorer/tests/test_questions_access.py",
+      "source_location": "L119"
     },
     {
       "id": "explorer_tests_test_questions_access_rationale_127",
@@ -14666,7 +14699,7 @@
       "label": "model_validator",
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "model_validator",
       "source_file": "",
@@ -14677,7 +14710,7 @@
       "label": "test_schemas.py",
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "code",
       "norm_label": "test_schemas.py",
       "source_file": "question_generator/tests/test_schemas.py",
@@ -14688,22 +14721,11 @@
       "label": "Una pregunta completa tal como la devuelve la llamada por ventana.",
       "_origin": "ast",
       "community": 60,
-      "community_name": "GeneratedQuestion",
+      "community_name": "WindowQuestion",
       "file_type": "rationale",
       "norm_label": "una pregunta completa tal como la devuelve la llamada por ventana.",
       "source_file": "question_generator/src/qgen/prompts/schemas.py",
       "source_location": "L70"
-    },
-    {
-      "id": "question_generator_tests_test_schemas_rationale_8",
-      "label": "Build a list of options matching the canonical 1+1+2 distribution.",
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "GeneratedQuestion",
-      "file_type": "rationale",
-      "norm_label": "build a list of options matching the canonical 1+1+2 distribution.",
-      "source_file": "question_generator/tests/test_schemas.py",
-      "source_location": "L8"
     },
     {
       "id": "question_generator_src_qgen_validation_checks_rationale_123",
@@ -15025,17 +15047,6 @@
       "source_location": "L1"
     },
     {
-      "id": "question_generator_src_qgen_cli_stats_py_command",
-      "label": "command",
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "migration.py",
-      "file_type": "code",
-      "norm_label": "command",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "question_generator_src_qgen_db_init",
       "label": "qgen/db/__init__.py",
       "_origin": "ast",
@@ -15055,6 +15066,17 @@
       "file_type": "code",
       "norm_label": "migration.py",
       "source_file": "question_generator/src/qgen/db/migration.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "question_generator_src_qgen_db_persistence",
+      "label": "qgen/db/persistence.py",
+      "_origin": "ast",
+      "community": 68,
+      "community_name": "migration.py",
+      "file_type": "code",
+      "norm_label": "qgen/db/persistence.py",
+      "source_file": "question_generator/src/qgen/db/persistence.py",
       "source_location": "L1"
     },
     {
@@ -15113,6 +15135,17 @@
       "source_location": "L1"
     },
     {
+      "id": "question_generator_src_qgen_db_persistence_rationale_1",
+      "label": "Mapea GeneratedQuestion de Pydantic + metadatos de corrida a filas del ORM.",
+      "_origin": "ast",
+      "community": 68,
+      "community_name": "migration.py",
+      "file_type": "rationale",
+      "norm_label": "mapea generatedquestion de pydantic + metadatos de corrida a filas del orm.",
+      "source_file": "question_generator/src/qgen/db/persistence.py",
+      "source_location": "L1"
+    },
+    {
       "id": "question_generator_src_qgen_models_schema_rationale_1",
       "label": "SQLAlchemy schema for generated questions. Hereda del mismo `Base` que\u2026",
       "_origin": "ast",
@@ -15168,6 +15201,17 @@
       "source_location": "L1"
     },
     {
+      "id": "question_generator_tests_test_baldor_rules_rationale_18",
+      "label": "La instrucci\u00f3n por ventana lleva las reglas de Baldor y pide ejercicios.",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "defaults.py",
+      "file_type": "rationale",
+      "norm_label": "la instruccion por ventana lleva las reglas de baldor y pide ejercicios.",
+      "source_file": "question_generator/tests/test_baldor_rules.py",
+      "source_location": "L18"
+    },
+    {
       "id": "question_generator_tests_test_baldor_rules_rationale_8",
       "label": "Verifica que el perfil 'algebra_baldor' est\u00e1 registrado en el cat\u00e1logo de\u2026",
       "_origin": "ast",
@@ -15212,24 +15256,13 @@
       "source_location": ""
     },
     {
-      "id": "question_generator_src_qgen_cli_claude_code_py_command",
+      "id": "question_generator_src_qgen_cli_stats_py_command",
       "label": "command",
       "_origin": "ast",
       "community": 7,
       "community_name": "session_scope",
       "file_type": "code",
       "norm_label": "command",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "question_generator_src_qgen_cli_claude_code_py_path",
-      "label": "Path",
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "session_scope",
-      "file_type": "code",
-      "norm_label": "path",
       "source_file": "",
       "source_location": ""
     },
@@ -15311,28 +15344,6 @@
       "source_location": "L68"
     },
     {
-      "id": "question_generator_src_qgen_cli_claude_code_rationale_26",
-      "label": "Escribe la instrucci\u00f3n y las ventanas pendientes para que Claude Code las\u2026",
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "session_scope",
-      "file_type": "rationale",
-      "norm_label": "escribe la instruccion y las ventanas pendientes para que claude code las...",
-      "source_file": "question_generator/src/qgen/cli/claude_code.py",
-      "source_location": "L26"
-    },
-    {
-      "id": "question_generator_src_qgen_cli_claude_code_rationale_53",
-      "label": "Escribe la r\u00fabrica y los lotes de preguntas sin decidir para que Claude Code\u2026",
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "session_scope",
-      "file_type": "rationale",
-      "norm_label": "escribe la rubrica y los lotes de preguntas sin decidir para que claude code...",
-      "source_file": "question_generator/src/qgen/cli/claude_code.py",
-      "source_location": "L53"
-    },
-    {
       "id": "question_generator_src_qgen_cli_claude_code_rationale_65",
       "label": "Aplica los veredictos: aceptar \u2192 valid, rechazar \u2192 rejected, dudosa \u2192\u2026",
       "_origin": "ast",
@@ -15374,6 +15385,17 @@
       "file_type": "code",
       "norm_label": "kpi_cards.py",
       "source_file": "explorer/src/explorer/components/kpi_cards.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "explorer_src_explorer_components_pdf_preview",
+      "label": "pdf_preview.py",
+      "_origin": "ast",
+      "community": 70,
+      "community_name": "6_\u2753_Preguntas.py",
+      "file_type": "code",
+      "norm_label": "pdf_preview.py",
+      "source_file": "explorer/src/explorer/components/pdf_preview.py",
       "source_location": "L1"
     },
     {
@@ -15452,6 +15474,17 @@
       "norm_label": "render a row of `st.metric` cards. items is a list of (label, value,...",
       "source_file": "explorer/src/explorer/components/kpi_cards.py",
       "source_location": "L7"
+    },
+    {
+      "id": "explorer_src_explorer_components_pdf_preview_rationale_1",
+      "label": "Render a single PDF page to PNG bytes via PyMuPDF.",
+      "_origin": "ast",
+      "community": 70,
+      "community_name": "6_\u2753_Preguntas.py",
+      "file_type": "rationale",
+      "norm_label": "render a single pdf page to png bytes via pymupdf.",
+      "source_file": "explorer/src/explorer/components/pdf_preview.py",
+      "source_location": "L1"
     },
     {
       "id": "explorer_src_explorer_home_rationale_1",
@@ -15586,22 +15619,88 @@
       "source_location": "L1"
     },
     {
-      "id": "question_generator_src_qgen_validation_checks_rationale_66",
-      "label": "Valida cada pregunta por separado: una mala no tumba a las dem\u00e1s.",
+      "id": "question_generator_src_qgen_cli_claude_code",
+      "label": "cli/claude_code.py",
       "_origin": "ast",
       "community": 72,
-      "community_name": "parse_items",
+      "community_name": "cli/claude_code.py",
+      "file_type": "code",
+      "norm_label": "cli/claude_code.py",
+      "source_file": "question_generator/src/qgen/cli/claude_code.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "question_generator_src_qgen_cli_claude_code_py_command",
+      "label": "command",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "cli/claude_code.py",
+      "file_type": "code",
+      "norm_label": "command",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "question_generator_src_qgen_cli_claude_code_py_path",
+      "label": "Path",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "cli/claude_code.py",
+      "file_type": "code",
+      "norm_label": "path",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "question_generator_src_qgen_cli_claude_code_rationale_1",
+      "label": "`qgen-claude`: generar preguntas desde Claude Code, sin API (ver\u2026",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "cli/claude_code.py",
       "file_type": "rationale",
-      "norm_label": "valida cada pregunta por separado: una mala no tumba a las demas.",
-      "source_file": "question_generator/src/qgen/validation/checks.py",
-      "source_location": "L66"
+      "norm_label": "`qgen-claude`: generar preguntas desde claude code, sin api (ver...",
+      "source_file": "question_generator/src/qgen/cli/claude_code.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "question_generator_src_qgen_cli_claude_code_rationale_26",
+      "label": "Escribe la instrucci\u00f3n y las ventanas pendientes para que Claude Code las\u2026",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "cli/claude_code.py",
+      "file_type": "rationale",
+      "norm_label": "escribe la instruccion y las ventanas pendientes para que claude code las...",
+      "source_file": "question_generator/src/qgen/cli/claude_code.py",
+      "source_location": "L26"
+    },
+    {
+      "id": "question_generator_src_qgen_cli_claude_code_rationale_38",
+      "label": "Revisa y guarda las respuestas de las ventanas pendientes, como una corrida m\u00e1s.",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "cli/claude_code.py",
+      "file_type": "rationale",
+      "norm_label": "revisa y guarda las respuestas de las ventanas pendientes, como una corrida mas.",
+      "source_file": "question_generator/src/qgen/cli/claude_code.py",
+      "source_location": "L38"
+    },
+    {
+      "id": "question_generator_src_qgen_cli_claude_code_rationale_53",
+      "label": "Escribe la r\u00fabrica y los lotes de preguntas sin decidir para que Claude Code\u2026",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "cli/claude_code.py",
+      "file_type": "rationale",
+      "norm_label": "escribe la rubrica y los lotes de preguntas sin decidir para que claude code...",
+      "source_file": "question_generator/src/qgen/cli/claude_code.py",
+      "source_location": "L53"
     },
     {
       "id": "question_generator_tests_test_rules",
       "label": "test_rules.py",
       "_origin": "ast",
       "community": 73,
-      "community_name": "test_rules.py",
+      "community_name": "get_default_rules",
       "file_type": "code",
       "norm_label": "test_rules.py",
       "source_file": "question_generator/tests/test_rules.py",
@@ -15612,29 +15711,18 @@
       "label": "parametrize",
       "_origin": "ast",
       "community": 73,
-      "community_name": "test_rules.py",
+      "community_name": "get_default_rules",
       "file_type": "code",
       "norm_label": "parametrize",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "question_generator_src_qgen_cli_claude_code",
-      "label": "cli/claude_code.py",
-      "_origin": "ast",
-      "community": 74,
-      "community_name": "cli/claude_code.py",
-      "file_type": "code",
-      "norm_label": "cli/claude_code.py",
-      "source_file": "question_generator/src/qgen/cli/claude_code.py",
-      "source_location": "L1"
-    },
-    {
       "id": "question_generator_src_qgen_cli_generate",
       "label": "cli/generate.py",
       "_origin": "ast",
       "community": 74,
-      "community_name": "cli/claude_code.py",
+      "community_name": "cli/generate.py",
       "file_type": "code",
       "norm_label": "cli/generate.py",
       "source_file": "question_generator/src/qgen/cli/generate.py",
@@ -15645,56 +15733,56 @@
       "label": "command",
       "_origin": "ast",
       "community": 74,
-      "community_name": "cli/claude_code.py",
+      "community_name": "cli/generate.py",
       "file_type": "code",
       "norm_label": "command",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "docs_superpowers_plans_2026_09_23_qgen_ventanas_task_9_corrida_por_ventanas_estimaci\u00f3n_y_cli_retira_el_flujo_viejo",
-      "label": "Task 9: Corrida por ventanas, estimaci\u00f3n y CLI (retira el flujo viejo)",
+      "id": "docs_superpowers_plans_2026_09_23_qgen_ventanas_task_7_columnas_nuevas_migraci\u00f3n_y_persistencia",
+      "label": "Task 7: Columnas nuevas, migraci\u00f3n y persistencia",
       "_origin": "ast",
       "community": 74,
-      "community_name": "cli/claude_code.py",
+      "community_name": "cli/generate.py",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "task 9: corrida por ventanas, estimacion y cli (retira el flujo viejo)",
+      "norm_label": "task 7: columnas nuevas, migracion y persistencia",
       "source_file": "docs/superpowers/plans/2026-09-23-qgen-ventanas.md",
-      "source_location": "L2002"
+      "source_location": "L1545"
     },
     {
-      "id": "question_generator_src_qgen_cli_claude_code_rationale_1",
-      "label": "`qgen-claude`: generar preguntas desde Claude Code, sin API (ver\u2026",
+      "id": "question_generator_src_qgen_db_persistence_rationale_94",
+      "label": "--regenerate: borra las preguntas de las ventanas que se van a rehacer y las\u2026",
       "_origin": "ast",
       "community": 74,
-      "community_name": "cli/claude_code.py",
+      "community_name": "cli/generate.py",
       "file_type": "rationale",
-      "norm_label": "`qgen-claude`: generar preguntas desde claude code, sin api (ver...",
-      "source_file": "question_generator/src/qgen/cli/claude_code.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "question_generator_src_qgen_cli_claude_code_rationale_38",
-      "label": "Revisa y guarda las respuestas de las ventanas pendientes, como una corrida m\u00e1s.",
-      "_origin": "ast",
-      "community": 74,
-      "community_name": "cli/claude_code.py",
-      "file_type": "rationale",
-      "norm_label": "revisa y guarda las respuestas de las ventanas pendientes, como una corrida mas.",
-      "source_file": "question_generator/src/qgen/cli/claude_code.py",
-      "source_location": "L38"
+      "norm_label": "--regenerate: borra las preguntas de las ventanas que se van a rehacer y las...",
+      "source_file": "question_generator/src/qgen/db/persistence.py",
+      "source_location": "L94"
     },
     {
       "id": "question_generator_src_qgen_gemini_client_rationale_21",
       "label": "Accept short aliases ('flash', 'pro') or full names; return canonical model id.",
       "_origin": "ast",
       "community": 74,
-      "community_name": "cli/claude_code.py",
+      "community_name": "cli/generate.py",
       "file_type": "rationale",
       "norm_label": "accept short aliases ('flash', 'pro') or full names; return canonical model id.",
       "source_file": "question_generator/src/qgen/gemini/client.py",
       "source_location": "L21"
+    },
+    {
+      "id": "question_generator_src_qgen_pipeline_rationale_184",
+      "label": "Costo aproximado sin llamar a Gemini; el entero son las ventanas por procesar.",
+      "_origin": "ast",
+      "community": 74,
+      "community_name": "cli/generate.py",
+      "file_type": "rationale",
+      "norm_label": "costo aproximado sin llamar a gemini; el entero son las ventanas por procesar.",
+      "source_file": "question_generator/src/qgen/pipeline.py",
+      "source_location": "L184"
     },
     {
       "id": "question_generator_src_qgen_cli_batch_status",
@@ -15741,103 +15829,27 @@
       "source_location": "L33"
     },
     {
-      "id": "question_generator_src_qgen_cost",
-      "label": "cost.py",
+      "id": "docs_superpowers_plans_2026_09_23_qgen_ventanas_task_9_corrida_por_ventanas_estimaci\u00f3n_y_cli_retira_el_flujo_viejo",
+      "label": "Task 9: Corrida por ventanas, estimaci\u00f3n y CLI (retira el flujo viejo)",
       "_origin": "ast",
       "community": 76,
-      "community_name": "estimate_only",
-      "file_type": "code",
-      "norm_label": "cost.py",
-      "source_file": "question_generator/src/qgen/cost.py",
-      "source_location": "L1"
+      "community_name": "RunSummary",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "task 9: corrida por ventanas, estimacion y cli (retira el flujo viejo)",
+      "source_file": "docs/superpowers/plans/2026-09-23-qgen-ventanas.md",
+      "source_location": "L2002"
     },
     {
-      "id": "question_generator_src_qgen_cost_rationale_1",
-      "label": "Cost accounting: predictions before a run + actual after. Pricing (USD per 1M\u2026",
+      "id": "question_generator_src_qgen_pipeline_rationale_558",
+      "label": "Construye un RunSummary a partir de una corrida persistida en la base de datos.",
       "_origin": "ast",
       "community": 76,
-      "community_name": "estimate_only",
+      "community_name": "RunSummary",
       "file_type": "rationale",
-      "norm_label": "cost accounting: predictions before a run + actual after. pricing (usd per 1m...",
-      "source_file": "question_generator/src/qgen/cost.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "question_generator_src_qgen_cost_rationale_60",
-      "label": "Una llamada por ventana (instrucci\u00f3n + texto de la ventana + documento\u2026",
-      "_origin": "ast",
-      "community": 76,
-      "community_name": "estimate_only",
-      "file_type": "rationale",
-      "norm_label": "una llamada por ventana (instruccion + texto de la ventana + documento...",
-      "source_file": "question_generator/src/qgen/cost.py",
-      "source_location": "L60"
-    },
-    {
-      "id": "question_generator_src_qgen_pipeline_rationale_184",
-      "label": "Costo aproximado sin llamar a Gemini; el entero son las ventanas por procesar.",
-      "_origin": "ast",
-      "community": 76,
-      "community_name": "estimate_only",
-      "file_type": "rationale",
-      "norm_label": "costo aproximado sin llamar a gemini; el entero son las ventanas por procesar.",
+      "norm_label": "construye un runsummary a partir de una corrida persistida en la base de datos.",
       "source_file": "question_generator/src/qgen/pipeline.py",
-      "source_location": "L184"
-    },
-    {
-      "id": "question_generator_src_qgen_reference_importer_py_basemodel",
-      "label": "BaseModel",
-      "_origin": "ast",
-      "community": 77,
-      "community_name": "OptionExemplarInput",
-      "file_type": "code",
-      "norm_label": "basemodel",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "question_generator_src_qgen_reference_importer_rationale_21",
-      "label": "Modelo Pydantic para validar una opci\u00f3n de respuesta de ejemplo.",
-      "_origin": "ast",
-      "community": 77,
-      "community_name": "OptionExemplarInput",
-      "file_type": "rationale",
-      "norm_label": "modelo pydantic para validar una opcion de respuesta de ejemplo.",
-      "source_file": "question_generator/src/qgen/reference/importer.py",
-      "source_location": "L21"
-    },
-    {
-      "id": "question_generator_src_qgen_reference_importer_rationale_29",
-      "label": "Modelo Pydantic para validar una pregunta de ejemplo completa.",
-      "_origin": "ast",
-      "community": 77,
-      "community_name": "OptionExemplarInput",
-      "file_type": "rationale",
-      "norm_label": "modelo pydantic para validar una pregunta de ejemplo completa.",
-      "source_file": "question_generator/src/qgen/reference/importer.py",
-      "source_location": "L29"
-    },
-    {
-      "id": "explorer_src_explorer_questions_access_rationale_134",
-      "label": "\u00bfExisten ya las tablas de la fase 2 en esta base? Un SQLite reci\u00e9n ingerido\u2026",
-      "_origin": "ast",
-      "community": 78,
-      "community_name": "questions_available",
-      "file_type": "rationale",
-      "norm_label": "\u00bfexisten ya las tablas de la fase 2 en esta base? un sqlite recien ingerido...",
-      "source_file": "explorer/src/explorer/questions_access.py",
-      "source_location": "L134"
-    },
-    {
-      "id": "explorer_tests_test_questions_access_rationale_119",
-      "label": "Verifica que detecta correctamente si las tablas de preguntas existen.",
-      "_origin": "ast",
-      "community": 78,
-      "community_name": "questions_available",
-      "file_type": "rationale",
-      "norm_label": "verifica que detecta correctamente si las tablas de preguntas existen.",
-      "source_file": "explorer/tests/test_questions_access.py",
-      "source_location": "L119"
+      "source_location": "L558"
     },
     {
       "id": "explorer_src_explorer_pages_3_toc_rationale_168",
@@ -22764,7 +22776,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L124",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -22776,7 +22788,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L129",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -26496,7 +26508,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L61",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -26508,7 +26520,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L76",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -26520,7 +26532,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L76",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -26580,7 +26592,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L71",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -26592,7 +26604,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L71",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -26604,7 +26616,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L66",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "question_generator_tests_test_families_test_las_reglas_de_calidad_de_la_revision_llegan_a_las_dos_familias",
+      "target": "question_generator_src_qgen_prompts_families_build_window_instruction",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "question_generator/tests/test_families.py",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "question_generator_tests_test_families_test_las_reglas_de_calidad_de_la_revision_llegan_a_las_dos_familias",
+      "target": "question_generator_src_qgen_rules_defaults_get_default_rules",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "question_generator/tests/test_families.py",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -26616,7 +26652,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L46",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -26628,7 +26664,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L46",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -26640,7 +26676,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L54",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -26652,7 +26688,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L54",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -31356,7 +31392,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L110",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -31368,7 +31404,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L143",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -44529,7 +44565,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L156",
+      "source_location": "L168",
       "weight": 1.0
     },
     {
@@ -44540,23 +44576,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L202",
+      "source_location": "L214",
       "weight": 1.0
     },
     {
       "source": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_generaci\u00f3n_de_preguntas_por_ventanas_qgen_v2",
       "target": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_9_cli_estimaci\u00f3n_y_explorador",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L223",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_generaci\u00f3n_de_preguntas_por_ventanas_qgen_v2",
-      "target": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_10_contrato_v2_del_bundle",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -44578,13 +44603,24 @@
     },
     {
       "source": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_generaci\u00f3n_de_preguntas_por_ventanas_qgen_v2",
+      "target": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_10_contrato_v2_del_bundle",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
+      "source_location": "L247",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_generaci\u00f3n_de_preguntas_por_ventanas_qgen_v2",
       "target": "docs_superpowers_specs_2026_09_23_qgen_ventanas_design_11_trabajo_en_la_webapp_lo_hace_el_usuario",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L253",
+      "source_location": "L265",
       "weight": 1.0
     },
     {
@@ -44595,7 +44631,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L260",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -44606,7 +44642,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L280",
+      "source_location": "L292",
       "weight": 1.0
     },
     {
@@ -44617,7 +44653,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L289",
+      "source_location": "L301",
       "weight": 1.0
     },
     {
@@ -44628,7 +44664,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L308",
+      "source_location": "L320",
       "weight": 1.0
     },
     {
@@ -49127,7 +49163,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L110",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -49138,7 +49174,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L137",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -49149,7 +49185,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L143",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -49160,7 +49196,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L159",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -49171,7 +49207,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L175",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
@@ -49182,7 +49218,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L179",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -51123,7 +51159,7 @@
     },
     {
       "source": "question_generator_tests_test_families",
-      "target": "question_generator_tests_test_families_test_las_reglas_del_perfil_entran_en_la_instruccion",
+      "target": "question_generator_tests_test_families_test_las_reglas_de_calidad_de_la_revision_llegan_a_las_dos_familias",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -51134,13 +51170,24 @@
     },
     {
       "source": "question_generator_tests_test_families",
+      "target": "question_generator_tests_test_families_test_las_reglas_del_perfil_entran_en_la_instruccion",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "question_generator/tests/test_families.py",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "question_generator_tests_test_families",
       "target": "question_generator_tests_test_families_test_los_ejemplos_de_referencia_sustituyen_a_los_de_siempre",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L51",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -51151,7 +51198,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L59",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -51162,7 +51209,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L65",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -51173,7 +51220,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L70",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -51184,7 +51231,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L75",
+      "source_location": "L88",
       "weight": 1.0
     },
     {
@@ -56215,58 +56262,58 @@
       "weight": 1.0
     },
     {
-      "source": "question_generator_src_qgen_prompts_families_rationale_116",
+      "source": "question_generator_src_qgen_prompts_families_rationale_128",
       "target": "question_generator_src_qgen_prompts_families_build_window_instruction",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L116",
+      "source_location": "L128",
       "weight": 1.0
     },
     {
-      "source": "question_generator_src_qgen_prompts_families_rationale_138",
+      "source": "question_generator_src_qgen_prompts_families_rationale_151",
       "target": "question_generator_src_qgen_prompts_families_conforme",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L138",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
-      "source": "question_generator_src_qgen_prompts_families_rationale_144",
+      "source": "question_generator_src_qgen_prompts_families_rationale_157",
       "target": "question_generator_src_qgen_prompts_families_ejemplos",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L144",
+      "source_location": "L157",
       "weight": 1.0
     },
     {
-      "source": "question_generator_src_qgen_prompts_families_rationale_160",
+      "source": "question_generator_src_qgen_prompts_families_rationale_173",
       "target": "question_generator_src_qgen_prompts_families_build_window_message",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L160",
+      "source_location": "L173",
       "weight": 1.0
     },
     {
-      "source": "question_generator_src_qgen_prompts_families_rationale_180",
+      "source": "question_generator_src_qgen_prompts_families_rationale_193",
       "target": "question_generator_src_qgen_prompts_families_build_verification_message",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L180",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
@@ -57560,7 +57607,7 @@
       "confidence_score": 0.95,
       "context": "GenerationRun",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L218",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -57680,7 +57727,7 @@
       "confidence_score": 0.95,
       "context": "VerificationResult",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L266",
+      "source_location": "L278",
       "weight": 1.0
     },
     {
@@ -57764,7 +57811,7 @@
       "confidence_score": 0.95,
       "context": "WindowQuestion",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L266",
+      "source_location": "L278",
       "weight": 1.0
     },
     {
@@ -57788,7 +57835,7 @@
       "confidence_score": 0.95,
       "context": "WindowResponse",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L266",
+      "source_location": "L278",
       "weight": 1.0
     },
     {
@@ -57800,7 +57847,7 @@
       "confidence_score": 0.95,
       "context": "WindowResponse",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L136",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -57908,7 +57955,7 @@
       "confidence_score": 0.95,
       "context": "build_windows",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L264",
+      "source_location": "L276",
       "weight": 1.0
     },
     {
@@ -57932,7 +57979,7 @@
       "confidence_score": 0.95,
       "context": "generate_window",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L267",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -58184,7 +58231,7 @@
       "confidence_score": 0.95,
       "context": "init_question_tables",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L214",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -58256,7 +58303,7 @@
       "confidence_score": 0.95,
       "context": "ok",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L299",
+      "source_location": "L311",
       "weight": 1.0
     },
     {
@@ -58280,7 +58327,7 @@
       "confidence_score": 0.95,
       "context": "ok",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L219",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
@@ -58760,7 +58807,7 @@
       "confidence_score": 0.95,
       "context": "parameter_type",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L111",
+      "source_location": "L123",
       "weight": 0.8
     },
     {
@@ -58772,7 +58819,7 @@
       "confidence_score": 0.95,
       "context": "parameter_type",
       "source_file": "question_generator/src/qgen/prompts/families.py",
-      "source_location": "L159",
+      "source_location": "L172",
       "weight": 0.8
     },
     {
@@ -59120,7 +59167,7 @@
       "confidence_score": 0.95,
       "context": "run_ref",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L243",
+      "source_location": "L255",
       "weight": 1.0
     },
     {
@@ -59180,7 +59227,7 @@
       "confidence_score": 0.95,
       "context": "verify_exercise",
       "source_file": "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md",
-      "source_location": "L267",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -61446,7 +61493,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "question_generator/tests/test_families.py",
-      "source_location": "L60",
+      "source_location": "L73",
       "weight": 0.8
     },
     {
@@ -62232,5 +62279,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8e3a35f552375ed126f552f429943c4fa0f56e05"
+  "built_at_commit": "e7d30dcebe32c80f1cfa6fab116fb2aa6e2a64f2"
 }

@@ -116,6 +116,18 @@ cambia la familia, los tipos ni `matematicas`.
   y un `ejercicio_nuevo` (mismo tipo y procedimiento, datos nuevos, dificultad igual o
   menor). Un "ejemplo resuelto" es cualquier pasaje en que el libro aplica una regla o
   un procedimiento y muestra el resultado. Máximo 30 preguntas por ventana.
+- **Calidad** (ambas familias, desde `SYSTEM_VERSION` `2026-09-24.v6`): no se generan
+  las preguntas que la rúbrica de revisión (`qgen-claude exportar-revision`) rechaza:
+  - las que no se entienden sin el libro o dependen del orden de los temas;
+  - las que no evalúan un concepto (afirmaciones generales, detalles anecdóticos);
+  - las que se responden sin saber el tema (la respuesta está en el enunciado, es de
+    sentido común, o la correcta se delata por repetir palabras del enunciado o por su
+    forma);
+  - las que tienen distractores absurdos;
+  - las que repiten una idea ya preguntada;
+  - las que tienen más de una opción defendible.
+
+  Cada elemento evaluable se pregunta una sola vez.
 - **Reglas del perfil:** estilo, temas preferentes y prohibidos, instrucciones extra (como hoy).
 - **Ejemplos:** `reference_questions` del perfil (hasta 5). Si no hay, la familia civil no
   lleva ejemplos; los ejemplos por defecto de teoría de la guerra solo se usan en `militar`.

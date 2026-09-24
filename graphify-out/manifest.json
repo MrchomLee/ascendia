@@ -858,9 +858,9 @@
     "semantic_hash": ""
   },
   "question_generator/src/qgen/prompts/families.py": {
-    "mtime": 1790204665.0439022,
-    "seen": 1790204738.7234874,
-    "ast_hash": "55e9a558acc2a3e3aa9ec7f29b57a771",
+    "mtime": 1790266326.7198403,
+    "seen": 1790266358.0187201,
+    "ast_hash": "40cc928ee8962c3c204228d6951b02b8",
     "semantic_hash": ""
   },
   "question_generator/src/qgen/validation/checks.py": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "question_generator/tests/test_families.py": {
-    "mtime": 1790204638.3483796,
-    "seen": 1790204738.7241971,
-    "ast_hash": "d95b0023f69a09a13dc0b8d58c5ee5d3",
+    "mtime": 1790266289.030386,
+    "seen": 1790266358.0200145,
+    "ast_hash": "93194a3ba36ea93c7ef1945a59c51800",
     "semantic_hash": ""
   },
   "question_generator/tests/test_generate_window.py": {
@@ -918,9 +918,9 @@
     "semantic_hash": ""
   },
   "docs/superpowers/specs/2026-09-23-qgen-ventanas-design.md": {
-    "mtime": 1790262367.5064855,
-    "seen": 1790262379.887133,
-    "ast_hash": "f3ed5ec9b9d72c6500a29c71dd32b269",
+    "mtime": 1790266350.3067453,
+    "seen": 1790266358.0210834,
+    "ast_hash": "2f9e84385b10309b73da6bd74aae4154",
     "semantic_hash": ""
   },
   "question_generator/src/qgen/claude_code.py": {

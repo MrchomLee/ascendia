@@ -12,7 +12,7 @@ from qgen.prompts.schemas import LETRAS, MAX_PREGUNTAS_POR_VENTANA
 from qgen.rules.base import DocumentRules
 from qgen.windows import Window
 
-SYSTEM_VERSION = "2026-09-23.v5"
+SYSTEM_VERSION = "2026-09-24.v6"
 
 _ROLES = {
     "militar": (
@@ -56,6 +56,17 @@ _OPCIONES_EJERCICIOS = (
     "pueden parecerse entre sí.\n"
 )
 
+# Lo mismo que rechaza la rúbrica de la revisión (qgen.claude_review): mejor no generarlo.
+_CALIDAD = """\
+CALIDAD: NO generes una pregunta si
+- No se entiende sola: remite a algo que el alumno no tiene enfrente ("el texto", "la lectura", "el cuadro", "la figura", una página) o depende del orden en que se presentan los temas (p. ej. "¿cuál es la última función que se estudia?").
+- No evalúa un concepto de la materia: afirmaciones generales o introductorias, o un detalle anecdótico de un ejemplo que no ilustra ningún concepto.
+- Se responde sin saber el tema: la respuesta ya está en el enunciado (si el enunciado dice "sin acento" o "en la última sílaba", no preguntes lo que eso resuelve), se deduce por sentido común, o la "correct" es la única opción que repite palabras del enunciado o la única con otra forma (otro número de elementos, otra estructura).
+- Algún distractor es absurdo o de relleno: cada opción incorrecta debe ser creíble para quien no domina el tema.
+- Repite una idea ya preguntada en esta ventana: otra redacción del mismo dato, el mismo concepto con otro ejemplo del texto (pregunta un solo ejemplo) o el mismo dato preguntado al revés.
+- Tiene más de una opción defendible como correcta.
+"""
+
 _EJEMPLOS_MILITARES = """\
 Ejemplo 1 (Concepto directo):
 - Pregunta: "Para México, la guerra se conceptúa como:"
@@ -72,7 +83,7 @@ _PLANTILLA = """\
 {rol}
 
 TU TAREA
-El mensaje trae el TEXTO de una ventana de "{manual}". Crea TODAS las preguntas de opción múltiple que ese texto permita: no hay cuota, una por cada elemento evaluable, hasta un máximo de {maximo}. No uses información de fuera del texto.
+El mensaje trae el TEXTO de una ventana de "{manual}". Crea TODAS las preguntas de opción múltiple que ese texto permita: no hay cuota, una por cada elemento evaluable, hasta un máximo de {maximo}. Cada elemento evaluable se pregunta una sola vez. No uses información de fuera del texto.
 
 TIPOS DE PREGUNTA
 {tipos}
@@ -87,6 +98,7 @@ CITA Y JUSTIFICACIÓN
 - "justificacion": en "teoria", por qué la correcta lo es; en ejercicios, la resolución paso a paso.
 - Notación: la "correct" de "teoria", el resultado de "ejercicio_libro" y la "cita" copian la notación del texto tal cual (no la cambies a x^2, sqrt( ) ni otra); la notación del estilo solo aplica a enunciados, distractores y ejercicios nuevos.
 
+{calidad}
 ENUNCIADOS
 {formato}
 
@@ -127,6 +139,7 @@ def build_window_instruction(
         prohibidos=", ".join(rules.forbidden_topics) or "(ninguno)",
         extra=rules.extra_instructions or "(ninguna)",
         ejemplos=_ejemplos(rules.familia, exemplars),
+        calidad=_CALIDAD,
     )
 
 

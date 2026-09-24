@@ -42,6 +42,19 @@ def test_con_ejercicios_se_piden_el_del_libro_y_uno_nuevo_sin_subir_la_dificulta
     assert "error más típico" in instr
 
 
+def test_las_reglas_de_calidad_de_la_revision_llegan_a_las_dos_familias():
+    # Lo que la revisión rechaza (qgen.claude_review) no se debe generar desde el principio.
+    for perfil in ("manual", "taller_lectura_redaccion", "calculo_una_variable"):
+        instr = build_window_instruction(get_default_rules(perfil), manual_title="Libro")
+        assert "CALIDAD" in instr
+        assert "una sola vez" in instr  # repetidas en esencia
+        assert "sentido común" in instr  # no evalúa
+        assert "repite palabras del enunciado" in instr  # la correcta se delata
+        assert "orden en que se presentan los temas" in instr  # sin sentido
+        assert "anecdótico" in instr  # fuera de tema
+        assert "más de una opción defendible" in instr  # respuesta discutible
+
+
 def test_las_reglas_del_perfil_entran_en_la_instruccion():
     instr = build_window_instruction(get_default_rules("codigo_legal"), manual_title="CJM")
     assert "tipos de delitos y faltas militares" in instr
