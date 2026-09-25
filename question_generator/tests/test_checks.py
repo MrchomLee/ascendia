@@ -1,5 +1,6 @@
 """Revisiones de cada pregunta de una ventana (spec §7)."""
 
+from qgen.prompts.schemas import MAX_PREGUNTAS_POR_VENTANA
 from qgen.prompts.schemas import LETRAS, GeneratedQuestion, OptionRole, VerificationResult, WindowQuestion
 from qgen.validation.checks import (
     DuplicateIndex,
@@ -20,11 +21,12 @@ VENTANA = (
 )
 
 
-def _item(pregunta="¿Cómo se conceptúa la guerra?", *, tipo="teoria",
+def _item(pregunta="¿Cómo se conceptúa la guerra?", *, tipo="teoria", nivel="conocimiento",
           correcta="un conflicto entre sociedades",
           cita='la guerra se conceptúa como "un conflicto entre sociedades') -> dict:
     return {
         "tipo": tipo,
+        "nivel": nivel,
         "pregunta": pregunta,
         "opciones": [
             {"rol": "correct", "texto": correcta},
@@ -101,10 +103,11 @@ def test_parse_items_descarta_solo_lo_malo():
     assert len(descartes) == 1 and descartes[0].startswith("pregunta 2: estructura inválida")
 
 
-def test_parse_items_corta_en_30():
-    preguntas, descartes = parse_items([_item(f"¿Pregunta {i}?") for i in range(31)])
-    assert len(preguntas) == 30
-    assert descartes == ["pregunta 31: pasa de las 30 preguntas por ventana"]
+def test_parse_items_corta_en_el_tope_por_ventana():
+    tope = MAX_PREGUNTAS_POR_VENTANA
+    preguntas, descartes = parse_items([_item(f"¿Pregunta {i}?") for i in range(tope + 1)])
+    assert len(preguntas) == tope
+    assert descartes == [f"pregunta {tope + 1}: pasa de las {tope} preguntas por ventana"]
 
 
 def test_tipo_permitido():

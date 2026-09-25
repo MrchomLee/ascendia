@@ -8,6 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from qgen.prompts.niveles import Nivel
+
 
 class OptionRole(StrEnum):
     CORRECT = "correct"
@@ -51,7 +53,7 @@ class GeneratedQuestion(BaseModel):
 
 # ─── Llamada por ventana (spec §6) ─────────────────────────────────────────
 
-MAX_PREGUNTAS_POR_VENTANA = 30
+MAX_PREGUNTAS_POR_VENTANA = 45
 LETRAS = ("A", "B", "C", "D")
 
 
@@ -70,6 +72,7 @@ class WindowQuestion(BaseModel):
     """Una pregunta completa tal como la devuelve la llamada por ventana."""
 
     tipo: QuestionType
+    nivel: Nivel
     pregunta: str = Field(min_length=1, max_length=1000)
     opciones: list[WindowOption] = Field(min_length=4, max_length=4)
     cita: str = Field(min_length=1, max_length=2000)
@@ -86,6 +89,9 @@ class WindowQuestion(BaseModel):
             raise ValueError("opciones con el mismo texto")
         if not self.cita.strip():
             raise ValueError("cita vacía")
+        # Un ejercicio del libro o nuevo siempre es de aplicación (spec de niveles §5).
+        if self.tipo != QuestionType.TEORIA and self.nivel != Nivel.APLICACION:
+            self.nivel = Nivel.APLICACION
         return self
 
 

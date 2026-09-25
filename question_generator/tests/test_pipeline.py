@@ -26,10 +26,11 @@ TEXTO = "La guerra es un conflicto entre sociedades que luchan violentamente."
 EJEMPLO = "EJEMPLO 1 Derivar f(x) = x^2. Solución: f'(x) = 2x."
 
 
-def _item(pregunta="¿Qué es la guerra?", *, tipo="teoria", correcta="un conflicto entre sociedades",
+def _item(pregunta="¿Qué es la guerra?", *, tipo="teoria", nivel="conocimiento", correcta="un conflicto entre sociedades",
           cita=TEXTO, prefijo="T") -> dict:
     return {
         "tipo": tipo,
+        "nivel": nivel,
         "pregunta": pregunta,
         "opciones": [
             {"rol": "correct", "texto": correcta},

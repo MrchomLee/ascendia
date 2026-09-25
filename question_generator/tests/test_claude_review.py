@@ -24,6 +24,7 @@ TEXTO = "La guerra es un conflicto entre sociedades que luchan violentamente."
 def _item(pregunta: str, correcta: str = "un conflicto entre sociedades", prefijo: str = "T") -> dict:
     return {
         "tipo": "teoria",
+        "nivel": "conocimiento",
         "pregunta": pregunta,
         "opciones": [
             {"rol": "correct", "texto": correcta},

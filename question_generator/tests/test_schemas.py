@@ -63,6 +63,7 @@ def test_empty_question_rejected():
         GeneratedQuestion(question="", options=_make_options(), justification="J")
 
 
+from qgen.prompts.niveles import Nivel
 from qgen.prompts.schemas import (
     MAX_PREGUNTAS_POR_VENTANA,
     QuestionType,
@@ -75,6 +76,7 @@ from qgen.prompts.schemas import (
 def _window_item(**cambios) -> dict:
     item = {
         "tipo": "teoria",
+        "nivel": "conocimiento",
         "pregunta": "¿Qué es la guerra?",
         "opciones": [
             {"rol": "correct", "texto": "un conflicto entre sociedades"},
@@ -120,7 +122,6 @@ def test_ventana_rechaza_tipo_desconocido():
 
 def test_la_respuesta_de_ventana_es_una_lista_de_preguntas():
     assert len(WindowResponse.model_validate({"preguntas": [_window_item()]}).preguntas) == 1
-    assert MAX_PREGUNTAS_POR_VENTANA == 30
 
 
 def test_verificacion_solo_admite_letras_ninguna_o_varias():
@@ -129,3 +130,27 @@ def test_verificacion_solo_admite_letras_ninguna_o_varias():
         VerificationResult(razonamiento="…", opcion="E", dificultad="igual")
     with pytest.raises(ValidationError):
         VerificationResult(razonamiento="…", opcion="A", dificultad="altísima")
+
+
+def test_la_pregunta_de_ventana_exige_un_nivel_conocido():
+    sin_nivel = _window_item()
+    sin_nivel.pop("nivel")
+    with pytest.raises(ValidationError):
+        WindowQuestion.model_validate(sin_nivel)
+    with pytest.raises(ValidationError):
+        WindowQuestion.model_validate(_window_item(nivel="memoria"))
+
+
+def test_un_ejercicio_siempre_es_de_aplicacion():
+    for tipo in ("ejercicio_libro", "ejercicio_nuevo"):
+        q = WindowQuestion.model_validate(_window_item(tipo=tipo, nivel="conocimiento"))
+        assert q.nivel == Nivel.APLICACION
+
+
+def test_el_esquema_para_gemini_declara_los_cuatro_niveles():
+    esquema = WindowResponse.model_json_schema()
+    assert set(esquema["$defs"]["Nivel"]["enum"]) == {"conocimiento", "comprension", "analisis", "aplicacion"}
+
+
+def test_el_tope_por_ventana_es_45():
+    assert MAX_PREGUNTAS_POR_VENTANA == 45
