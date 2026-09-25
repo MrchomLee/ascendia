@@ -206,6 +206,23 @@ respuesta; las demás siguen pendientes. La corrida queda con el modelo
 `claude-opus-5-5`, modo `immediate` y costo 0. Los ejercicios nuevos entran
 "a revisar": no hay verificación a ciegas.
 
+#### Niveles cognitivos
+
+Cada pregunta lleva un `nivel`: conocimiento, comprensión, análisis o aplicación,
+en proporción 55/15/15/15 (todas las de conocimiento que el texto permita y, sobre
+esa base, las de los otros niveles). La clave es literal solo en conocimiento; en
+los otros niveles basta la cita literal y la revisión juzga el razonamiento. Los
+ejercicios de matemáticas son siempre aplicación. El resumen de cada corrida
+muestra la proporción real contra la meta y las ventanas a las que les faltó algún
+nivel. Las definiciones de cada nivel viven en `qgen/prompts/niveles.py`.
+
+```bash
+py -3.14 -m uv run qgen-import-examples ejemplos.xlsx --profile global   # una hoja por nivel
+```
+
+El prompt usa un ejemplo por nivel (del manual, del perfil o global), como modelo
+de forma y no de contenido.
+
 #### Revisión de calidad desde Claude Code
 
 ```bash
@@ -220,6 +237,11 @@ de tema, con respuesta discutible, que no evalúan nada o repetidas en esencia.
 revisan las preguntas sin decidir: lo que ya aprobó o rechazó una persona no se
 toca. El veredicto, la calificación (1–5) y los motivos quedan en
 `metadata_json["revision"]` y el explorador los muestra en cada pregunta.
+
+Cada veredicto lleva también el `nivel`; si difiere del generado, la pregunta se
+reclasifica (no se rechaza) y el nivel original queda en `nivel_generado`. Las
+preguntas ya decididas sin nivel salen como SOLO CLASIFICAR: se clasifican sin
+cambiar su estado.
 
 ### 3.6 Control de calidad
 
