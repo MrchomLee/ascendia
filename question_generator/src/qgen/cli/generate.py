@@ -9,6 +9,7 @@ from rich.table import Table
 from qgen.db.migration import init_question_tables
 from qgen.gemini.client import MODEL_FLASH, resolve_model
 from qgen.pipeline import estimate_only, run_generation
+from qgen.prompts.niveles import NIVEL_LABEL, ORDEN, PROPORCION
 
 load_dotenv()
 app = typer.Typer(help="Generate questions for a manual.")
@@ -115,6 +116,24 @@ def _print_summary(summary) -> None:
     for k, v in rows:
         table.add_row(k, v)
     console.print(table)
+    _print_niveles(summary)
+
+
+def _print_niveles(summary) -> None:
+    """Proporción real por nivel contra la meta (spec de niveles §6)."""
+    niveles = getattr(summary, "niveles", None) or {}
+    total = sum(niveles.values())
+    if not total:
+        return
+    table = Table(title="Proporción por nivel")
+    for col in ("Nivel", "Preguntas", "Real", "Meta"):
+        table.add_column(col, justify="left" if col == "Nivel" else "right")
+    for nivel in ORDEN:
+        n = niveles.get(nivel.value, 0)
+        table.add_row(NIVEL_LABEL[nivel.value], str(n), f"{100 * n / total:.0f}%", f"{PROPORCION[nivel]}%")
+    console.print(table)
+    if summary.ventanas_sin_algun_nivel:
+        console.print(f"[yellow]Ventanas sin algún nivel: {', '.join(summary.ventanas_sin_algun_nivel)}[/]")
 
 
 if __name__ == "__main__":

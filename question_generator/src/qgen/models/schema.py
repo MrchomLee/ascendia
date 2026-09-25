@@ -96,6 +96,8 @@ class Question(Base):
     question_type: Mapped[str] = mapped_column(String(32), default="teoria", server_default="teoria")
     source_quote: Mapped[str] = mapped_column(Text, default="", server_default="")
     window_key: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    # Niveles cognitivos (spec de niveles §5): NULL = sin clasificar.
+    cognitive_level: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
     run: Mapped[GenerationRun] = relationship(back_populates="questions")
     node: Mapped[Node] = relationship()

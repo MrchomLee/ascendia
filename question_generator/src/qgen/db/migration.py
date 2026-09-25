@@ -17,11 +17,17 @@ from etl.models.schema import Base
 import qgen.models.schema  # noqa: F401
 import qgen.models.reference_schema  # noqa: F401
 
-# Columnas de `questions` que llegaron después de crear la tabla (qgen v2, spec §8).
-_QUESTION_COLUMNS: dict[str, str] = {
-    "question_type": "VARCHAR(32) NOT NULL DEFAULT 'teoria'",
-    "source_quote": "TEXT NOT NULL DEFAULT ''",
-    "window_key": "VARCHAR(64)",
+# Columnas que llegaron después de crear cada tabla (qgen v2 y niveles cognitivos).
+_NEW_COLUMNS: dict[str, dict[str, str]] = {
+    "questions": {
+        "question_type": "VARCHAR(32) NOT NULL DEFAULT 'teoria'",
+        "source_quote": "TEXT NOT NULL DEFAULT ''",
+        "window_key": "VARCHAR(64)",
+        "cognitive_level": "VARCHAR(16)",
+    },
+    "reference_questions": {
+        "cognitive_level": "VARCHAR(16)",
+    },
 }
 
 
@@ -32,9 +38,11 @@ def init_question_tables(db_url: str | None = None) -> None:
 
 
 def _add_missing_columns(engine) -> None:
-    existing = {c["name"] for c in inspect(engine).get_columns("questions")}
+    inspector = inspect(engine)
     with engine.begin() as conn:
-        for name, ddl in _QUESTION_COLUMNS.items():
-            if name not in existing:
-                conn.execute(text(f"ALTER TABLE questions ADD COLUMN {name} {ddl}"))
+        for table, columns in _NEW_COLUMNS.items():
+            existing = {c["name"] for c in inspector.get_columns(table)}
+            for name, ddl in columns.items():
+                if name not in existing:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_questions_window_key ON questions (window_key)"))

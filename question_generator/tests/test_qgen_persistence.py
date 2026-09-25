@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from etl.db.session import session_scope
+from etl.db.session import get_engine, session_scope
+from sqlalchemy import inspect, text
 from etl.models.schema import Chunk, Manual, Node
 
 from qgen.db.migration import init_question_tables
@@ -202,3 +203,19 @@ def test_la_migracion_anade_las_columnas_nuevas_a_una_base_antigua():
     with engine.connect() as conn:
         fila = conn.execute(text("SELECT question_type, source_quote FROM questions WHERE id = 1")).one()
     assert tuple(fila) == ("teoria", "")
+
+
+def test_la_migracion_agrega_el_nivel_a_preguntas_y_referencias_sin_perder_filas():
+    init_question_tables()
+    engine = get_engine()
+    with engine.begin() as conn:
+        conn.execute(text("INSERT INTO reference_questions (profile, question_text, created_at, metadata_json) "
+                          "VALUES ('global', '¿Qué?', '2026-09-25', '{}')"))
+        conn.execute(text("ALTER TABLE reference_questions DROP COLUMN cognitive_level"))
+        conn.execute(text("ALTER TABLE questions DROP COLUMN cognitive_level"))
+    init_question_tables()
+    init_question_tables()  # idempotente
+    for tabla in ("questions", "reference_questions"):
+        assert "cognitive_level" in {c["name"] for c in inspect(get_engine()).get_columns(tabla)}
+    with engine.begin() as conn:
+        assert conn.execute(text("SELECT count(*) FROM reference_questions")).scalar_one() == 1

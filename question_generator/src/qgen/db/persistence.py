@@ -57,6 +57,7 @@ def persist_question(
     question_type: str = "teoria",
     source_quote: str = "",
     window_key: str | None = None,
+    cognitive_level: str | None = None,
 ) -> Question:
     q = Question(
         run_id=run.id,
@@ -71,6 +72,7 @@ def persist_question(
         question_type=question_type,
         source_quote=source_quote,
         window_key=window_key,
+        cognitive_level=cognitive_level,
     )
     session.add(q)
     session.flush()

@@ -37,6 +37,7 @@ class ReferenceQuestion(Base):
     manual_code: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     topic: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
     source_tag: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    cognitive_level: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
     question_text: Mapped[str] = mapped_column(Text)
     justification: Mapped[str | None] = mapped_column(Text, nullable=True)

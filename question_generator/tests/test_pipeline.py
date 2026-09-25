@@ -488,3 +488,38 @@ def test_lo_generado_se_exporta_como_bundle_v2_valido(monkeypatch):
     assert report.ok, report.errors
     assert report.counts["questions"] == 4  # dos por nodo: el contrato v1 lo habría rechazado
     assert {q["question_type"] for q in bundle["questions"]} == {"teoria"}
+
+
+def test_cada_pregunta_guarda_su_nivel_y_la_corrida_cuenta_los_niveles(monkeypatch):
+    manual_id = _seed(1)
+    fake = FakeGemini(monkeypatch)
+    fake.window = lambda message: WindowOutcome(items=[
+        _item(),
+        _item("¿Cómo se explica la guerra?", nivel="comprension", correcta="choque violento de grupos", prefijo="C"),
+    ])
+
+    summary = _run(manual_id)
+
+    with session_scope() as session:
+        niveles = sorted(session.execute(select(Question.cognitive_level)).scalars())
+        (run,) = session.execute(select(GenerationRun)).scalars().all()
+        meta = run.metadata_json["niveles"]
+    assert niveles == ["comprension", "conocimiento"]
+    assert meta["total"] == {"conocimiento": 1, "comprension": 1}
+    assert list(meta["ventanas"].values()) == [{"conocimiento": 1, "comprension": 1}]
+    assert meta["sin_algun_nivel"] == []
+    assert summary.niveles == {"conocimiento": 1, "comprension": 1}
+
+
+def test_una_ventana_con_3_de_conocimiento_y_sin_otros_niveles_se_reporta(monkeypatch):
+    manual_id = _seed(1)
+    fake = FakeGemini(monkeypatch)
+    fake.window = lambda message: WindowOutcome(items=[
+        _item("¿Qué es la guerra?"),
+        _item("¿Entre quiénes ocurre?", correcta="entre sociedades", prefijo="B"),
+        _item("¿Cómo luchan?", correcta="violentamente", prefijo="C"),
+    ])
+
+    summary = _run(manual_id)
+
+    assert len(summary.ventanas_sin_algun_nivel) == 1

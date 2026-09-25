@@ -33,6 +33,7 @@ from qgen.prompts.families import (
     build_window_instruction,
     build_window_message,
 )
+from qgen.prompts.niveles import falta_algun_nivel
 from qgen.prompts.schemas import QuestionType, WindowQuestion
 from qgen.reference.repository import get_reference_exemplars
 from qgen.rules.base import DocumentRules, RulesOverride, merge_rules, rules_to_dict
@@ -73,6 +74,8 @@ class RunSummary:
     windows_total: int = 0
     windows_failed: int = 0
     questions_saved: int = 0
+    niveles: dict[str, int] = field(default_factory=dict)
+    ventanas_sin_algun_nivel: list[str] = field(default_factory=list)
 
 
 # ---- Ventanas (spec §4) ---------------------------------------------------
@@ -346,6 +349,8 @@ def _run_immediate(
     failures: list[dict] = []  # por qué falló cada ventana: una corrida `partial` ya se pagó
     descartes: list[dict] = []
     conteo: Counter[str] = Counter()
+    por_nivel: Counter[str] = Counter()
+    niveles_por_ventana: dict[str, dict[str, int]] = {}
     saved = 0
     cache = None
     cache_name = "none"
@@ -384,6 +389,11 @@ def _run_immediate(
             "cache_hours": round(cache_hours, 4),
             "ventanas": dict(ventanas),
             "preguntas": dict(conteo),
+            "niveles": {
+                "total": dict(por_nivel),
+                "ventanas": dict(niveles_por_ventana),
+                "sin_algun_nivel": [k for k, c in niveles_por_ventana.items() if falta_algun_nivel(c)],
+            },
             "descartes": list(descartes),
             "failures": list(failures),
         }
@@ -490,6 +500,7 @@ def _run_immediate(
             descartadas = len(result.descartes)
             descartes.extend({"window_key": key, "motivo": motivo} for motivo in result.descartes)
             guardadas = revision = 0
+            nivel_ventana: Counter[str] = Counter()
             for accepted in result.accepted:
                 q = accepted.question
                 correcta = correct_answer(q)
@@ -515,13 +526,17 @@ def _run_immediate(
                     question_type=q.tipo.value,
                     source_quote=q.cita,
                     window_key=key,
+                    cognitive_level=q.nivel.value,
                 )
                 order += 1
                 saved += 1
                 guardadas += 1
                 revision += accepted.verdict.status == "needs_review"
                 conteo[f"{q.tipo.value}/{accepted.verdict.status}"] += 1
+                nivel_ventana[q.nivel.value] += 1
+                por_nivel[q.nivel.value] += 1
             ventanas[key] = "ok"
+            niveles_por_ventana[key] = dict(nivel_ventana)
             # Se guarda antes del callback: si el callback falla o se corta la corrida,
             # lo generado ya quedó.
             session.commit()
@@ -546,6 +561,8 @@ def _run_immediate(
         nodes_total=run.nodes_total, nodes_completed=run.nodes_completed, nodes_failed=run.nodes_failed,
         cost_estimate_usd=0.0, actual_cost_usd=computed_cost, cache_name=cache_name,
         windows_total=len(jobs), windows_failed=len(failures), questions_saved=saved,
+        niveles=dict(por_nivel),
+        ventanas_sin_algun_nivel=[k for k, c in niveles_por_ventana.items() if falta_algun_nivel(c)],
     )
 
 
