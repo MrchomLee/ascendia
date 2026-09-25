@@ -145,7 +145,7 @@ def test_solo_se_exportan_las_preguntas_sin_decidir_y_sin_revision_previa(tmp_pa
     assert exportacion.preguntas == 1
 
     _veredictos(carpeta, _lotes(carpeta)[0], [
-        {"id": libre, "veredicto": "dudosa", "calificacion": 3, "motivos": ["no se puede decidir con el texto"]},
+        {"id": libre, "nivel": "conocimiento", "veredicto": "dudosa", "calificacion": 3, "motivos": ["no se puede decidir con el texto"]},
     ])
     _importar_revision(manual_id, carpeta)
     assert _exportar_revision(manual_id, carpeta).preguntas == 0
@@ -160,9 +160,9 @@ def test_cada_veredicto_deja_su_estado_y_queda_registrado(tmp_path):
     aceptada, rechazada, dudosa = _generar(manual_id, carpeta)
     _exportar_revision(manual_id, carpeta)
     _veredictos(carpeta, _lotes(carpeta)[0], [
-        {"id": aceptada, "veredicto": "aceptar", "calificacion": 5, "motivos": []},
-        {"id": rechazada, "veredicto": "rechazar", "calificacion": 1, "motivos": ["fuera de tema"]},
-        {"id": dudosa, "veredicto": "dudosa", "calificacion": 3, "motivos": ["depende de otra ventana"]},
+        {"id": aceptada, "nivel": "conocimiento", "veredicto": "aceptar", "calificacion": 5, "motivos": []},
+        {"id": rechazada, "nivel": "conocimiento", "veredicto": "rechazar", "calificacion": 1, "motivos": ["fuera de tema"]},
+        {"id": dudosa, "nivel": "conocimiento", "veredicto": "dudosa", "calificacion": 3, "motivos": ["depende de otra ventana"]},
     ])
 
     resumen = _importar_revision(manual_id, carpeta)
@@ -172,7 +172,7 @@ def test_cada_veredicto_deja_su_estado_y_queda_registrado(tmp_path):
     assert estado == "valid"
     assert meta["revision"] == {
         "por": MODEL_CLAUDE_CODE, "veredicto": "aceptar", "calificacion": 5, "motivos": [],
-        "fecha": meta["revision"]["fecha"],
+        "nivel": "conocimiento", "fecha": meta["revision"]["fecha"],
     }
     estado, meta = _estado(rechazada)
     assert estado == "rejected" and meta["revision"]["motivos"] == ["fuera de tema"]
@@ -192,10 +192,10 @@ def test_no_se_tocan_las_preguntas_que_ya_decidio_una_persona_ni_las_de_otro_man
     _exportar_revision(manual_id, carpeta)
     _marcar(aprobada, "valid")
     _veredictos(carpeta, _lotes(carpeta)[0], [
-        {"id": aprobada, "veredicto": "rechazar", "calificacion": 1, "motivos": ["x"]},
-        {"id": ajena, "veredicto": "rechazar", "calificacion": 1, "motivos": ["x"]},
-        {"id": 99999, "veredicto": "rechazar", "calificacion": 1, "motivos": ["x"]},
-        {"id": libre, "veredicto": "aceptar", "calificacion": 4, "motivos": []},
+        {"id": aprobada, "nivel": "conocimiento", "veredicto": "rechazar", "calificacion": 1, "motivos": ["x"]},
+        {"id": ajena, "nivel": "conocimiento", "veredicto": "rechazar", "calificacion": 1, "motivos": ["x"]},
+        {"id": 99999, "nivel": "conocimiento", "veredicto": "rechazar", "calificacion": 1, "motivos": ["x"]},
+        {"id": libre, "nivel": "conocimiento", "veredicto": "aceptar", "calificacion": 4, "motivos": []},
     ])
 
     resumen = _importar_revision(manual_id, carpeta)
@@ -213,8 +213,8 @@ def test_un_lote_invalido_no_aplica_nada_y_se_reporta(tmp_path):
     _exportar_revision(manual_id, carpeta)
     _veredictos(carpeta, "roto", "esto no es JSON")
     _veredictos(carpeta, "sin_motivos", [
-        {"id": primera, "veredicto": "aceptar", "calificacion": 5, "motivos": []},
-        {"id": segunda, "veredicto": "rechazar", "calificacion": 1, "motivos": []},  # rechazar exige motivos
+        {"id": primera, "nivel": "conocimiento", "veredicto": "aceptar", "calificacion": 5, "motivos": []},
+        {"id": segunda, "nivel": "conocimiento", "veredicto": "rechazar", "calificacion": 1, "motivos": []},  # rechazar exige motivos
     ])
 
     resumen = _importar_revision(manual_id, carpeta)
@@ -235,8 +235,97 @@ def test_el_cli_exporta_e_importa_la_revision(tmp_path):
 
     salida = runner.invoke(app, ["exportar-revision", str(manual_id), "--carpeta", str(carpeta)])
     assert salida.exit_code == 0, salida.output
-    _veredictos(carpeta, _lotes(carpeta)[0], [{"id": primera, "veredicto": "aceptar", "calificacion": 5, "motivos": []}])
+    _veredictos(carpeta, _lotes(carpeta)[0], [{"id": primera, "nivel": "conocimiento", "veredicto": "aceptar", "calificacion": 5, "motivos": []}])
 
     salida = runner.invoke(app, ["importar-revision", str(manual_id), "--carpeta", str(carpeta)])
     assert salida.exit_code == 0, salida.output
     assert _estado(primera)[0] == "valid"
+
+
+def _sin_nivel(qid: int) -> None:
+    with session_scope() as session:
+        session.get(Question, qid).cognitive_level = None
+
+
+def _nivel(qid: int) -> str | None:
+    with session_scope() as session:
+        return session.get(Question, qid).cognitive_level
+
+
+def test_la_rubrica_trae_los_niveles_y_sus_criterios(tmp_path):
+    manual_id = _seed()
+    carpeta = tmp_path / "TST"
+    _generar(manual_id, carpeta)
+    _exportar_revision(manual_id, carpeta)
+    rubrica = (carpeta / "revision" / "instruccion.md").read_text(encoding="utf-8")
+    for marca in ("CONCLUSIÓN INFERIDA", "Paráfrasis infiel", "lógicamente innegable",
+                  "no se resuelve con la regla citada", "solo clasificar"):
+        assert marca in rubrica
+    (lote,) = _lotes(carpeta)
+    assert "nivel declarado: conocimiento" in (carpeta / "revision" / "lotes" / f"{lote}.md").read_text(encoding="utf-8")
+
+
+def test_si_el_nivel_revisado_difiere_la_pregunta_se_reclasifica(tmp_path):
+    manual_id = _seed()
+    carpeta = tmp_path / "TST"
+    primera, *_ = _generar(manual_id, carpeta)
+    _exportar_revision(manual_id, carpeta)
+    _veredictos(carpeta, _lotes(carpeta)[0], [
+        {"id": primera, "nivel": "analisis", "veredicto": "aceptar", "calificacion": 4, "motivos": []},
+    ])
+
+    resumen = _importar_revision(manual_id, carpeta)
+
+    estado, meta = _estado(primera)
+    assert (estado, _nivel(primera), meta["nivel_generado"], meta["revision"]["nivel"]) == (
+        "valid", "analisis", "conocimiento", "analisis",
+    )
+    assert resumen.reclasificadas == 1
+
+
+def test_las_decididas_sin_nivel_solo_se_clasifican_sin_tocar_su_estado(tmp_path):
+    manual_id = _seed()
+    carpeta = tmp_path / "TST"
+    aprobada, _, _ = _generar(manual_id, carpeta)
+    _marcar(aprobada, "valid")
+    _sin_nivel(aprobada)
+
+    exportacion = _exportar_revision(manual_id, carpeta)
+    contenido = (carpeta / "revision" / "lotes" / f"{_lotes(carpeta)[0]}.md").read_text(encoding="utf-8")
+    assert exportacion.solo_clasificar == 1 and "SOLO CLASIFICAR" in contenido
+
+    _veredictos(carpeta, _lotes(carpeta)[0], [
+        {"id": aprobada, "nivel": "comprension", "veredicto": "rechazar", "calificacion": 1, "motivos": ["x"]},
+    ])
+    resumen = _importar_revision(manual_id, carpeta)
+
+    estado, meta = _estado(aprobada)
+    assert (estado, _nivel(aprobada), meta["clasificacion"]["nivel"]) == ("valid", "comprension", "comprension")
+    assert resumen.solo_clasificadas == 1 and resumen.rechazadas == 0
+    assert (aprobada, "ya decidida (valid): solo se clasificó") in resumen.omitidas
+
+
+def test_una_sin_decidir_sin_veredicto_se_omite(tmp_path):
+    manual_id = _seed()
+    carpeta = tmp_path / "TST"
+    primera, *_ = _generar(manual_id, carpeta)
+    _exportar_revision(manual_id, carpeta)
+    _veredictos(carpeta, _lotes(carpeta)[0], [{"id": primera, "nivel": "conocimiento"}])
+
+    resumen = _importar_revision(manual_id, carpeta)
+
+    assert (primera, "falta el veredicto") in resumen.omitidas
+    assert _estado(primera)[0] == "pending"
+
+
+def test_un_lote_de_la_ronda_anterior_sin_nivel_no_aplica_nada(tmp_path):
+    manual_id = _seed()
+    carpeta = tmp_path / "TST"
+    primera, *_ = _generar(manual_id, carpeta)
+    _exportar_revision(manual_id, carpeta)
+    _veredictos(carpeta, "viejo", [{"id": primera, "veredicto": "aceptar", "calificacion": 5, "motivos": []}])
+
+    resumen = _importar_revision(manual_id, carpeta)
+
+    assert [nombre for nombre, _ in resumen.lotes_invalidos] == ["viejo"]
+    assert _estado(primera)[0] == "pending"

@@ -54,7 +54,10 @@ def exportar_revision_cmd(
     init_question_tables()
     with session_scope() as session:
         exportacion = exportar_revision(session, manual_id=manual_id, carpeta=carpeta)
-    console.print(f"{exportacion.preguntas} preguntas en {exportacion.lotes} lotes en {exportacion.carpeta}")
+    console.print(
+        f"{exportacion.preguntas} preguntas ({exportacion.solo_clasificar} solo para clasificar) "
+        f"en {exportacion.lotes} lotes en {exportacion.carpeta}"
+    )
 
 
 @app.command("importar-revision")
@@ -68,7 +71,8 @@ def importar_revision_cmd(
         resumen = importar_revision(session, manual_id=manual_id, carpeta=carpeta)
     console.print(
         f"[green]{resumen.aceptadas} aceptadas[/], [red]{resumen.rechazadas} rechazadas[/], "
-        f"[yellow]{resumen.dudosas} dudosas[/]"
+        f"[yellow]{resumen.dudosas} dudosas[/], {resumen.reclasificadas} reclasificadas, "
+        f"{resumen.solo_clasificadas} solo clasificadas"
     )
     for qid, motivo in resumen.omitidas:
         console.print(f"  omitida {qid}: {motivo}")
