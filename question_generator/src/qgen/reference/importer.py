@@ -164,6 +164,7 @@ _ROLES_XLSX = ("correct", "confusa", "distractor", "distractor")
 _PREFIJOS = ("de acuerdo con la información del texto,", "según el texto,", "a partir del texto,")
 _CITA = re.compile(r"\s*\[cite:[^\]]*\]")
 _SEGUN_AL_FINAL = re.compile(r",\s*según el texto(?=\s*\?)", re.IGNORECASE)
+_EN_EL_TEXTO = re.compile(r"\s+en el texto(?=[\s,.;:?])", re.IGNORECASE)
 
 
 def _sin_acentos(texto: str) -> str:
@@ -181,6 +182,7 @@ def limpiar_ejemplo(texto: str) -> str:
             limpio = limpio[len(prefijo):].lstrip()
             break
     limpio = _SEGUN_AL_FINAL.sub("", limpio)
+    limpio = _EN_EL_TEXTO.sub("", limpio)  # "…mencionadas en el texto respecto a…"
     if limpio.startswith("¿") and len(limpio) > 1:
         return "¿" + limpio[1].upper() + limpio[2:]
     return limpio[:1].upper() + limpio[1:]

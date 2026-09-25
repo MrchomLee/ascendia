@@ -329,3 +329,64 @@ def test_un_lote_de_la_ronda_anterior_sin_nivel_no_aplica_nada(tmp_path):
 
     assert [nombre for nombre, _ in resumen.lotes_invalidos] == ["viejo"]
     assert _estado(primera)[0] == "pending"
+
+
+def _como(qid: int, **campos) -> None:
+    with session_scope() as session:
+        q = session.get(Question, qid)
+        for campo, valor in campos.items():
+            setattr(q, campo, valor)
+
+
+def test_un_ejercicio_sigue_siendo_de_aplicacion_aunque_la_revision_diga_otro_nivel(tmp_path):
+    manual_id = _seed()
+    carpeta = tmp_path / "TST"
+    revisado, clasificado, _ = _generar(manual_id, carpeta)
+    _como(revisado, question_type="ejercicio_libro", cognitive_level="aplicacion")
+    _como(clasificado, question_type="ejercicio_nuevo", cognitive_level=None, validation_status="valid")
+    _exportar_revision(manual_id, carpeta)
+    _veredictos(carpeta, _lotes(carpeta)[0], [
+        {"id": revisado, "nivel": "conocimiento", "veredicto": "aceptar", "calificacion": 4, "motivos": []},
+        {"id": clasificado, "nivel": "conocimiento"},
+    ])
+
+    resumen = _importar_revision(manual_id, carpeta)
+
+    assert (_nivel(revisado), _nivel(clasificado)) == ("aplicacion", "aplicacion")
+    assert resumen.reclasificadas == 0
+    assert "nivel_generado" not in _estado(revisado)[1]
+
+
+def test_una_sin_decidir_ni_revisar_sin_nivel_y_sin_veredicto_no_se_clasifica(tmp_path):
+    manual_id = _seed()
+    carpeta = tmp_path / "TST"
+    primera, *_ = _generar(manual_id, carpeta)
+    _sin_nivel(primera)
+    _exportar_revision(manual_id, carpeta)
+    _veredictos(carpeta, _lotes(carpeta)[0], [{"id": primera, "nivel": "analisis"}])
+
+    resumen = _importar_revision(manual_id, carpeta)
+
+    assert (primera, "falta el veredicto") in resumen.omitidas
+    assert _nivel(primera) is None and resumen.solo_clasificadas == 0
+
+
+def test_una_a_revisar_ya_revisada_por_claude_solo_se_clasifica_y_sigue_en_la_cola(tmp_path):
+    manual_id = _seed()
+    carpeta = tmp_path / "TST"
+    primera, *_ = _generar(manual_id, carpeta)
+    _exportar_revision(manual_id, carpeta)
+    _veredictos(carpeta, _lotes(carpeta)[0], [
+        {"id": primera, "nivel": "conocimiento", "veredicto": "dudosa", "calificacion": 3, "motivos": ["depende"]},
+    ])
+    _importar_revision(manual_id, carpeta)
+    _sin_nivel(primera)  # como una revisión anterior a los niveles
+    _exportar_revision(manual_id, carpeta)
+    _veredictos(carpeta, _lotes(carpeta)[0], [
+        {"id": primera, "nivel": "analisis", "veredicto": "rechazar", "calificacion": 1, "motivos": ["x"]},
+    ])
+
+    resumen = _importar_revision(manual_id, carpeta)
+
+    assert _estado(primera)[0] == "needs_review"
+    assert _nivel(primera) == "analisis" and resumen.solo_clasificadas == 1

@@ -141,8 +141,11 @@ def importar_revision(
             if q is None or q.manual_id != manual_id:
                 resumen.omitidas.append((v.id, "no es de este manual"))
                 continue
-            revisable = q.validation_status in REVISABLES
-            if v.veredicto is not None and revisable:
+            # La misma regla que al exportar: revisión completa o, a lo sumo, solo clasificar.
+            if _revision_completa(q):
+                if v.veredicto is None:
+                    resumen.omitidas.append((v.id, "falta el veredicto"))
+                    continue
                 if _aplicar(q, v, model_name, ahora):
                     resumen.reclasificadas += 1
                 if v.veredicto == "aceptar":
@@ -152,15 +155,14 @@ def importar_revision(
                 else:
                     resumen.dudosas += 1
                 continue
+            ya = "ya revisada" if q.validation_status in REVISABLES else "ya decidida"
             if q.cognitive_level is None:
                 _clasificar(q, v.nivel, model_name, ahora)
                 resumen.solo_clasificadas += 1
                 if v.veredicto is not None:
-                    resumen.omitidas.append((v.id, f"ya decidida ({q.validation_status}): solo se clasificó"))
+                    resumen.omitidas.append((v.id, f"{ya} ({q.validation_status}): solo se clasificó"))
                 continue
-            resumen.omitidas.append(
-                (v.id, "falta el veredicto" if revisable else f"ya decidida ({q.validation_status})")
-            )
+            resumen.omitidas.append((v.id, f"{ya} ({q.validation_status})"))
     session.commit()
     return resumen
 
@@ -172,38 +174,51 @@ def _a_revisar(session: Session, manual_id: int) -> list[tuple[Question, bool]]:
     for q in session.execute(
         select(Question).where(Question.manual_id == manual_id).order_by(Question.id)
     ).scalars():
-        if q.validation_status in REVISABLES and "revision" not in (q.metadata_json or {}):
+        if _revision_completa(q):
             salida.append((q, False))
         elif q.cognitive_level is None:
             salida.append((q, True))
     return salida
 
 
+def _revision_completa(q: Question) -> bool:
+    """Sin decidir y sin revisión previa: revisión completa. Cualquier otra, a lo sumo, solo
+    se clasifica (spec de niveles §8). La usan la exportación y la importación."""
+    return q.validation_status in REVISABLES and "revision" not in (q.metadata_json or {})
+
+
+def _nivel_final(q: Question, nivel: Nivel) -> str:
+    """Los ejercicios siempre son aplicación (spec de niveles §5), diga lo que diga la revisión."""
+    return Nivel.APLICACION.value if q.question_type != "teoria" else nivel.value
+
+
 def _aplicar(q: Question, v: Veredicto, model_name: str, ahora: datetime) -> bool:
     """Aplica el veredicto y el nivel; devuelve si la pregunta se reclasificó. Los motivos
     van en `revision`, aparte de los `motivos` de la revisión automática."""
     meta = dict(q.metadata_json or {})
-    reclasificada = q.cognitive_level is not None and q.cognitive_level != v.nivel.value
+    nivel = _nivel_final(q, v.nivel)
+    reclasificada = q.cognitive_level is not None and q.cognitive_level != nivel
     if reclasificada:
         meta["nivel_generado"] = q.cognitive_level
     meta["revision"] = {
         "por": model_name, "veredicto": v.veredicto, "calificacion": v.calificacion,
-        "motivos": list(v.motivos), "nivel": v.nivel.value, "fecha": ahora.isoformat(),
+        "motivos": list(v.motivos), "nivel": nivel, "fecha": ahora.isoformat(),
     }
     q.metadata_json = meta
     q.validation_status = ESTADO_DE[v.veredicto]
     q.validated_at = ahora
-    q.cognitive_level = v.nivel.value
+    q.cognitive_level = nivel
     return reclasificada
 
 
 def _clasificar(q: Question, nivel: Nivel, model_name: str, ahora: datetime) -> None:
     """Solo el nivel: el estado y la fecha de validación de una pregunta decidida no se tocan."""
+    final = _nivel_final(q, nivel)
     q.metadata_json = {
         **(q.metadata_json or {}),
-        "clasificacion": {"por": model_name, "nivel": nivel.value, "fecha": ahora.isoformat()},
+        "clasificacion": {"por": model_name, "nivel": final, "fecha": ahora.isoformat()},
     }
-    q.cognitive_level = nivel.value
+    q.cognitive_level = final
 
 
 def _primer_error(exc: Exception) -> str:
@@ -286,7 +301,8 @@ de verdad pide, no según lo que declaró la generación:
 8. **Caso sin solución en el texto** (aplicación): el caso no se resuelve con la regla citada.
 
 Si el nivel que declaró la generación no es el que la pregunta pide de verdad, **no la
-rechaces por eso**: escribe el nivel correcto y juzga la pregunta en ese nivel.
+rechaces por eso**: escribe el nivel correcto y juzga la pregunta en ese nivel. Los
+ejercicios (`ejercicio_libro`, `ejercicio_nuevo`) siempre son "aplicacion".
 
 **dudosa** (queda "a revisar" para una persona) solo si no puedes decidir con el
 texto del lote; por ejemplo, porque depende de lo que dicen otras secciones.

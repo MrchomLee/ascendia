@@ -155,9 +155,15 @@ def questions_available() -> bool:
 
     Un SQLite recién ingerido solo tiene las tablas de la ETL: las de preguntas
     las crea `qgen-generate` la primera vez. Preguntar es más barato que dejar
-    que reviente una consulta.
+    que reviente una consulta. Si ya existen pero son de antes de una columna nueva
+    (p. ej. el nivel cognitivo), la migración idempotente de qgen las pone al día.
     """
-    return inspect(get_engine()).has_table("questions")
+    if not inspect(get_engine()).has_table("questions"):
+        return False
+    from qgen.db.migration import init_question_tables
+
+    init_question_tables()
+    return True
 
 
 @st.cache_data(ttl=30, show_spinner=False)

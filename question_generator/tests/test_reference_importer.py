@@ -101,6 +101,10 @@ def test_una_fila_con_menos_de_cuatro_respuestas_se_rechaza_con_hoja_y_fila(tmp_
     ("A partir del texto, ¿cómo se explica el avance?", "¿Cómo se explica el avance?"),
     ("¿Cómo se establecieron los límites tras 1848, según el texto?", "¿Cómo se establecieron los límites tras 1848?"),
     ("Trazar la línea media del río[cite: 1].", "Trazar la línea media del río."),
+    ("A partir de las proporciones mencionadas en el texto respecto a Canadá, ¿qué se deduce?",
+     "A partir de las proporciones mencionadas respecto a Canadá, ¿qué se deduce?"),
+    ("A partir de las características descritas en el texto, ¿qué implicación se infiere?",
+     "A partir de las características descritas, ¿qué implicación se infiere?"),
 ])
 def test_limpiar_ejemplo(sucio, limpio):
     assert limpiar_ejemplo(sucio) == limpio

@@ -450,9 +450,9 @@
     "semantic_hash": ""
   },
   "explorer/src/explorer/questions_access.py": {
-    "mtime": 1790351694.7110329,
-    "seen": 1790351847.9135203,
-    "ast_hash": "83d9ae53f3e1d6fd46873fcd29aad0ec",
+    "mtime": 1790352617.8062758,
+    "seen": 1790352663.8812573,
+    "ast_hash": "a6452b82fd11e5adb268d130c839c5d3",
     "semantic_hash": ""
   },
   "explorer/src/explorer/search.py": {
@@ -678,9 +678,9 @@
     "semantic_hash": ""
   },
   "explorer/tests/test_questions_access.py": {
-    "mtime": 1790351652.477705,
-    "seen": 1790351847.913954,
-    "ast_hash": "5dfde6ab8582f3ddc94a91f4e8fb18c2",
+    "mtime": 1790352571.517821,
+    "seen": 1790352663.8818185,
+    "ast_hash": "133ef42e7b23c693a8d322504f651c57",
     "semantic_hash": ""
   },
   "question_generator/tests/test_qgen_persistence.py": {
@@ -774,9 +774,9 @@
     "semantic_hash": ""
   },
   "question_generator/src/qgen/reference/importer.py": {
-    "mtime": 1790351290.1151302,
-    "seen": 1790351847.91621,
-    "ast_hash": "508d6e74d068cf23b72779c75f22f673",
+    "mtime": 1790352617.8062758,
+    "seen": 1790352663.886301,
+    "ast_hash": "87ef919c220c51aedb8dac45b0980d69",
     "semantic_hash": ""
   },
   "question_generator/src/qgen/reference/repository.py": {
@@ -798,9 +798,9 @@
     "semantic_hash": ""
   },
   "question_generator/tests/test_reference_importer.py": {
-    "mtime": 1790351243.48164,
-    "seen": 1790351847.9174404,
-    "ast_hash": "c2b7103cfe2c0a48ab1eee50e05e93e0",
+    "mtime": 1790352571.517821,
+    "seen": 1790352663.8889813,
+    "ast_hash": "62d0e8d3f6d5e1230901adbaed3b994f",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -942,15 +942,15 @@
     "semantic_hash": ""
   },
   "question_generator/src/qgen/claude_review.py": {
-    "mtime": 1790351482.5318372,
-    "seen": 1790351847.914395,
-    "ast_hash": "b4472fd6cc3751dcc13822ee5e4f1245",
+    "mtime": 1790352617.8062758,
+    "seen": 1790352663.8827085,
+    "ast_hash": "0239ee5f5e07640781a1a5dc6d32ad42",
     "semantic_hash": ""
   },
   "question_generator/tests/test_claude_review.py": {
-    "mtime": 1790351438.865859,
-    "seen": 1790351847.9171789,
-    "ast_hash": "81e1bdb3b97a2599966e42cf40a14685",
+    "mtime": 1790352571.517821,
+    "seen": 1790352663.8880694,
+    "ast_hash": "e808dbd7b692c5e25528fb91613b2528",
     "semantic_hash": ""
   },
   "question_generator/src/qgen/prompts/niveles.py": {

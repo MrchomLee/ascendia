@@ -215,3 +215,17 @@ def test_filtra_por_nivel_incluido_sin_clasificar():
 def test_la_etiqueta_de_revision_lleva_el_nivel_si_lo_hay():
     revision = {"por": "claude-opus-5-5", "veredicto": "aceptar", "calificacion": 5, "motivos": [], "nivel": "aplicacion"}
     assert revision_label(revision) == "Revisión de claude-opus-5-5: aceptar · 5/5 · Aplicación"
+
+
+def test_el_explorador_migra_una_base_sin_las_columnas_nuevas():
+    from sqlalchemy import text
+    from etl.db.session import get_engine
+
+    st.cache_data.clear()
+    manual_id, _, _, _ = _seed_questions_data()
+    with get_engine().begin() as conn:
+        conn.execute(text("ALTER TABLE questions DROP COLUMN cognitive_level"))
+    st.cache_data.clear()
+
+    assert questions_available() is True
+    assert len(list_questions(manual_id)) == 1
