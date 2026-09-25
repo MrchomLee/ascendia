@@ -44,6 +44,7 @@ def _seed(*, run_status: str) -> int:
             session, run=run, node_id=node.id, manual_id=manual.id, generation_order=0,
             source_quote=text,
             question_type="ejercicio_nuevo",
+            cognitive_level="aplicacion",
             metadata={
                 "motivos": ["supera la dificultad del PDF"],
                 "revision": {"por": "claude-opus-5-5", "veredicto": "dudosa", "calificacion": 3,
@@ -112,3 +113,8 @@ def test_la_cita_se_muestra_tal_cual():
 
     cita = "La administración de la justicia militar corresponde al Supremo Tribunal Militar."
     assert any(t.value == cita for t in at.text)
+
+
+def test_la_pregunta_muestra_su_nivel_junto_al_tipo():
+    at = _open_page(_seed(run_status="succeeded"))
+    assert any("Ejercicio nuevo · Aplicación" in c.value for c in at.caption)

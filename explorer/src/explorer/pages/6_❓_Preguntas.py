@@ -16,6 +16,7 @@ from explorer.components import kpi_row
 from explorer.data_access import get_manual, list_manuals
 from explorer.navigation import PAGE_NODE, get_int, link_to, set_params
 from explorer.questions_access import (
+    SIN_NIVEL,
     ROLE_COLOR,
     ROLE_LABEL,
     STATUS_LABEL,
@@ -23,6 +24,7 @@ from explorer.questions_access import (
     TYPE_LABEL,
     QuestionView,
     get_question_kpis,
+    level_label,
     list_questions,
     list_runs,
     nodes_missing_questions,
@@ -31,6 +33,7 @@ from explorer.questions_access import (
     set_validation_status,
 )
 from qgen.bundle.build import build_bundle, source_digest
+from qgen.prompts.niveles import NIVEL_LABEL, ORDEN, PROPORCION
 from qgen.bundle.spec import bundle_filename, dumps, validate
 
 load_dotenv()
@@ -102,6 +105,19 @@ if kpis.by_status:
         ]
     )
 
+if kpis.by_level:
+    total_niveles = sum(kpis.by_level.values())
+    kpi_row(
+        [
+            (
+                NIVEL_LABEL[n.value],
+                kpis.by_level.get(n.value, 0),
+                f"{100 * kpis.by_level.get(n.value, 0) / total_niveles:.0f}% (meta {PROPORCION[n]}%)",
+            )
+            for n in ORDEN
+        ]
+    )
+
 st.divider()
 
 # Barra visual de progreso y auditoría de cobertura
@@ -139,7 +155,7 @@ def _render_question(question: QuestionView) -> None:
             )
 
         st.markdown(f"**{question.question_text}**")
-        st.caption(TYPE_LABEL.get(question.question_type, question.question_type))
+        st.caption(f"{TYPE_LABEL.get(question.question_type, question.question_type)} · {level_label(question)}")
         if question.motivos:
             st.warning("A revisar: " + "; ".join(question.motivos))
         if question.revision:
@@ -176,7 +192,7 @@ def _render_question(question: QuestionView) -> None:
 
 
 with tab_preguntas:
-    filtros = st.columns([0.3, 0.25, 0.45])
+    filtros = st.columns([0.25, 0.2, 0.2, 0.35])
     with filtros[0]:
         estados = st.multiselect(
             "Estado",
@@ -186,18 +202,27 @@ with tab_preguntas:
             placeholder="Todos",
         )
     with filtros[1]:
+        niveles = st.multiselect(
+            "Nivel",
+            options=[n.value for n in ORDEN] + [SIN_NIVEL],
+            default=[],
+            format_func=lambda n: NIVEL_LABEL.get(n, "sin nivel"),
+            placeholder="Todos",
+        )
+    with filtros[2]:
         run_ids = [r.id for r in runs]
         run_elegida = st.selectbox(
             "Corrida",
             options=[None, *run_ids],
             format_func=lambda i: "Todas" if i is None else f"#{i}",
         )
-    with filtros[2]:
+    with filtros[3]:
         busqueda = st.text_input("Buscar en el enunciado o la justificación", "")
 
     preguntas = list_questions(
         manual.id,
         statuses=tuple(estados) or None,
+        levels=tuple(niveles) or None,
         run_id=run_elegida,
         query=busqueda or None,
     )

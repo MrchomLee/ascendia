@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, inspect, select, update
 
 from explorer.data_access import NodeSummary, get_tree
+from qgen.prompts.niveles import NIVEL_LABEL
 
 #: Los cuatro estados que acepta la base de la webapp.
 STATUSES: tuple[str, ...] = ("pending", "valid", "needs_review", "rejected")
@@ -55,6 +56,9 @@ TYPE_LABEL: dict[str, str] = {
     "ejercicio_nuevo": "🆕 Ejercicio nuevo",
 }
 
+#: Valor del filtro para las preguntas sin nivel cognitivo (anteriores a los niveles).
+SIN_NIVEL = "sin_nivel"
+
 
 class OptionView(BaseModel):
     id: int
@@ -82,6 +86,9 @@ class QuestionView(BaseModel):
     motivos: list[str] = Field(default_factory=list)
     #: Veredicto de la revisión desde Claude Code (`qgen-claude importar-revision`).
     revision: dict | None = None
+    cognitive_level: str | None = None
+    #: El nivel que declaró la generación, si la revisión lo cambió.
+    nivel_generado: str | None = None
     options: list[OptionView] = Field(default_factory=list)
 
     @property
@@ -107,6 +114,7 @@ class RunView(BaseModel):
 class QuestionKPIs(BaseModel):
     total: int
     by_status: dict[str, int] = Field(default_factory=dict)
+    by_level: dict[str, int] = Field(default_factory=dict)
     nodes_with_text: int
     nodes_with_question: int
     cost_total_usd: float
@@ -126,8 +134,20 @@ class QuestionKPIs(BaseModel):
 def revision_label(revision: dict) -> str:
     """Una línea con el veredicto de la revisión desde Claude Code y sus motivos."""
     texto = f"Revisión de {revision.get('por', '?')}: {revision.get('veredicto', '?')} · {revision.get('calificacion', '?')}/5"
+    if revision.get("nivel"):
+        texto += f" · {NIVEL_LABEL.get(revision['nivel'], revision['nivel'])}"
     motivos = revision.get("motivos") or []
     return texto + (" — " + "; ".join(motivos) if motivos else "")
+
+
+def level_label(question: QuestionView) -> str:
+    """El nivel de la pregunta y, si la revisión lo cambió, el que declaró la generación."""
+    if not question.cognitive_level:
+        return "sin nivel"
+    texto = NIVEL_LABEL.get(question.cognitive_level, question.cognitive_level)
+    if question.nivel_generado:
+        texto += f" (generada como {NIVEL_LABEL.get(question.nivel_generado, question.nivel_generado)})"
+    return texto
 
 
 def questions_available() -> bool:
@@ -165,10 +185,19 @@ def get_question_kpis(manual_id: int) -> QuestionKPIs:
                 GenerationRun.manual_id == manual_id
             )
         ).scalar_one()
+        by_level = {
+            nivel: n
+            for nivel, n in session.execute(
+                select(Question.cognitive_level, func.count(Question.id))
+                .where(Question.manual_id == manual_id, Question.cognitive_level.is_not(None))
+                .group_by(Question.cognitive_level)
+            ).all()
+        }
 
         return QuestionKPIs(
             total=sum(by_status.values()),
             by_status=by_status,
+            by_level=by_level,
             nodes_with_text=nodes_with_text,
             nodes_with_question=nodes_with_question,
             cost_total_usd=float(cost or 0.0),
@@ -220,6 +249,7 @@ def list_questions(
     manual_id: int,
     *,
     statuses: tuple[str, ...] | None = None,
+    levels: tuple[str, ...] | None = None,
     run_id: int | None = None,
     node_id: int | None = None,
     query: str | None = None,
@@ -236,6 +266,13 @@ def list_questions(
         )
         if statuses:
             stmt = stmt.where(Question.validation_status.in_(statuses))
+        if levels:
+            nombrados = [n for n in levels if n != SIN_NIVEL]
+            condicion = Question.cognitive_level.in_(nombrados) if nombrados else None
+            if SIN_NIVEL in levels:
+                nulos = Question.cognitive_level.is_(None)
+                condicion = nulos if condicion is None else (condicion | nulos)
+            stmt = stmt.where(condicion)
         if run_id is not None:
             stmt = stmt.where(Question.run_id == run_id)
         if node_id is not None:
@@ -290,6 +327,8 @@ def list_questions(
                 source_quote=q.source_quote,
                 motivos=list((q.metadata_json or {}).get("motivos") or []),
                 revision=(q.metadata_json or {}).get("revision"),
+                cognitive_level=q.cognitive_level,
+                nivel_generado=(q.metadata_json or {}).get("nivel_generado"),
                 options=options_by_question.get(q.id, []),
             )
             for q, node in rows

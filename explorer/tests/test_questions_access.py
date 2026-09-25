@@ -11,7 +11,9 @@ from qgen.db.persistence import create_run, finalize_run, persist_question
 from qgen.prompts.schemas import GeneratedOption, GeneratedQuestion, OptionRole
 
 from explorer.questions_access import (
+    SIN_NIVEL,
     get_question_kpis,
+    level_label,
     list_questions,
     revision_label,
     list_runs,
@@ -192,3 +194,24 @@ def test_la_etiqueta_de_la_revision_lleva_veredicto_calificacion_y_motivos():
     assert revision_label({**revision, "veredicto": "aceptar", "calificacion": 5, "motivos": []}) == (
         "Revisión de claude-opus-5-5: aceptar · 5/5"
     )
+
+
+def test_filtra_por_nivel_incluido_sin_clasificar():
+    st.cache_data.clear()
+    manual_id, _, _, qid = _seed_questions_data()
+    assert list_questions(manual_id, levels=(SIN_NIVEL,))  # el seed no tiene nivel
+    assert list_questions(manual_id, levels=("analisis",)) == []
+    with session_scope() as session:
+        from qgen.models.schema import Question
+        q = session.get(Question, qid)
+        q.cognitive_level = "analisis"
+        q.metadata_json = {**(q.metadata_json or {}), "nivel_generado": "comprension"}
+    st.cache_data.clear()
+    [q] = list_questions(manual_id, levels=("analisis",))
+    assert level_label(q) == "Análisis (generada como Comprensión)"
+    assert get_question_kpis(manual_id).by_level == {"analisis": 1}
+
+
+def test_la_etiqueta_de_revision_lleva_el_nivel_si_lo_hay():
+    revision = {"por": "claude-opus-5-5", "veredicto": "aceptar", "calificacion": 5, "motivos": [], "nivel": "aplicacion"}
+    assert revision_label(revision) == "Revisión de claude-opus-5-5: aceptar · 5/5 · Aplicación"
