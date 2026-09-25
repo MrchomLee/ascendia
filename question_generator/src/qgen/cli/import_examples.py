@@ -16,7 +16,7 @@ console = Console()
 
 @app.command()
 def main(
-    file_path: Path = typer.Argument(..., help="Ruta al archivo JSON, JSONL o CSV con preguntas de ejemplo."),
+    file_path: Path = typer.Argument(..., help="Ruta al archivo JSON, JSONL, CSV o XLSX (una hoja por nivel) con preguntas de ejemplo."),
     profile: str = typer.Option("global", "--profile", "-p", help="Perfil al que asociar las preguntas (ej. algebra_baldor, ley_organica)."),
     source_tag: str | None = typer.Option(None, "--source-tag", "-t", help="Etiqueta de origen (ej. examen_2024, banco_oficial)."),
 ) -> None:

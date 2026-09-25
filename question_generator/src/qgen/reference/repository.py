@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any
 from sqlalchemy.orm import Session, joinedload
 from qgen.models.reference_schema import ReferenceQuestion
+from qgen.prompts.niveles import ORDEN
 
 
 def get_reference_exemplars(
@@ -70,24 +71,38 @@ def get_reference_exemplars(
         )
         exemplars.extend(global_exemplars)
 
-    # Convertir a formato de diccionario serializable
-    results = []
-    for q in exemplars:
-        opts = [
-            {
-                "role": opt.role,
-                "text": opt.text,
-                "is_correct": opt.is_correct,
-            }
-            for opt in q.options
-        ]
-        results.append({
-            "id": q.id,
-            "question_text": q.question_text,
-            "profile": q.profile,
-            "manual_code": q.manual_code,
-            "justification": q.justification,
-            "options": opts,
-        })
+    return [_as_dict(q) for q in exemplars]
 
-    return results
+
+def _as_dict(q: ReferenceQuestion) -> dict[str, Any]:
+    return {
+        "id": q.id,
+        "question_text": q.question_text,
+        "profile": q.profile,
+        "manual_code": q.manual_code,
+        "justification": q.justification,
+        "nivel": q.cognitive_level,
+        "options": [{"role": o.role, "text": o.text, "is_correct": o.is_correct} for o in q.options],
+    }
+
+
+def get_level_exemplars(session: Session, *, profile: str, manual_code: str | None) -> list[dict[str, Any]]:
+    """Un ejemplo por nivel, en el orden de los niveles: del manual; si no hay, del
+    perfil; si no, global. El de menor id, para que el prompt sea determinista."""
+    filtros = [ReferenceQuestion.profile == profile, ReferenceQuestion.profile == "global"]
+    if manual_code:
+        filtros.insert(0, ReferenceQuestion.manual_code == manual_code)
+    ejemplos: list[dict[str, Any]] = []
+    for nivel in ORDEN:
+        for filtro in filtros:
+            q = (
+                session.query(ReferenceQuestion)
+                .options(joinedload(ReferenceQuestion.options))
+                .filter(ReferenceQuestion.cognitive_level == nivel.value, filtro)
+                .order_by(ReferenceQuestion.id)
+                .first()
+            )
+            if q is not None:
+                ejemplos.append(_as_dict(q))
+                break
+    return ejemplos

@@ -3279,6 +3279,7 @@ source = { editable = "question_generator" }
 dependencies = [
     { name = "etl" },
     { name = "google-genai" },
+    { name = "openpyxl" },
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "rich" },
@@ -3290,6 +3291,7 @@ dependencies = [
 requires-dist = [
     { name = "etl", editable = "etl" },
     { name = "google-genai", specifier = ">=2.3.0" },
+    { name = "openpyxl", specifier = ">=3.1" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "python-dotenv", specifier = ">=1.0" },
     { name = "rich", specifier = ">=13.0" },
