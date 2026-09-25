@@ -141,6 +141,7 @@ escriba en ninguna base.
       "justification": "El artículo 142 establece …",
       "question_type": "teoria",
       "source_quote": "El artículo 142 establece que …",
+      "cognitive_level": "conocimiento",
       "validation_status": "valid",
       "validated_at": "2026-08-17T11:02:00Z",
       "created_at": "2026-08-17T09:41:07Z",
@@ -181,7 +182,9 @@ que faltaban se llenan en corridas posteriores.
 **`questions`** — cada una apunta a su corrida y a su nodo por `ref`, con sus 4
 opciones ordenadas. Desde v2 trae `question_type` (`teoria`, `ejercicio_libro` o
 `ejercicio_nuevo`) y `source_quote` (la cita del texto en que se apoya), y un nodo
-puede tener varias preguntas en la misma corrida.
+puede tener varias preguntas en la misma corrida. Desde v3 trae `cognitive_level`:
+`conocimiento`, `comprension`, `analisis` o `aplicacion`; `null` solo en preguntas
+generadas antes de los niveles y aún sin clasificar.
 
 ---
 
@@ -240,6 +243,8 @@ Todo o nada: si algo falla, no se escribe (ni se importa) nada. Las corre tanto
     contraseña, claves PEM) en los bloques libres.
 11. (v2) `question_type` ∈ `teoria | ejercicio_libro | ejercicio_nuevo` y
     `source_quote` no vacío.
+12. (v3) `cognitive_level` presente; su valor es uno de los cuatro niveles o `null`
+    (aviso con la cantidad de `null`).
 
 Los errores salen con la ruta exacta dentro del fichero —
 `questions[17].options[3]: …` — para poder localizarlos sin investigar.
@@ -306,6 +311,10 @@ entregamos, porque explica por qué el contrato es como es:
 
 ### Historial
 
+- **v3 (2026-09-25)** — niveles cognitivos: cada pregunta trae `cognitive_level`
+  (`conocimiento | comprension | analisis | aplicacion`, o `null` si es anterior a los
+  niveles y no se ha clasificado). La identidad no cambia. El importador acepta v1, v2 y
+  v3. En Postgres: una columna nullable `cognitive_level`.
 - **v2 (2026-09-23)** — generación por ventanas: la identidad de una pregunta pasa a
   `(run_ref, generation_order)`, así que un nodo puede tener varias preguntas por
   corrida; cada pregunta trae `question_type` y `source_quote` (obligatorios). El

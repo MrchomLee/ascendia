@@ -24,8 +24,8 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
-BUNDLE_VERSION = 2
-SUPPORTED_VERSIONS = frozenset({1, 2})
+BUNDLE_VERSION = 3
+SUPPORTED_VERSIONS = frozenset({1, 2, 3})
 
 # Por encima de esto el bundle se escribe como `.json.gz`.
 GZIP_THRESHOLD_BYTES = 25 * 1024 * 1024
@@ -36,6 +36,9 @@ SERVED_STATUSES = frozenset({"pending", "valid"})
 
 #: Tipos de pregunta (v2).
 QUESTION_TYPES = frozenset({"teoria", "ejercicio_libro", "ejercicio_nuevo"})
+
+#: Niveles cognitivos (v3); `null` = pregunta anterior a los niveles, sin clasificar.
+COGNITIVE_LEVELS = frozenset({"conocimiento", "comprension", "analisis", "aplicacion"})
 
 RUN_MODES = frozenset({"immediate", "batch"})
 #: `running` queda fuera: una corrida a medias no se entrega.
@@ -500,6 +503,7 @@ def validate(bundle: Any) -> Report:
     # (5, 7, 8, 9, 10) preguntas
     seen_questions: set[tuple[str, Any]] = set()
     by_status: dict[str, int] = {}
+    sin_nivel = 0
     for i, question in enumerate(questions):
         where = f"questions[{i}]"
         if not isinstance(question, dict):
@@ -543,6 +547,16 @@ def validate(bundle: Any) -> Report:
                     f"{where}: `question_type` = {q_type!r}; debe ser uno de {sorted(QUESTION_TYPES)}."
                 )
             _text(report, question, "source_quote", where, limit_key="source_quote")
+        if version >= 3:
+            if "cognitive_level" not in question:
+                report.error(f"{where}: falta `cognitive_level` (v3); usa null si no está clasificada.")
+            elif question["cognitive_level"] is None:
+                sin_nivel += 1
+            elif question["cognitive_level"] not in COGNITIVE_LEVELS:
+                report.error(
+                    f"{where}: `cognitive_level` = {question['cognitive_level']!r}; debe ser uno de "
+                    f"{sorted(COGNITIVE_LEVELS)} o null."
+                )
         _stamp(report, question, "created_at", where)
         _stamp(report, question, "validated_at", where, required=False)
         _dict(report, question, "metadata", where)
@@ -626,6 +640,8 @@ def validate(bundle: Any) -> Report:
     for status in ("needs_review", "rejected"):
         if by_status.get(status):
             report.warn(f"{by_status[status]} pregunta(s) en `{status}`: no se sirven a los alumnos.")
+    if sin_nivel:
+        report.warn(f"{sin_nivel} pregunta(s) sin nivel cognitivo (`cognitive_level` null).")
 
     covered = {q.get("node_ref") for q in questions if isinstance(q, dict)}
     with_text = {

@@ -241,6 +241,7 @@ def build_bundle(
                 "justification": question.justification,
                 "question_type": question.question_type,
                 "source_quote": question.source_quote,
+                "cognitive_level": question.cognitive_level,
                 "validation_status": question.validation_status,
                 "validated_at": iso(question.validated_at),
                 "created_at": iso(question.created_at),

@@ -92,6 +92,7 @@ def _bundle() -> dict:
                 "justification": "Porque el artículo 1 dice …",
                 "question_type": "teoria",
                 "source_quote": "El fuero de guerra …",
+                "cognitive_level": "conocimiento",
                 "validation_status": "valid",
                 "validated_at": None,
                 "created_at": "2026-08-17T09:41:07Z",
@@ -238,6 +239,33 @@ def _v1(b):
     for q in b["questions"]:
         q.pop("question_type")
         q.pop("source_quote")
+        q.pop("cognitive_level")
+
+
+def _v2(b):
+    b["bundle_version"] = 2
+    for q in b["questions"]:
+        q.pop("cognitive_level")
+
+
+def test_v3_exige_la_clave_del_nivel():
+    assert any("`cognitive_level`" in e for e in _errors(lambda b: b["questions"][0].pop("cognitive_level")))
+
+
+def test_v3_rechaza_un_nivel_desconocido():
+    assert any("`cognitive_level`" in e for e in _errors(lambda b: b["questions"][0].update(cognitive_level="memoria")))
+
+
+def test_v3_admite_null_sin_clasificar_y_avisa():
+    bundle = _bundle()
+    bundle["questions"][0]["cognitive_level"] = None
+    report = validate(bundle)
+    assert report.ok
+    assert any("sin nivel cognitivo" in w for w in report.warnings)
+
+
+def test_v2_sigue_siendo_valido_sin_el_nivel():
+    assert _errors(_v2) == []
 
 
 def test_v2_admite_varias_preguntas_por_nodo():

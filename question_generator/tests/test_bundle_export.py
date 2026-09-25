@@ -11,7 +11,7 @@ from etl.db.session import session_scope
 from etl.models.schema import Chunk, Manual, Node
 
 from qgen.bundle.build import DuplicateNodeRef, build_bundle
-from qgen.bundle.spec import validate
+from qgen.bundle.spec import BUNDLE_VERSION, validate
 from qgen.db.migration import init_question_tables
 from qgen.db.persistence import create_run, finalize_run, persist_question
 from qgen.models.schema import GenerationRun
@@ -214,7 +214,7 @@ def test_la_pregunta_viaja_con_su_tipo_y_su_cita():
         manual_id, _, _ = _seed_with_questions(session)
         bundle = build_bundle(session, manual_id=manual_id)
 
-    assert bundle["bundle_version"] == 2
+    assert bundle["bundle_version"] == BUNDLE_VERSION
     q = bundle["questions"][0]
     assert (q["question_type"], q["source_quote"]) == ("teoria", CITA)
 
@@ -233,3 +233,26 @@ def test_varias_preguntas_del_mismo_nodo_se_exportan():
     report = validate(bundle)
     assert report.ok, report.errors
     assert [q["generation_order"] for q in bundle["questions"]] == [0, 1]
+
+
+def test_el_nivel_cognitivo_viaja_en_el_bundle():
+    init_question_tables()
+    with session_scope() as session:
+        manual_id, node_ids = _seed(session)
+        run = create_run(
+            session, manual_id=manual_id, model="claude-opus-5-5", mode="immediate",
+            profile_used="codigo", rules_snapshot={"name": "codigo"}, nodes_total=1,
+        )
+        persist_question(
+            session, run=run, node_id=node_ids[-1], manual_id=manual_id, question_type="teoria",
+            source_quote=CITA, generation_order=0, payload=_question(), raw_response={},
+            cognitive_level="analisis",
+        )
+        finalize_run(
+            session, run=run, nodes_completed=1, nodes_failed=0, cost_input_tokens=0,
+            cost_output_tokens=0, cost_cached_tokens=0, cost_estimate_usd=0.0, status="succeeded",
+        )
+        bundle = build_bundle(session, manual_id=manual_id)
+    assert bundle["bundle_version"] == 3
+    assert bundle["questions"][0]["cognitive_level"] == "analisis"
+    assert validate(bundle).ok
