@@ -16,6 +16,7 @@ from typing import Iterable
 
 from pydantic import ValidationError
 
+from qgen.prompts.niveles import Nivel
 from qgen.prompts.schemas import (
     LETRAS,
     MAX_PREGUNTAS_POR_VENTANA,
@@ -29,6 +30,9 @@ from qgen.prompts.schemas import (
 )
 
 SIMILITUD_DUPLICADO = 0.90
+
+#: Una clave literal más corta que esto aparece en el texto por coincidencia (spec de niveles §7).
+PALABRAS_MINIMAS_LITERAL = 6
 
 _SIGNOS = str.maketrans({
     "“": '"', "”": '"', "«": '"', "»": '"', "‘": "'", "’": "'", "′": "'",
@@ -93,8 +97,14 @@ def review(question: WindowQuestion, window_text: str) -> Verdict:
         motivos = []
         if not _literal(question.cita, window_text):
             motivos.append("cita no encontrada")
-        if not _literal(correcta, window_text):
-            motivos.append("respuesta parafraseada")
+        if question.nivel == Nivel.CONOCIMIENTO:
+            if not _literal(correcta, window_text):
+                motivos.append("respuesta parafraseada")
+        else:
+            if len(correcta.split()) >= PALABRAS_MINIMAS_LITERAL and _literal(correcta, window_text):
+                motivos.append("la clave es literal: por su forma es conocimiento")
+            if question.nivel == Nivel.APLICACION and _copiado(question.pregunta, window_text):
+                motivos.append("el caso no es inventado")
         return Verdict.from_motivos(motivos)
 
     cita = norm_math(question.cita)
@@ -110,6 +120,15 @@ def _literal(fragmento: str, texto: str) -> bool:
     """¿Está `fragmento` literal en `texto`? Se acepta también con la notación igualada:
     en los libros de matemáticas la teoría trae fórmulas (𝑥2, x²) que llegan aplanadas."""
     return norm_text(fragmento) in norm_text(texto) or norm_math(fragmento) in norm_math(texto)
+
+
+def _copiado(enunciado: str, texto: str) -> bool:
+    """¿Más de la mitad del enunciado está copiada literal del texto? (caso no inventado)."""
+    a, b = norm_text(enunciado), norm_text(texto)
+    if not a:
+        return False
+    bloque = difflib.SequenceMatcher(None, a, b, autojunk=False).find_longest_match(0, len(a), 0, len(b))
+    return bloque.size > len(a) / 2
 
 
 def _barajadas(question: WindowQuestion, sal: str) -> list[WindowOption]:

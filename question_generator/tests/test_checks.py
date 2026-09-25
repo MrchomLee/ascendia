@@ -215,3 +215,44 @@ def test_teoria_de_matematicas_no_va_a_revision_por_la_notacion():
 
 def test_norm_math_ignora_el_signo_por():
     assert norm_math("2 × 3 = 6") == norm_math("2*3=6")
+
+
+COSTA = (
+    "La costa avanza hacia el norte por efecto de depósitos aluviales formados por "
+    "los ríos Grijalva y Usumacinta, unidos."
+)
+
+
+def _nivel(nivel, pregunta="¿Cómo avanza la costa?", correcta="por la acumulación de sedimentos de dos ríos",
+           cita=COSTA):
+    return _q(pregunta, nivel=nivel, correcta=correcta, cita=cita)
+
+
+def test_en_conocimiento_la_clave_debe_ser_literal():
+    assert review(_nivel("conocimiento", correcta="hacia el norte"), COSTA).motivos == ()
+    assert review(_nivel("conocimiento"), COSTA).motivos == ("respuesta parafraseada",)
+
+
+def test_en_comprension_una_clave_literal_larga_delata_conocimiento():
+    literal = "por efecto de depósitos aluviales formados por los ríos Grijalva y Usumacinta"
+    assert review(_nivel("comprension", correcta=literal), COSTA).motivos == (
+        "la clave es literal: por su forma es conocimiento",
+    )
+    assert review(_nivel("comprension"), COSTA).motivos == ()  # paráfrasis
+
+
+def test_una_clave_literal_corta_no_delata_nada():
+    assert review(_nivel("analisis", correcta="hacia el norte"), COSTA).motivos == ()
+
+
+def test_en_aplicacion_el_caso_debe_ser_inventado():
+    copiado = "La costa avanza hacia el norte por efecto de depósitos aluviales. ¿Qué ocurre?"
+    inventado = "Un equipo de geógrafos mide la línea costera de Tabasco durante diez años. ¿Qué cambio registrará?"
+    assert review(_nivel("aplicacion", pregunta=copiado), COSTA).motivos == ("el caso no es inventado",)
+    assert review(_nivel("aplicacion", pregunta=inventado), COSTA).motivos == ()
+
+
+def test_la_cita_debe_ser_literal_en_todos_los_niveles():
+    for nivel in ("conocimiento", "comprension", "analisis", "aplicacion"):
+        motivos = review(_nivel(nivel, correcta="hacia el norte", cita="una cita inventada"), COSTA).motivos
+        assert "cita no encontrada" in motivos
