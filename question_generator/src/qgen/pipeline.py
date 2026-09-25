@@ -35,7 +35,7 @@ from qgen.prompts.families import (
 )
 from qgen.prompts.niveles import falta_algun_nivel
 from qgen.prompts.schemas import QuestionType, WindowQuestion
-from qgen.reference.repository import get_reference_exemplars
+from qgen.reference.repository import get_level_exemplars
 from qgen.rules.base import DocumentRules, RulesOverride, merge_rules, rules_to_dict
 from qgen.rules.defaults import get_default_rules
 from qgen.validation.checks import (
@@ -281,7 +281,7 @@ def _manual_title(manual: Manual) -> str:
 
 def window_instruction(session: Session, manual: Manual, rules: DocumentRules, profile: str) -> str:
     """La instrucción de sistema de la familia del manual, con sus ejemplos de referencia."""
-    exemplars = get_reference_exemplars(session, profile=profile, manual_code=manual.code, limit=5)
+    exemplars = get_level_exemplars(session, profile=profile, manual_code=manual.code)
     return build_window_instruction(rules, manual_title=_manual_title(manual), exemplars=exemplars or None)
 
 

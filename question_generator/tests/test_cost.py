@@ -11,7 +11,7 @@ def _estimate(**kwargs):
 
 def test_cuenta_preguntas_y_verificaciones_por_caracteres():
     e = _estimate()
-    assert (e.windows, e.n_questions, e.verifications) == (2, 10, 2)
+    assert (e.windows, e.n_questions, e.verifications) == (2, 18, 2)
     assert e.total_usd > 0
 
 

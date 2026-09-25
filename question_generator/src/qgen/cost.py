@@ -24,7 +24,7 @@ CHARS_PER_TOKEN = 4.0  # rough Spanish estimate
 # Supuestos de la estimación por ventanas (spec §9): valores iniciales, se calibran
 # con la primera corrida real.
 INSTRUCTION_TOKENS = 1500
-CHARS_PER_QUESTION = 350
+CHARS_PER_QUESTION = 190  # ≈ 20/11 veces más preguntas por ventana con los niveles (spec de niveles §6)
 OUTPUT_TOKENS_PER_QUESTION = 350
 CHARS_PER_NEW_EXERCISE = 1500
 VERIFICATION_INPUT_TOKENS = 1000

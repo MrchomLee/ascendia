@@ -1,6 +1,7 @@
 """Instrucciones de la llamada por ventana, por familia (spec §6)."""
 
 from qgen.prompts.families import (
+    SYSTEM_VERSION,
     build_verification_message,
     build_window_instruction,
     build_window_message,
@@ -90,3 +91,33 @@ def test_el_prefijo_militar_concuerda_con_el_titulo():
     assert "Conforme a la Ley Federal de Armas de Fuego" in ley and "Conforme al Ley" not in ley
     manual = build_window_instruction(get_default_rules("manual"), manual_title="Manual de Operaciones Militares")
     assert "Conforme al Manual de Operaciones Militares" in manual
+
+
+def test_las_dos_familias_piden_los_cuatro_niveles_con_su_proporcion():
+    for perfil in ("manual", "geografia_moderna_mexico", "calculo_una_variable"):
+        instr = build_window_instruction(get_default_rules(perfil), manual_title="Libro")
+        assert "NIVELES COGNITIVOS" in instr and '"nivel"' in instr
+        assert "CONCLUSIÓN INFERIDA" in instr and "CASO INVENTADO" in instr
+        assert "55/15/15/15" in instr
+        assert 'En "conocimiento" la opción "correct" es un fragmento LITERAL' in instr
+    assert SYSTEM_VERSION == "2026-09-25.v7"
+
+
+def test_los_ejercicios_van_fuera_de_la_proporcion_solo_donde_hay_ejercicios():
+    mate = build_window_instruction(get_default_rules("calculo_una_variable"), manual_title="Cálculo")
+    info = build_window_instruction(get_default_rules("historia_universal"), manual_title="Historia")
+    assert 'Los ejercicios son siempre "aplicacion"' in mate
+    assert 'Los ejercicios son siempre "aplicacion"' not in info
+
+
+def test_los_ejemplos_van_etiquetados_por_nivel_como_modelo_de_forma():
+    ejemplos = [
+        {"question_text": "¿Qué islas forman el archipiélago?", "nivel": "conocimiento",
+         "options": [{"role": "correct", "text": "María Madre, María Magdalena y María Cleofas"}]},
+        {"question_text": "Un equipo de topógrafos…", "nivel": "aplicacion",
+         "options": [{"role": "correct", "text": "La apertura de un cenote"}]},
+    ]
+    instr = build_window_instruction(get_default_rules("manual"), manual_title="M", exemplars=ejemplos)
+    assert "Nivel Conocimiento:" in instr and "Nivel Aplicación:" in instr
+    assert "modelo de FORMA, no de contenido" in instr
+    assert "la guerra se conceptúa" not in instr

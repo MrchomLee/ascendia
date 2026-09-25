@@ -8,11 +8,12 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
+from qgen.prompts.niveles import DEFINICIONES, NIVEL_LABEL
 from qgen.prompts.schemas import LETRAS, MAX_PREGUNTAS_POR_VENTANA
 from qgen.rules.base import DocumentRules
 from qgen.windows import Window
 
-SYSTEM_VERSION = "2026-09-24.v6"
+SYSTEM_VERSION = "2026-09-25.v7"
 
 _ROLES = {
     "militar": (
@@ -34,9 +35,10 @@ _FORMATOS = {
 }
 
 _TEORIA = (
-    '- "teoria": una pregunta por CADA elemento evaluable del texto: definiciones, propiedades, '
-    "reglas, clasificaciones, hechos, actores, años y ubicaciones. La opción \"correct\" es un "
-    "fragmento LITERAL del texto (copia exacta, palabra por palabra; prohibido parafrasear)."
+    '- "teoria": preguntas sobre el contenido del texto, en los cuatro niveles de abajo. '
+    'En "conocimiento" la opción "correct" es un fragmento LITERAL del texto (copia exacta, '
+    "palabra por palabra; prohibido parafrasear); en los otros niveles sigue la estructura de "
+    "clave de su nivel."
 )
 
 _EJERCICIOS = (
@@ -55,6 +57,14 @@ _OPCIONES_EJERCICIOS = (
     "errores típicos (signos, exponentes, orden de operaciones, fórmula equivocada). Las opciones "
     "pueden parecerse entre sí.\n"
 )
+
+_PROPORCION = (
+    '- Genera TODAS las preguntas de "conocimiento" que el texto permita. Sobre esa base K, agrega '
+    'de "comprension", "analisis" y "aplicacion" unas 3 de cada una por cada 11 de conocimiento '
+    "(proporción 55/15/15/15), y al menos 1 de cada una si K es 3 o más. Con K menor que 3 son "
+    "opcionales."
+)
+_PROPORCION_EJERCICIOS = '\n- Los ejercicios son siempre "aplicacion" y van aparte de esta proporción.'
 
 # Lo mismo que rechaza la rúbrica de la revisión (qgen.claude_review): mejor no generarlo.
 _CALIDAD = """\
@@ -88,15 +98,20 @@ El mensaje trae el TEXTO de una ventana de "{manual}". Crea TODAS las preguntas 
 TIPOS DE PREGUNTA
 {tipos}
 
+NIVELES COGNITIVOS (campo "nivel" de cada pregunta)
+{niveles}
+PROPORCIÓN
+{proporcion}
+
 OPCIONES (exactamente 4 por pregunta)
 - 1 "correct", 1 "confusa" y 2 "distractor", de longitud parecida; la "correct" no debe ser la más larga.
-- En "teoria": la "confusa" es un concepto parecido con un detalle crítico cambiado; los "distractor" son otros conceptos reales del texto.
+- La "confusa" y los "distractor" siguen la estructura de su nivel (ver NIVELES COGNITIVOS).
 {opciones_ejercicios}- Nunca pongas incisos (A, B, C, D) en el enunciado ni en las opciones.
 
 CITA Y JUSTIFICACIÓN
-- "cita": el fragmento LITERAL del texto en que se apoya la pregunta. En ejercicios, el ejemplo del libro (con su resultado) en que se basa.
-- "justificacion": en "teoria", por qué la correcta lo es; en ejercicios, la resolución paso a paso.
-- Notación: la "correct" de "teoria", el resultado de "ejercicio_libro" y la "cita" copian la notación del texto tal cual (no la cambies a x^2, sqrt( ) ni otra); la notación del estilo solo aplica a enunciados, distractores y ejercicios nuevos.
+- "cita": el fragmento LITERAL del texto en que se apoya la pregunta: el dato, el pasaje que se explica, los datos que se cruzan o la regla que se aplica. En ejercicios, el ejemplo del libro (con su resultado) en que se basa.
+- "justificacion": en "teoria", por qué la correcta lo es (en análisis y aplicación, el razonamiento desde la cita); en ejercicios, la resolución paso a paso.
+- Notación: la "correct" de "conocimiento", el resultado de "ejercicio_libro" y la "cita" copian la notación del texto tal cual (no la cambies a x^2, sqrt( ) ni otra); la notación del estilo solo aplica a enunciados, distractores y ejercicios nuevos.
 
 {calidad}
 ENUNCIADOS
@@ -140,6 +155,8 @@ def build_window_instruction(
         extra=rules.extra_instructions or "(ninguna)",
         ejemplos=_ejemplos(rules.familia, exemplars),
         calidad=_CALIDAD,
+        niveles=DEFINICIONES,
+        proporcion=_PROPORCION + (_PROPORCION_EJERCICIOS if con_ejercicios else ""),
     )
 
 
@@ -158,10 +175,15 @@ def _ejemplos(familia: str, exemplars: Sequence[dict[str, Any]] | None) -> str:
     if exemplars:
         bloques = []
         for i, ex in enumerate(exemplars, start=1):
-            lineas = [f"Ejemplo {i}:", f'- Pregunta: "{ex.get("question_text") or ex.get("question", "")}"']
+            nivel = ex.get("nivel")
+            titulo = f"Nivel {NIVEL_LABEL[nivel]}:" if nivel in NIVEL_LABEL else f"Ejemplo {i}:"
+            lineas = [titulo, f'- Pregunta: "{ex.get("question_text") or ex.get("question", "")}"']
             lineas += [f'- {opt.get("role", "distractor")}: "{opt.get("text", "")}"' for opt in ex.get("options", [])]
             bloques.append("\n".join(lineas))
-        cuerpo = "\n\n".join(bloques)
+        cuerpo = (
+            "Cada ejemplo es un modelo de FORMA, no de contenido: no lo copies ni uses sus datos.\n\n"
+            + "\n\n".join(bloques)
+        )
     elif familia == "militar":
         cuerpo = _EJEMPLOS_MILITARES
     else:
