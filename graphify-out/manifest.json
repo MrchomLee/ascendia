@@ -228,9 +228,9 @@
     "semantic_hash": "71fa298ad67f1055fc414654a3344e2b"
   },
   "etl/src/etl/extraction/docling_adapter.py": {
-    "mtime": 1790176190.641415,
-    "seen": 1790176286.4013107,
-    "ast_hash": "760570a86c5ced7a8e2c7bb24201a9b0",
+    "mtime": 1790385511.2500095,
+    "seen": 1790386907.6322541,
+    "ast_hash": "27357c3badc0e007315963d597e8999d",
     "semantic_hash": ""
   },
   "etl/src/etl/extraction/toc_parser.py": {
@@ -444,9 +444,9 @@
     "semantic_hash": "0d555e847f57f01b0af3d8abe30c3b97"
   },
   "explorer/src/explorer/pages/6_\u2753_Preguntas.py": {
-    "mtime": 1790351694.7110329,
-    "seen": 1790351847.9135182,
-    "ast_hash": "6f1c91971e6c76acc28c396e0b347cbe",
+    "mtime": 1790374823.335326,
+    "seen": 1790375031.8836987,
+    "ast_hash": "91cfa6e113881831d2e93967df4814b7",
     "semantic_hash": ""
   },
   "explorer/src/explorer/questions_access.py": {
@@ -480,9 +480,9 @@
     "semantic_hash": "215edc17c5ec2ea4d99686cd1a54d4a0"
   },
   "question_generator/src/qgen/bundle/build.py": {
-    "mtime": 1790351550.9521296,
-    "seen": 1790351847.9142625,
-    "ast_hash": "90c1ee10a1390ea89eb7b5bcab10d547",
+    "mtime": 1790374804.9347634,
+    "seen": 1790375031.8843896,
+    "ast_hash": "f2e02510dedc064814111d199f27e03e",
     "semantic_hash": ""
   },
   "question_generator/src/qgen/bundle/spec.py": {
@@ -642,9 +642,9 @@
     "semantic_hash": ""
   },
   "question_generator/tests/test_bundle_export.py": {
-    "mtime": 1790351576.496045,
-    "seen": 1790351847.9171748,
-    "ast_hash": "4c05eb096d6fc4166fdf6a9e59c98f78",
+    "mtime": 1790374790.028197,
+    "seen": 1790375031.8872004,
+    "ast_hash": "018db7adf814f396ae36bec2f3ce3ed9",
     "semantic_hash": ""
   },
   "question_generator/tests/test_bundle_spec.py": {
@@ -702,9 +702,9 @@
     "semantic_hash": ""
   },
   "CONTRATO-BUNDLE.md": {
-    "mtime": 1790351550.9521296,
-    "seen": 1790351847.9180813,
-    "ast_hash": "cd01a53da6b28cce2fee2f4e560853e8",
+    "mtime": 1790374830.2245898,
+    "seen": 1790375031.8884916,
+    "ast_hash": "4117293c4815d53a7e1fc02b87344214",
     "semantic_hash": ""
   },
   "README.md": {
@@ -975,6 +975,12 @@
     "mtime": 1790348763.2504027,
     "seen": 1790351847.9183488,
     "ast_hash": "7388cd305ae5b9422d696c5384882dcd",
+    "semantic_hash": ""
+  },
+  "etl/tests/test_formulas.py": {
+    "mtime": 1790385493.744015,
+    "seen": 1790386907.6353333,
+    "ast_hash": "140229f62d7b4d5eb44b48bd3efecd1e",
     "semantic_hash": ""
   }
 }
