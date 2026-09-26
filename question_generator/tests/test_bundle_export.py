@@ -33,11 +33,11 @@ def _question(prefix: str = "T") -> GeneratedQuestion:
     )
 
 
-def _seed(session, *, sort_keys=("01", "01.01")) -> tuple[int, list[int]]:
+def _seed(session, *, sort_keys=("01", "01.01"), code="CJM", profile="codigo") -> tuple[int, list[int]]:
     manual = Manual(
-        code="CJM", title="Código de Justicia Militar", source_path="data/raw_pdfs/cjm.pdf",
+        code=code, title="Código de Justicia Militar", source_path="data/raw_pdfs/cjm.pdf",
         page_count=320, extractor_used="docling", ingested_at=datetime.now(timezone.utc),
-        metadata_json={"profile": "codigo"},
+        metadata_json={"profile": profile},
     )
     session.add(manual)
     session.flush()
@@ -256,3 +256,27 @@ def test_el_nivel_cognitivo_viaja_en_el_bundle():
     assert bundle["bundle_version"] == 3
     assert bundle["questions"][0]["cognitive_level"] == "analisis"
     assert validate(bundle).ok
+
+
+@pytest.mark.parametrize(("profile", "materia"), [
+    ("taller_lectura_redaccion", "TLR"),
+    ("geografia_moderna_mexico", "GEO_MEX"),
+    ("historia_universal", "HIST_UNI"),
+    ("algebra_baldor", "ALG"),
+    ("algebra_trigonometria_geometria_analitica", "TRIG_GEO"),
+    ("calculo_una_variable", "CALC"),
+])
+def test_los_libros_de_aspirantes_van_a_su_materia_del_hcm(profile, materia):
+    init_question_tables()
+    with session_scope() as session:
+        manual_id, _ = _seed(session, code=f"LIBRO_{materia}", profile=profile)
+        bundle = build_bundle(session, manual_id=manual_id)
+    assert bundle["catalog_hint"] == {"grado_code": "ASP_HCM", "materia_code": materia}
+
+
+def test_los_manuales_militares_siguen_en_sargento_segundo():
+    init_question_tables()
+    with session_scope() as session:
+        manual_id, _ = _seed(session)
+        bundle = build_bundle(session, manual_id=manual_id)
+    assert bundle["catalog_hint"] == {"grado_code": "SARG_2", "materia_code": "JUS_MIL"}

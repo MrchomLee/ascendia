@@ -23,6 +23,18 @@ from qgen.models.schema import GenerationRun, Question, QuestionOption
 #: una decisión: quien importa puede ignorarla (ver `catalog_hint` en el contrato).
 DEFAULT_GRADO_HINT = "SARG_2"
 
+#: Los libros de aspirantes al Heroico Colegio Militar, por perfil del ETL: su
+#: materia en el catálogo de la webapp (`GET /catalog`).
+ASPIRANTES_GRADO_HINT = "ASP_HCM"
+MATERIAS_ASPIRANTES = {
+    "taller_lectura_redaccion": "TLR",
+    "geografia_moderna_mexico": "GEO_MEX",
+    "historia_universal": "HIST_UNI",
+    "algebra_baldor": "ALG",
+    "algebra_trigonometria_geometria_analitica": "TRIG_GEO",
+    "calculo_una_variable": "CALC",
+}
+
 
 def _pipeline_commit() -> str | None:
     """Commit del repo de contenido, para poder reproducir una entrega vieja."""
@@ -38,6 +50,13 @@ def _pipeline_commit() -> str | None:
 
 def _materia_hint(code: str) -> str:
     return "JUS_MIL" if code.upper().startswith("CJM") else "OPS_MIL"
+
+
+def _catalog_hint(manual: Manual) -> dict[str, str]:
+    materia = MATERIAS_ASPIRANTES.get((manual.metadata_json or {}).get("profile"))
+    if materia:
+        return {"grado_code": ASPIRANTES_GRADO_HINT, "materia_code": materia}
+    return {"grado_code": DEFAULT_GRADO_HINT, "materia_code": _materia_hint(manual.code)}
 
 
 def _qgen_version() -> str:
@@ -177,10 +196,7 @@ def build_bundle(
             "ingested_at": iso(manual.ingested_at),
             "metadata": manual.metadata_json or {},
         },
-        "catalog_hint": {
-            "grado_code": DEFAULT_GRADO_HINT,
-            "materia_code": _materia_hint(manual.code),
-        },
+        "catalog_hint": _catalog_hint(manual),
         "nodes": [
             {
                 "ref": ref_by_id[node.id],

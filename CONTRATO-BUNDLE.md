@@ -171,6 +171,9 @@ Existe porque del otro lado el emparejamiento manual → materia es una heuríst
 de una línea (`CJM*` → Justicia Militar, el resto → Operaciones Militares) que se
 rompe en cuanto haya un tercer tipo de manual, y desde aquí se sabe mejor dónde
 va cada cosa. Dónde se publica y a qué precio sigue siendo decisión de la webapp.
+Los libros de aspirantes van en `ASP_HCM` con su materia según el perfil del ETL
+(`TLR`, `GEO_MEX`, `HIST_UNI`, `ALG`, `TRIG_GEO`, `CALC`); los manuales militares,
+en `SARG_2` con la regla de siempre.
 
 **`nodes`** — el árbol, **plano** con `parent_ref`, y los `chunks` **anidados**
 dentro de su nodo. Ordenado por `ref`.
