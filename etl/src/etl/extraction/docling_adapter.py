@@ -149,6 +149,11 @@ def elements_from_document(doc) -> list[RawElement]:
 
         text = (getattr(item, "text", "") or "").strip()
 
+        # Sin el enriquecimiento de fórmulas, una ecuación llega con .text vacío y la
+        # ecuación en .orig: sin esto, los libros de matemáticas pierden los resultados.
+        if not text and label_str == "formula":
+            text = (getattr(item, "orig", "") or "").strip()
+
         # Una tabla no trae .text: sus celdas se exportan como tabla markdown, sin
         # líneas en blanco para que el chunker no separe el título de las filas.
         if kind == ElementKind.TABLE and not text and hasattr(item, "export_to_markdown"):
