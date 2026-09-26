@@ -34,7 +34,7 @@ from explorer.questions_access import (
 )
 from qgen.bundle.build import build_bundle, source_digest
 from qgen.prompts.niveles import NIVEL_LABEL, ORDEN, PROPORCION
-from qgen.bundle.spec import bundle_filename, dumps, validate
+from qgen.bundle.spec import BUNDLE_VERSION, bundle_filename, dumps, validate
 
 load_dotenv()
 st.set_page_config(page_title="Preguntas", page_icon="❓", layout="wide")
@@ -288,7 +288,7 @@ with tab_corridas:
         )
 
 with tab_exportar:
-    st.subheader("📦 Exportación del Bundle de Contenido (v1)")
+    st.subheader(f"📦 Exportación del Bundle de Contenido (v{BUNDLE_VERSION})")
     st.caption(
         "Genera el paquete canónico JSON listo para entregar o importar en la webapp de exámenes, "
         "conforme a la especificación oficial de `CONTRATO-BUNDLE.md`."
@@ -317,7 +317,7 @@ with tab_exportar:
             min_value=1,
             value=1,
             step=1,
-            help="Sufijo de versión para el nombre del archivo (ej. v1, v2).",
+            help="Número de entrega para el nombre del archivo (ej. v1, v2). No es la versión del bundle.",
         )
 
         # Construir y validar bundle en memoria
@@ -340,7 +340,9 @@ with tab_exportar:
             file_bytes = json_str.encode("utf-8")
 
             if reporte_val.ok:
-                st.success("✅ Bundle validado con éxito contra el contrato v1.")
+                st.success(
+                    f"✅ Bundle v{bundle_data['bundle_version']} validado con éxito contra el contrato."
+                )
                 st.download_button(
                     label=f"📥 Descargar {filename} ({len(file_bytes) / 1024:.1f} KB)",
                     data=file_bytes,
