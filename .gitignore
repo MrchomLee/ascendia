@@ -31,6 +31,8 @@ data/manuals.sqlite
 data/manuals.sqlite-journal
 data/manuals.sqlite-wal
 data/manuals.sqlite-shm
+# Respaldos de la base antes de cargar preguntas o correcciones.
+*.sqlite
 
 bakeoff_report.md
 *.log

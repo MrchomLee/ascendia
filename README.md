@@ -21,12 +21,18 @@ otro lado lo importa cuando lo da por bueno.
 
 ## 1. Puesta en marcha
 
-Hace falta **Python 3.14** y **uv**. Todos los comandos se corren desde la raíz
-del repo.
+Hace falta **Python 3.14**, **uv** y **git**. Todos los comandos se corren
+desde la raíz del repo.
 
 ```bash
-py -3.14 -m uv sync
+git clone https://github.com/MrchomLee/ascendia.git
+cd ascendia
+py -3.14 -m uv sync          # Windows
+uv sync --python 3.14        # macOS / Linux
 ```
+
+> En este README los comandos van con la forma de Windows, `py -3.14 -m uv run
+> <comando>`. En macOS o Linux se escribe `uv run <comando>`.
 
 Luego, la configuración:
 
@@ -55,6 +61,47 @@ py -3.14 -m uv run pytest question_generator/tests
 Los PDFs no viajan en git (pesan y no son públicos): se dejan a mano en
 `data/raw_pdfs/`.
 
+### 1.1 Los datos: qué no trae el clon
+
+Un clon recién hecho trae **solo el código**. No trae los PDFs, ni el texto
+extraído, ni la base `data/manuals.sqlite` con los manuales y las preguntas: el
+repo es público y ese material no lo es. Hay dos formas de empezar:
+
+- **Seguir con lo que ya hay.** Pide a quien lleva el proyecto una copia de
+  `data/manuals.sqlite` (y de los PDFs que vayas a trabajar) por un medio
+  privado, nunca por el repo. Déjala en `data/`.
+- **Empezar de cero.** Pon tus PDFs en `data/raw_pdfs/` e ingéstalos (§3.1). La
+  base se crea sola.
+
+Nada de `data/` (salvo los `.gitkeep`) se sube a git. Antes de un commit, revisa
+que `git status` no muestre PDFs, `.sqlite`, bundles ni carpetas de
+`data/claude_code/`.
+
+### 1.2 Trabajar con Claude Code
+
+El repo está pensado para trabajarse con [Claude Code](https://claude.com/claude-code).
+Al abrirlo, tu Claude lee [CLAUDE.md](CLAUDE.md), que trae las reglas del
+proyecto. Basta con pedirle, por ejemplo: «lee el README e instala el
+proyecto», «ingesta este PDF» o «genera las preguntas del manual 32 sin API».
+
+Las preguntas se pueden generar de dos formas:
+
+- **Con Gemini**, pagando con tu `GEMINI_API_KEY` (§3.5).
+- **Sin API**, con tu propio Claude Code: `qgen-claude exportar` deja las
+  instrucciones en `data/claude_code/`, Claude escribe las respuestas e
+  `importar` las carga (§3.5, «Sin API»). Lo mismo sirve para revisar y corregir.
+
+**graphify (opcional).** El repo trae un grafo del código en `graphify-out/`
+que ayuda a Claude a ubicarse sin leer todo. Para usarlo:
+
+```bash
+uv tool install graphifyy
+```
+
+Si no lo instalas, Claude busca en el código de la forma normal. Si cambias
+código, actualiza el grafo con `PYTHONHASHSEED=0 graphify update .` (en
+PowerShell: `$env:PYTHONHASHSEED = "0"; graphify update .`).
+
 ---
 
 ## 2. Cómo funciona el pipeline
@@ -73,10 +120,11 @@ data/raw_pdfs/*.pdf
       ├─► consolidación de chunks de texto     chunking/consolidator.py
       └─► persistencia                         → manuals · nodes · chunks
       │
-      │  FASE 2 — question_generator/   (Gemini, una llamada por nodo-hoja)
+      │  FASE 2 — question_generator/   (Gemini o Claude Code, una llamada por ventana)
       │  ─────────────────────────────────────────────────────
-      ├─► por cada nodo-hoja con texto: 1 pregunta + 4 opciones + justificación
-      │      1 correcta · 1 confusa · 2 distractores
+      ├─► por cada ventana de texto: todas las preguntas que el texto permite,
+      │      en cuatro niveles cognitivos, con cita literal y justificación
+      │      cada una: 1 correcta · 1 confusa · 2 distractores
       ├─► validación de forma antes de guardar (roles, duplicados, longitudes)
       └─► persistencia          → generation_runs · questions · question_options
       │
@@ -243,6 +291,32 @@ reclasifica (no se rechaza) y el nivel original queda en `nivel_generado`. Las
 preguntas ya decididas sin nivel salen como SOLO CLASIFICAR: se clasifican sin
 cambiar su estado.
 
+#### Corrección con las observaciones de un revisor
+
+Cuando alguien revisa una muestra y deja observaciones y versiones corregidas,
+Claude Code puede revisar el resto con ese mismo criterio:
+
+```bash
+py -3.14 -m uv run qgen-claude exportar-correccion <manual_id> --run <run_id> --ejemplos ejemplos.json
+# Claude Code escribe data/claude_code/<código>/correccion/decisiones/<lote>.json
+py -3.14 -m uv run qgen-claude importar-correccion <manual_id>
+```
+
+- **Instrucción.** La deja `correccion/instruccion.md` y lleva las reglas de
+  redacción, las definiciones de los niveles y los ejemplos.
+- **Ejemplos.** `ejemplos.json` es una lista de
+  `{"nivel", "articulo", "antes", "observacion_pregunta", "observacion_opciones", "despues"}`,
+  donde `antes` y `despues` son `{"pregunta", "opciones"}` con la clave primero.
+- **Decisiones.** Cada pregunta recibe `sin_cambios`, `corregir` o `descartar`.
+- **Qué se guarda.** La versión anterior queda en `metadata_json["original"]` y
+  la decisión, con sus motivos, en `metadata_json["correccion"]`.
+- **Qué no se toca.** No se modifican las preguntas que una persona ya aprobó o
+  rechazó, ni las ya corregidas; `--rehacer` las vuelve a aplicar.
+
+Las reglas de redacción de las preguntas militares (enunciado y opciones) viven
+en `qgen/prompts/redaccion_militar.py` y también entran en el prompt de
+generación.
+
 ### 3.6 Control de calidad
 
 Cada pregunta lleva un `validation_status`:
@@ -380,6 +454,9 @@ igual, con su `.sha256`; el importador lo lee comprimido.
 | `qgen-batch-status [run_id]` | estado de los trabajos en batch |
 | `qgen-stats <manual_id>` | cobertura y corridas del manual |
 | `qgen-inspect <question_id>` | ver una pregunta con sus 4 opciones |
+| `qgen-claude exportar \| importar <manual_id>` | generar sin API, con Claude Code |
+| `qgen-claude exportar-revision \| importar-revision <manual_id>` | revisar calidad con Claude Code |
+| `qgen-claude exportar-correccion \| importar-correccion <manual_id>` | corregir con observaciones de un revisor |
 | `qgen-export <manual_id> [--check]` | empaquetar la entrega |
 | `streamlit run explorer/src/explorer/Home.py` | abrir el revisor visual |
 
