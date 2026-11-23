@@ -17,6 +17,7 @@ dependencies = [
 [project.scripts]
 qgen-generate = "qgen.cli.generate:app"
 qgen-export = "qgen.cli.export:app"
+qgen-bancos-juego = "qgen.cli.bancos_juego:app"
 qgen-batch-status = "qgen.cli.batch_status:app"
 qgen-inspect = "qgen.cli.inspect:app"
 qgen-stats = "qgen.cli.stats:app"

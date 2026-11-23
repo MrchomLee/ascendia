@@ -256,3 +256,11 @@ def test_la_cita_debe_ser_literal_en_todos_los_niveles():
     for nivel in ("conocimiento", "comprension", "analisis", "aplicacion"):
         motivos = review(_nivel(nivel, correcta="hacia el norte", cita="una cita inventada"), COSTA).motivos
         assert "cita no encontrada" in motivos
+
+
+def test_la_clave_de_conocimiento_admite_punto_final_y_verbo_en_infinitivo():
+    from qgen.validation.checks import _literal_salvo_arranque
+    texto = "I.Ponga una firma o rúbrica falsas, aunque sean imaginarias, o altere una verdadera, en algún documento militar;"
+    assert _literal_salvo_arranque("Poner una firma o rúbrica falsas, aunque sean imaginarias, o altere una verdadera.", texto)
+    assert _literal_salvo_arranque("una firma o rúbrica falsas.", texto)
+    assert not _literal_salvo_arranque("Poner una firma o rúbrica verdaderas, aunque fuera del plazo señalado.", texto)

@@ -77,6 +77,8 @@ class WindowQuestion(BaseModel):
     opciones: list[WindowOption] = Field(min_length=4, max_length=4)
     cita: str = Field(min_length=1, max_length=2000)
     justificacion: str = Field(min_length=1, max_length=2000)
+    #: Artículo y fracción, o párrafo, de donde sale (solo lo pide la familia militar).
+    referencia: str | None = Field(default=None, max_length=200)
 
     @model_validator(mode="after")
     def _check(self) -> "WindowQuestion":

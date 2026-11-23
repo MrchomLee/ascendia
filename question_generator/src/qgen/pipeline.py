@@ -9,9 +9,10 @@ ventanas que faltan.
 from __future__ import annotations
 
 import logging
+import re
 import time
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -92,17 +93,21 @@ class WindowJob:
     node_breadcrumb: str
 
 
+#: Un nodo que es solo la introducción del libro; un tema como «Introducción a los
+#: compuestos orgánicos» sí entra.
+_INTRODUCCION = re.compile(r"\W*introducci[oó]n\W*", re.IGNORECASE)
+
+
 def _nodes_with_text(session: Session, *, manual_id: int, only_node_id: int | None) -> list[Node]:
     stmt = (
         select(Node)
         .where(Node.manual_id == manual_id)
         .where(Node.id.in_(select(Chunk.node_id).where(Chunk.manual_id == manual_id)))
-        .where(~Node.title.ilike("%introducci%"))
         .order_by(Node.sort_key)
     )
     if only_node_id is not None:
         stmt = stmt.where(Node.id == only_node_id)
-    return list(session.execute(stmt).scalars().all())
+    return [node for node in session.execute(stmt).scalars().all() if not _INTRODUCCION.fullmatch(node.title)]
 
 
 def _chunks_for(session: Session, node_id: int) -> list[Chunk]:
@@ -140,11 +145,17 @@ def plan_windows(
     only_node_id: int | None = None,
     regenerate: bool = False,
     limit: int | None = None,
+    rutas: Sequence[str] | None = None,
 ) -> list[WindowJob]:
-    """Las ventanas que le tocan a esta corrida, en orden de nodo. `limit` cuenta ventanas."""
+    """Las ventanas que le tocan a esta corrida, en orden de nodo. `limit` cuenta ventanas.
+    `rutas`: expresiones regulares sobre la ruta del nodo; solo entran los nodos que casan
+    con alguna (el alcance de un temario: «TÍTULO SEXTO», «Capítulo (V|VIII) —»)."""
     done = set() if regenerate else _done_window_keys(session, manual_id)
+    alcance = [re.compile(r, re.IGNORECASE) for r in rutas or ()]
     jobs: list[WindowJob] = []
     for node in _nodes_with_text(session, manual_id=manual_id, only_node_id=only_node_id):
+        if alcance and not any(r.search(node.breadcrumb or "") for r in alcance):
+            continue
         for window in build_windows(node.id, _chunks_for(session, node.id)):
             if window.key in done:
                 continue
@@ -517,6 +528,7 @@ def _run_immediate(
                     metadata={
                         "provider": provider,
                         "paginas": [job.window.page_start, job.window.page_end],
+                        "referencia": q.referencia,
                         "motivos": list(accepted.verdict.motivos),
                         "verificacion": accepted.verificacion,
                         "ventana_tokens": {"input": result.input_tokens, "output": result.output_tokens},

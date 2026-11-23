@@ -14,10 +14,12 @@ from qgen.bundle.build import DuplicateNodeRef, build_bundle
 from qgen.bundle.spec import BUNDLE_VERSION, validate
 from qgen.db.migration import init_question_tables
 from qgen.db.persistence import create_run, finalize_run, persist_question
-from qgen.models.schema import GenerationRun
+from qgen.models.schema import GenerationRun, Question
+from sqlalchemy import select
 from qgen.prompts.schemas import GeneratedOption, GeneratedQuestion, OptionRole
 
 CITA = "El fuero de guerra subsiste para los delitos del orden militar."
+JUSTIFICACION = "Porque el artículo lo dice."
 
 
 def _question(prefix: str = "T") -> GeneratedQuestion:
@@ -29,7 +31,7 @@ def _question(prefix: str = "T") -> GeneratedQuestion:
             GeneratedOption(role=OptionRole.DISTRACTOR, text=f"{prefix} fácil 1"),
             GeneratedOption(role=OptionRole.DISTRACTOR, text=f"{prefix} fácil 2"),
         ],
-        justification="Porque el artículo lo dice.",
+        justification=JUSTIFICACION,
     )
 
 
@@ -216,7 +218,66 @@ def test_la_pregunta_viaja_con_su_tipo_y_su_cita():
 
     assert bundle["bundle_version"] == BUNDLE_VERSION
     q = bundle["questions"][0]
-    assert (q["question_type"], q["source_quote"]) == ("teoria", CITA)
+    # La cita va en `justification` y la justificación en `source_quote`: el panel muestra primero
+    # la justificación y debajo la cita, y el usuario prefiere ver primero la cita del libro.
+    assert (q["question_type"], q["justification"], q["source_quote"]) == ("teoria", CITA, JUSTIFICACION)
+
+
+def _con_paginas(session, manual_id: int, paginas: list[int], *, referencia: str | None = "Baldor, Álgebra") -> None:
+    manual = session.get(Manual, manual_id)
+    if referencia:
+        manual.metadata_json = {**manual.metadata_json, "referencia_cita": referencia}
+    question = session.execute(select(Question).where(Question.manual_id == manual_id)).scalar_one()
+    question.metadata_json = {**(question.metadata_json or {}), "cita_libro": {"paginas": paginas}}
+    session.flush()
+
+
+def test_la_cita_lleva_el_libro_y_la_pagina_impresa():
+    init_question_tables()
+    with session_scope() as session:
+        manual_id, _, _ = _seed_with_questions(session)
+        _con_paginas(session, manual_id, [44])
+        bundle = build_bundle(session, manual_id=manual_id)
+
+    assert validate(bundle).ok
+    assert bundle["questions"][0]["justification"] == f"{CITA} (Baldor, Álgebra, p. 44)"
+
+
+def test_una_cita_entre_dos_paginas_lleva_el_rango():
+    init_question_tables()
+    with session_scope() as session:
+        manual_id, _, _ = _seed_with_questions(session)
+        _con_paginas(session, manual_id, [160, 161])
+        bundle = build_bundle(session, manual_id=manual_id)
+
+    assert bundle["questions"][0]["justification"] == f"{CITA} (Baldor, Álgebra, pp. 160–161)"
+
+
+def test_la_pregunta_puede_traer_su_propia_referencia():
+    """Un manual que junta dos ediciones (Curtis 8.ª y el cap. 33 de la 7.ª) la declara por pregunta."""
+    init_question_tables()
+    with session_scope() as session:
+        manual_id, _, _ = _seed_with_questions(session)
+        _con_paginas(session, manual_id, [634], referencia="Curtis y otros, Biología, 8.ª ed.")
+        question = session.execute(select(Question).where(Question.manual_id == manual_id)).scalar_one()
+        question.metadata_json = {
+            **question.metadata_json,
+            "cita_libro": {"paginas": [634], "referencia": "Curtis y otros, Biología, 7.ª ed."},
+        }
+        session.flush()
+        bundle = build_bundle(session, manual_id=manual_id)
+
+    assert bundle["questions"][0]["justification"] == f"{CITA} (Curtis y otros, Biología, 7.ª ed., p. 634)"
+
+
+def test_sin_referencia_del_manual_la_cita_va_sola():
+    init_question_tables()
+    with session_scope() as session:
+        manual_id, _, _ = _seed_with_questions(session)
+        _con_paginas(session, manual_id, [44], referencia=None)
+        bundle = build_bundle(session, manual_id=manual_id)
+
+    assert bundle["questions"][0]["justification"] == CITA
 
 
 def test_varias_preguntas_del_mismo_nodo_se_exportan():
@@ -263,7 +324,7 @@ def test_el_nivel_cognitivo_viaja_en_el_bundle():
     ("geografia_moderna_mexico", "GEO_MEX"),
     ("historia_universal", "HIST_UNI"),
     ("algebra_baldor", "ALG"),
-    ("algebra_trigonometria_geometria_analitica", "TRIG_GEO"),
+    ("algebra_trig_geo_analitica", "TRIG_GEO"),
     ("calculo_una_variable", "CALC"),
 ])
 def test_los_libros_de_aspirantes_van_a_su_materia_del_hcm(profile, materia):
@@ -272,6 +333,20 @@ def test_los_libros_de_aspirantes_van_a_su_materia_del_hcm(profile, materia):
         manual_id, _ = _seed(session, code=f"LIBRO_{materia}", profile=profile)
         bundle = build_bundle(session, manual_id=manual_id)
     assert bundle["catalog_hint"] == {"grado_code": "ASP_HCM", "materia_code": materia}
+
+
+@pytest.mark.parametrize("profile", [
+    "quimica_chang", "fisica_general", "biologia_curtis",
+    "geografia_lucio_victorio", "fisica_serway", "precalculo_larson", "metodologia_baena",
+    "historia_menchaca", "calculo_salazar",
+])
+def test_los_libros_de_la_emm_y_la_emefa_van_sin_pista_mientras_no_esten_en_el_catalogo(profile):
+    init_question_tables()
+    with session_scope() as session:
+        manual_id, _ = _seed(session, code=f"LIBRO_{profile}", profile=profile)
+        bundle = build_bundle(session, manual_id=manual_id)
+    assert bundle["catalog_hint"] is None
+    assert validate(bundle).ok
 
 
 def test_los_manuales_militares_siguen_en_sargento_segundo():

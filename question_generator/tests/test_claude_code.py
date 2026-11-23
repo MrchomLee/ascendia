@@ -272,3 +272,37 @@ def test_el_cli_exporta_e_importa(tmp_path):
     salida = runner.invoke(app, ["importar", str(manual_id), "--carpeta", str(carpeta)])
     assert salida.exit_code == 0, salida.output
     assert len(_questions()) == 1
+
+
+# ─── Alcance y referencia ──────────────────────────────────────────────────
+
+
+def test_exportar_con_rutas_solo_deja_las_ventanas_del_alcance(tmp_path):
+    manual_id = _seed(3)
+    carpeta = tmp_path / "TST"
+
+    with session_scope() as session:
+        exportacion = exportar(session, manual_id=manual_id, carpeta=carpeta, rutas=[r"Capítulo [13]$"])
+
+    assert exportacion.ventanas == 2
+    assert len(_pendientes(manual_id)) == 3
+
+
+def test_el_comando_exportar_acepta_ruta(tmp_path):
+    manual_id = _seed(3)
+    resultado = CliRunner().invoke(app, ["exportar", str(manual_id), "--carpeta", str(tmp_path / "TST"), "--ruta", "Capítulo 2"])
+    assert resultado.exit_code == 0 and "1 ventanas pendientes" in resultado.output
+
+
+def test_la_referencia_al_articulo_se_guarda_con_la_pregunta(tmp_path):
+    manual_id = _seed(1, profile="codigo_legal")
+    carpeta = tmp_path / "TST"
+    _exportar(manual_id, carpeta)
+    (nombre,) = _ventanas(carpeta)
+    _responder(carpeta, nombre, [dict(_item(), referencia="Artículo 203, fracción I"), _item("¿Qué es un conflicto?", prefijo="U")])
+
+    _importar(manual_id, carpeta)
+
+    with session_scope() as session:
+        referencias = [q.metadata_json.get("referencia") for q in session.execute(select(Question).order_by(Question.id)).scalars()]
+    assert referencias == ["Artículo 203, fracción I", None]

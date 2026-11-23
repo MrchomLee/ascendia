@@ -31,8 +31,16 @@ MATERIAS_ASPIRANTES = {
     "geografia_moderna_mexico": "GEO_MEX",
     "historia_universal": "HIST_UNI",
     "algebra_baldor": "ALG",
-    "algebra_trigonometria_geometria_analitica": "TRIG_GEO",
+    "algebra_trig_geo_analitica": "TRIG_GEO",
     "calculo_una_variable": "CALC",
+}
+
+#: Libros de aspirantes que no tienen una materia propia en el catálogo de la webapp
+#: (Escuela Médico Militar, EMEFA, EMT y EMMG): viajan sin pista y se ubican con los temarios.
+PERFILES_SIN_CATALOGO = {
+    "quimica_chang", "fisica_general", "biologia_curtis",
+    "geografia_lucio_victorio", "fisica_serway", "precalculo_larson",
+    "metodologia_baena", "historia_menchaca", "calculo_salazar",
 }
 
 
@@ -52,8 +60,11 @@ def _materia_hint(code: str) -> str:
     return "JUS_MIL" if code.upper().startswith("CJM") else "OPS_MIL"
 
 
-def _catalog_hint(manual: Manual) -> dict[str, str]:
-    materia = MATERIAS_ASPIRANTES.get((manual.metadata_json or {}).get("profile"))
+def _catalog_hint(manual: Manual) -> dict[str, str] | None:
+    profile = (manual.metadata_json or {}).get("profile")
+    if profile in PERFILES_SIN_CATALOGO:
+        return None
+    materia = MATERIAS_ASPIRANTES.get(profile)
     if materia:
         return {"grado_code": ASPIRANTES_GRADO_HINT, "materia_code": materia}
     return {"grado_code": DEFAULT_GRADO_HINT, "materia_code": _materia_hint(manual.code)}
@@ -254,9 +265,12 @@ def build_bundle(
                 "node_ref": ref_by_id[question.node_id],
                 "generation_order": question.generation_order,
                 "question_text": question.question_text,
-                "justification": question.justification,
+                # Invertidas a pedido del usuario (2026-10-13): el panel muestra primero la
+                # justificación y debajo la cita, y quiere ver primero la cita del libro con su
+                # referencia. En la base cada una sigue en su campo.
+                "justification": _cita_con_referencia(question, manual),
                 "question_type": question.question_type,
-                "source_quote": question.source_quote,
+                "source_quote": question.justification,
                 "cognitive_level": question.cognitive_level,
                 "validation_status": question.validation_status,
                 "validated_at": iso(question.validated_at),
@@ -281,6 +295,28 @@ def build_bundle(
             for question in questions
         ],
     }
+
+
+#: Tope de `source_quote` del lado de la webapp (ver `spec.py`).
+_TOPE_CITA = 2000
+
+
+def _cita_con_referencia(question: Question, manual: Manual) -> str:
+    """La cita con el libro y la página impresa: «… (Baldor, Álgebra, p. 44)».
+
+    Solo si hay referencia (la de `cita_libro.referencia` de la pregunta o, si no trae, la
+    `referencia_cita` del manual) y la pregunta trae `cita_libro.paginas` (páginas del libro
+    impreso, no del PDF). En la base la cita queda tal cual: así se sigue comprobando que es
+    literal.
+    """
+    cita_libro = (question.metadata_json or {}).get("cita_libro") or {}
+    referencia = cita_libro.get("referencia") or (manual.metadata_json or {}).get("referencia_cita")
+    paginas = cita_libro.get("paginas") or []
+    if not referencia or not paginas:
+        return question.source_quote
+    lugar = f"p. {paginas[0]}" if paginas[0] == paginas[-1] else f"pp. {paginas[0]}–{paginas[-1]}"
+    cita = f"{question.source_quote} ({referencia}, {lugar})"
+    return cita if len(cita) <= _TOPE_CITA else question.source_quote
 
 
 def source_digest(manual_source_path: str) -> str | None:

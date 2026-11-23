@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -51,13 +52,21 @@ class Exportacion:
     ventanas: int
 
 
-def exportar(session: Session, *, manual_id: int, carpeta: Path | None = None, limit: int | None = None) -> Exportacion:
+def exportar(
+    session: Session,
+    *,
+    manual_id: int,
+    carpeta: Path | None = None,
+    limit: int | None = None,
+    rutas: Sequence[str] | None = None,
+) -> Exportacion:
     """Escribe la instrucción y las ventanas pendientes. Rehace `ventanas/` (solo quedan
-    las pendientes) y nunca toca `respuestas/`."""
+    las pendientes) y nunca toca `respuestas/`. Con `rutas`, solo las ventanas de los nodos
+    cuya ruta casa con alguna (el alcance de un temario)."""
     manual = _manual(session, manual_id)
     carpeta = carpeta or carpeta_por_defecto(manual)
     rules, profile = _resolve_rules(manual)
-    jobs = plan_windows(session, manual_id=manual_id, limit=limit)
+    jobs = plan_windows(session, manual_id=manual_id, limit=limit, rutas=rutas)
 
     ventanas = carpeta / "ventanas"
     ventanas.mkdir(parents=True, exist_ok=True)

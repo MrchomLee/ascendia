@@ -69,6 +69,12 @@ def test_las_introducciones_quedan_fuera():
     assert _keys(manual_id) == [f"{n2}:0-0"]
 
 
+def test_un_tema_que_empieza_con_introduccion_si_entra():
+    # Tema 2.8 de Química (Chang): está en el temario aunque su título diga «Introducción».
+    manual_id, (n1, n2) = _seed(titles=("Introducción a los compuestos orgánicos", "INTRODUCCIÓN"))
+    assert _keys(manual_id) == [f"{n1}:0-0"]
+
+
 def test_limit_cuenta_ventanas():
     manual_id, _ = _seed(chunk_texts=tuple(str(i) * 1500 for i in range(6)))  # 2 ventanas por nodo
     assert len(_keys(manual_id)) == 4
@@ -123,3 +129,9 @@ def test_gana_el_ultimo_estado_de_cada_ventana():
                 rules_snapshot={}, nodes_total=2, metadata_json={"ventanas": {f"{n1}:0-0": estado, f"{n2}:0-0": "ok"}},
             )
     assert _keys(manual_id) == [f"{n1}:0-0"]
+
+
+def test_con_rutas_solo_entran_los_nodos_del_alcance():
+    manual_id, (n1, _, n3) = _seed(titles=("TÍTULO SEXTO — Delitos", "TÍTULO SEPTIMO — Otros", "Título Noveno — Más"))
+    assert _keys(manual_id, rutas=[r"T[ÍI]TULO (SEXTO|NOVENO)"]) == [f"{n1}:0-0", f"{n3}:0-0"]
+    assert len(_keys(manual_id)) == 3

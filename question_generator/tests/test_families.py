@@ -100,7 +100,7 @@ def test_las_dos_familias_piden_los_cuatro_niveles_con_su_proporcion():
         assert "CONCLUSIÓN INFERIDA" in instr and "CASO INVENTADO" in instr
         assert "55/15/15/15" in instr
         assert 'En "conocimiento" la opción "correct" es un fragmento LITERAL' in instr
-    assert SYSTEM_VERSION == "2026-09-25.v7"
+    assert SYSTEM_VERSION == "2026-11-19.v9"
 
 
 def test_los_ejercicios_van_fuera_de_la_proporcion_solo_donde_hay_ejercicios():
@@ -121,3 +121,32 @@ def test_los_ejemplos_van_etiquetados_por_nivel_como_modelo_de_forma():
     assert "Nivel Conocimiento:" in instr and "Nivel Aplicación:" in instr
     assert "modelo de FORMA, no de contenido" in instr
     assert "la guerra se conceptúa" not in instr
+
+
+def test_el_enunciado_militar_nombra_la_fuente_sin_la_ruta_ni_el_articulo():
+    instr = build_window_instruction(get_default_rules("codigo_legal"), manual_title="Código de Justicia Militar")
+    assert 'empieza con "Conforme al Código de Justicia Militar, …"' in instr
+    assert "No pongas en el enunciado la Ruta del mensaje" in instr
+    assert "<Ruta del mensaje>" not in instr
+
+
+def test_solo_la_familia_militar_pide_la_referencia_al_articulo_o_parrafo():
+    militar = build_window_instruction(get_default_rules("manual"), manual_title="Manual de Operaciones Militares")
+    civil = build_window_instruction(get_default_rules("historia_universal"), manual_title="Historia Universal")
+    assert '"referencia"' in militar and "Artículo 241, fracción I" in militar and "párrafo 128" in militar
+    assert '"referencia"' not in civil
+
+
+def test_el_codigo_de_justicia_se_pregunta_sin_penas():
+    instr = build_window_instruction(get_default_rules("codigo_legal"), manual_title="Código de Justicia Militar")
+    assert "«sin penas»" in instr
+    assert "nunca con qué pena se castiga" in instr
+
+
+def test_las_reglas_de_redaccion_solo_van_en_la_familia_militar():
+    militar = build_window_instruction(get_default_rules("codigo_legal"), manual_title="Código de Justicia Militar")
+    civil = build_window_instruction(get_default_rules("historia_universal"), manual_title="Historia Universal")
+    assert "REGLAS DE REDACCIÓN" in militar and "REGLAS DE REDACCIÓN" not in civil
+    assert "1. Empieza con la fórmula fija \"Conforme al Código de Justicia Militar,\"" in militar
+    assert "{conforme}" not in militar
+    assert "Sin enunciados en negativo" in militar and "Paralelismo absoluto" in militar

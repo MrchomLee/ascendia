@@ -98,7 +98,7 @@ def review(question: WindowQuestion, window_text: str) -> Verdict:
         if not _literal(question.cita, window_text):
             motivos.append("cita no encontrada")
         if question.nivel == Nivel.CONOCIMIENTO:
-            if not _literal(correcta, window_text):
+            if not _literal_salvo_arranque(correcta, window_text):
                 motivos.append("respuesta parafraseada")
         else:
             if len(correcta.split()) >= PALABRAS_MINIMAS_LITERAL and _literal(correcta, window_text):
@@ -120,6 +120,16 @@ def _literal(fragmento: str, texto: str) -> bool:
     """¿Está `fragmento` literal en `texto`? Se acepta también con la notación igualada:
     en los libros de matemáticas la teoría trae fórmulas (𝑥2, x²) que llegan aplanadas."""
     return norm_text(fragmento) in norm_text(texto) or norm_math(fragmento) in norm_math(texto)
+
+
+def _literal_salvo_arranque(clave: str, texto: str) -> bool:
+    """La clave de conocimiento es literal aunque lleve punto final o su primer verbo pase a
+    infinitivo ("Ponga una firma…" → "Poner una firma…"), como piden las reglas militares."""
+    clave = clave.strip().rstrip(".").strip()
+    if _literal(clave, texto):
+        return True
+    palabras = clave.split()
+    return len(palabras) >= PALABRAS_MINIMAS_LITERAL and _literal(" ".join(palabras[1:]), texto)
 
 
 def _copiado(enunciado: str, texto: str) -> bool:

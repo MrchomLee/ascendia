@@ -9,11 +9,12 @@ from __future__ import annotations
 from typing import Any, Sequence
 
 from qgen.prompts.niveles import DEFINICIONES, NIVEL_LABEL
+from qgen.prompts.redaccion_militar import reglas_redaccion
 from qgen.prompts.schemas import LETRAS, MAX_PREGUNTAS_POR_VENTANA
 from qgen.rules.base import DocumentRules
 from qgen.windows import Window
 
-SYSTEM_VERSION = "2026-09-25.v7"
+SYSTEM_VERSION = "2026-11-19.v9"
 
 _ROLES = {
     "militar": (
@@ -28,11 +29,19 @@ _ROLES = {
 
 _FORMATOS = {
     "militar": (
-        'Cada enunciado empieza así: "{conforme}, <Ruta del mensaje>, ¿…?". '
-        "Usa la Ruta tal como llega en el mensaje."
+        'Cada enunciado empieza con "{conforme}, …" y nombra el delito o tema evaluado; en "aplicacion" '
+        'va primero el caso y después la pregunta ("Aplicando el …, ¿…?"). No pongas en el enunciado la '
+        "Ruta del mensaje (libro, título, capítulo, sección) ni el número del artículo o del párrafo. "
+        "Sigue las REGLAS DE REDACCIÓN de abajo."
     ),
     "civil": "Enunciados directos, sin mencionar el libro ni la ubicación del texto.",
 }
+
+# De dónde sale cada pregunta (la columna «Artículo Base» de los ejemplos del usuario).
+_REFERENCIA = (
+    '- "referencia": de dónde sale la pregunta, tal como lo numera el texto: el artículo y su fracción '
+    '("Artículo 241, fracción I") o el párrafo ("párrafo 128"); si cruza dos, ambos ("Artículos 116 y 118").\n'
+)
 
 _TEORIA = (
     '- "teoria": preguntas sobre el contenido del texto, en los cuatro niveles de abajo. '
@@ -111,12 +120,12 @@ OPCIONES (exactamente 4 por pregunta)
 CITA Y JUSTIFICACIÓN
 - "cita": el fragmento LITERAL del texto en que se apoya la pregunta: el dato, el pasaje que se explica, los datos que se cruzan o la regla que se aplica. En ejercicios, el ejemplo del libro (con su resultado) en que se basa.
 - "justificacion": en "teoria", por qué la correcta lo es (en análisis y aplicación, el razonamiento desde la cita); en ejercicios, la resolución paso a paso.
-- Notación: la "correct" de "conocimiento", el resultado de "ejercicio_libro" y la "cita" copian la notación del texto tal cual (no la cambies a x^2, sqrt( ) ni otra); la notación del estilo solo aplica a enunciados, distractores y ejercicios nuevos.
+{referencia}- Notación: la "correct" de "conocimiento", el resultado de "ejercicio_libro" y la "cita" copian la notación del texto tal cual (no la cambies a x^2, sqrt( ) ni otra); la notación del estilo solo aplica a enunciados, distractores y ejercicios nuevos.
 
 {calidad}
 ENUNCIADOS
 {formato}
-
+{redaccion}
 ESTILO Y RESTRICCIONES DE "{manual}"
 - Estilo: {estilo}
 - Temas preferentes: {preferentes}
@@ -155,6 +164,13 @@ def build_window_instruction(
         extra=rules.extra_instructions or "(ninguna)",
         ejemplos=_ejemplos(rules.familia, exemplars),
         calidad=_CALIDAD,
+        referencia=_REFERENCIA if rules.familia == "militar" else "",
+        redaccion=(
+            "\nREGLAS DE REDACCIÓN (observaciones del revisor a preguntas anteriores; obligatorias)\n"
+            + reglas_redaccion(_conforme(manual_title))
+            + '- En "conocimiento" la "correct" sigue siendo el texto literal; solo puedes pasar a infinitivo '
+            "el verbo con que empieza, poner mayúscula inicial y punto final.\n"
+        ) if rules.familia == "militar" else "",
         niveles=DEFINICIONES,
         proporcion=_PROPORCION + (_PROPORCION_EJERCICIOS if con_ejercicios else ""),
     )
