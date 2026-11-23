@@ -1,18 +1,17 @@
-"""Immediate-mode generation: one call → one parsed GeneratedQuestion."""
+"""Llamadas a Gemini en modo inmediato: una por ventana y la verificación de ejercicios."""
 
 from __future__ import annotations
 
 import json
+import logging
 import time
 from dataclasses import dataclass
 
-from pydantic import ValidationError
-
-from pydantic import ValidationError
-
 from qgen.gemini.cache import DocumentCache
 from qgen.gemini.client import GeminiClient, default_client
-from qgen.prompts.schemas import GeneratedQuestion
+from qgen.prompts.schemas import VerificationResult, WindowResponse
+
+logger = logging.getLogger(__name__)
 
 def _generate_with_retry(raw_client, **kwargs):
     import random
@@ -29,19 +28,6 @@ def _generate_with_retry(raw_client, **kwargs):
                     time.sleep(wait_time)
                     continue
             raise
-
-
-@dataclass
-class GenerationOutcome:
-    """Wraps one generate_content call."""
-
-    question: GeneratedQuestion | None
-    raw_response: dict
-    error: str | None = None
-    input_tokens: int = 0
-    output_tokens: int = 0
-    cached_tokens: int = 0
-    latency_s: float = 0.0
 
 
 def _safe_int(x) -> int:
@@ -62,29 +48,34 @@ def _extract_usage(response) -> tuple[int, int, int]:
     return in_tok, out_tok, cached
 
 
-def _response_to_dict(response) -> dict:
-    """Best-effort serialization of the response for audit trail."""
-    try:
-        return response.model_dump()
-    except Exception:
-        try:
-            return {"text": getattr(response, "text", None)}
-        except Exception:
-            return {}
+# ─── Flujo por ventanas (spec §6 y §7) ─────────────────────────────────────
 
 
-def generate_one(
+@dataclass
+class WindowOutcome:
+    """Las preguntas crudas de una ventana (sin validar) y lo que costó pedirlas."""
+
+    items: list[dict]
+    error: str | None = None
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cached_tokens: int = 0
+    latency_s: float = 0.0
+
+
+def generate_window(
     *,
     cache: DocumentCache | None = None,
     model: str | None = None,
-    variable_prompt: str,
-    system_instruction: str | None = None,
+    message: str,
+    system_instruction: str,
     client: GeminiClient | None = None,
-    response_schema: type | None = GeneratedQuestion,
-) -> GenerationOutcome:
+    attempts: int = 2,
+) -> WindowOutcome:
+    """Una llamada por ventana. Si la respuesta no se puede leer, se reintenta
+    (`attempts` en total); los tokens de todos los intentos se suman."""
     gc = client or default_client()
     raw_client = gc.get()
-    
     target_model = cache.model if cache else model
     if not target_model:
         raise ValueError("Must provide either cache or model")
@@ -93,117 +84,84 @@ def generate_one(
 
     config_kwargs = {
         "response_mime_type": "application/json",
+        "response_schema": WindowResponse,
+        "system_instruction": system_instruction,
+        "temperature": 0.3,
     }
     if cache:
         config_kwargs["cached_content"] = cache.name
-    if response_schema:
-        config_kwargs["response_schema"] = response_schema
-    if system_instruction:
-        config_kwargs["system_instruction"] = system_instruction
 
+    tokens = [0, 0, 0]
+    error: str | None = None
     started = time.perf_counter()
-    try:
-        response = _generate_with_retry(
-            raw_client=raw_client,
-            model=target_model,
-            contents=variable_prompt,
-            config=types.GenerateContentConfig(**config_kwargs),
-        )
-    except Exception as exc:
-        return GenerationOutcome(
-            question=None,
-            raw_response={},
-            error=f"{type(exc).__name__}: {exc}",
+    for _ in range(attempts):
+        try:
+            response = _generate_with_retry(
+                raw_client=raw_client,
+                model=target_model,
+                contents=message,
+                config=types.GenerateContentConfig(**config_kwargs),
+            )
+        except Exception as exc:
+            error = f"{type(exc).__name__}: {exc}"
+            break
+        for i, n in enumerate(_extract_usage(response)):
+            tokens[i] += n
+        try:
+            items = json.loads(getattr(response, "text", "") or "")["preguntas"]
+            if not isinstance(items, list):
+                raise TypeError("`preguntas` no es una lista")
+        except Exception as exc:
+            error = f"respuesta ilegible: {type(exc).__name__}: {exc}"
+            continue
+        return WindowOutcome(
+            items=items, input_tokens=tokens[0], output_tokens=tokens[1], cached_tokens=tokens[2],
             latency_s=time.perf_counter() - started,
         )
-
-    latency = time.perf_counter() - started
-    in_tok, out_tok, cached_tok = _extract_usage(response)
-    raw_dict = _response_to_dict(response)
-
-    parsed: GeneratedQuestion | None = getattr(response, "parsed", None)
-    if isinstance(parsed, GeneratedQuestion):
-        return GenerationOutcome(
-            question=parsed,
-            raw_response=raw_dict,
-            input_tokens=in_tok,
-            output_tokens=out_tok,
-            cached_tokens=cached_tok,
-            latency_s=latency,
-        )
-
-    text = getattr(response, "text", None)
-    if not text:
-        return GenerationOutcome(
-            question=None,
-            raw_response=raw_dict,
-            error="empty response",
-            input_tokens=in_tok,
-            output_tokens=out_tok,
-            cached_tokens=cached_tok,
-            latency_s=latency,
-        )
-
-    try:
-        parsed = GeneratedQuestion.model_validate_json(text)
-    except ValidationError as exc:
-        return GenerationOutcome(
-            question=None,
-            raw_response=raw_dict,
-            error=f"validation error: {exc.errors()[:3]}",
-            input_tokens=in_tok,
-            output_tokens=out_tok,
-            cached_tokens=cached_tok,
-            latency_s=latency,
-        )
-
-    return GenerationOutcome(
-        question=parsed,
-        raw_response=raw_dict,
-        input_tokens=in_tok,
-        output_tokens=out_tok,
-        cached_tokens=cached_tok,
-        latency_s=latency,
+    return WindowOutcome(
+        items=[], error=error, input_tokens=tokens[0], output_tokens=tokens[1], cached_tokens=tokens[2],
+        latency_s=time.perf_counter() - started,
     )
 
 
-def generate_draft_questions(
+@dataclass
+class VerificationOutcome:
+    result: VerificationResult | None
+    error: str | None = None
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cached_tokens: int = 0
+
+
+def verify_exercise(
     *,
-    cache: DocumentCache | None = None,
-    model: str | None = None,
-    variable_prompt: str,
+    model: str,
+    message: str,
     system_instruction: str,
     client: GeminiClient | None = None,
-) -> list[str]:
-    gc = client or default_client()
-    raw_client = gc.get()
-    
-    target_model = cache.model if cache else model
-    if not target_model:
-        raise ValueError("Must provide either cache or model")
+) -> VerificationOutcome:
+    """Resuelve un ejercicio nuevo a ciegas y compara su dificultad con la del libro (temperatura 0)."""
+    raw_client = (client or default_client()).get()
 
     from google.genai import types
 
-    config_kwargs = {
-        "response_mime_type": "application/json",
-        "system_instruction": system_instruction,
-        "response_schema": {"type": "object", "properties": {"questions": {"type": "array", "items": {"type": "string"}}}, "required": ["questions"]},
-        "temperature": 0.2,
-    }
-    if cache:
-        config_kwargs["cached_content"] = cache.name
-
+    config = types.GenerateContentConfig(
+        response_mime_type="application/json",
+        response_schema=VerificationResult,
+        system_instruction=system_instruction,
+        temperature=0,
+    )
     try:
-        response = _generate_with_retry(
-            raw_client=raw_client,
-            model=target_model,
-            contents=variable_prompt,
-            config=types.GenerateContentConfig(**config_kwargs),
-        )
-        text = getattr(response, "text", "")
-        import json
-        json_dict = json.loads(text)
-        return json_dict.get("questions", [])
+        response = _generate_with_retry(raw_client=raw_client, model=model, contents=message, config=config)
     except Exception as exc:
-        print(f"Error en draft Gemini: {exc}")
-        return []
+        return VerificationOutcome(result=None, error=f"{type(exc).__name__}: {exc}")
+
+    in_tok, out_tok, cached_tok = _extract_usage(response)
+    try:
+        result = VerificationResult.model_validate_json(getattr(response, "text", "") or "")
+    except Exception as exc:
+        return VerificationOutcome(
+            result=None, error=f"respuesta ilegible: {type(exc).__name__}: {exc}",
+            input_tokens=in_tok, output_tokens=out_tok, cached_tokens=cached_tok,
+        )
+    return VerificationOutcome(result=result, input_tokens=in_tok, output_tokens=out_tok, cached_tokens=cached_tok)

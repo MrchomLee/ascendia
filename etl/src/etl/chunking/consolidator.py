@@ -112,8 +112,6 @@ class ChunkConsolidator:
         has_image = False
         for idx in node.body_element_indices:
             el = elements[idx]
-            if el.kind in (ElementKind.HEADING, ElementKind.TITLE):
-                continue
             if el.kind == ElementKind.TABLE:
                 has_table = True
                 parts.append(f"\n[TABLA]\n{el.text}\n[/TABLA]\n")
@@ -122,6 +120,7 @@ class ChunkConsolidator:
                 if el.text:
                     parts.append(f"[FIGURA: {el.text}]")
             elif el.text:
+                # Incluye texto narrativo, elementos de lista y encabezados internos del capítulo
                 parts.append(el.text)
         # Reordenar fracciones romanas desplazadas por docling
         parts = self._reorder_roman_fractions(parts)

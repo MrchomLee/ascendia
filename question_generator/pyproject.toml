@@ -11,14 +11,18 @@ dependencies = [
     "typer>=0.12",
     "python-dotenv>=1.0",
     "rich>=13.0",
+    "openpyxl>=3.1",
 ]
 
 [project.scripts]
 qgen-generate = "qgen.cli.generate:app"
 qgen-export = "qgen.cli.export:app"
+qgen-bancos-juego = "qgen.cli.bancos_juego:app"
 qgen-batch-status = "qgen.cli.batch_status:app"
 qgen-inspect = "qgen.cli.inspect:app"
 qgen-stats = "qgen.cli.stats:app"
+qgen-import-examples = "qgen.cli.import_examples:app"
+qgen-claude = "qgen.cli.claude_code:app"
 
 [tool.uv.sources]
 etl = { workspace = true }

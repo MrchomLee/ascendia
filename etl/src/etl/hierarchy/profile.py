@@ -18,6 +18,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Callable, Pattern
 
+from etl.extraction.types import RawElement
 from etl.hierarchy.patterns import (
     KIND_ANEXO,
     KIND_ARTICULO,
@@ -38,19 +39,49 @@ from etl.hierarchy.patterns import (
     match_seccion,
     match_subseccion,
     match_titulo,
+    KIND_EJERCICIO,
+    match_ejercicio,
+    KIND_MISCELANEA,
+    match_miscelanea,
+    KIND_RESPUESTAS,
+    match_respuestas,
+    KIND_BALDOR_TEMA,
+    match_baldor_capitulo,
+    match_baldor_caso,
+    match_baldor_inciso,
+    match_baldor_subseccion_romana,
+    match_baldor_tema_mayusculas,
+    KIND_BLOQUE,
+    KIND_PARTE_TEMARIO,
+    match_bloque,
+    match_parte_temario,
+    KIND_TEMA,
+    match_tema,
 )
+from etl.hierarchy.temario import CapitulosConTemas, Temario
 
 
-# Order matters: more specific (multi-word, anchored) first.
+# El orden importa: los patrones más específicos primero.
 _ALL_MATCHERS: list[tuple[str, Callable[[str], HeadingCandidate | None]]] = [
+    (KIND_SUBSECCION, match_baldor_inciso),
     (KIND_SUBSECCION, match_subseccion),
     (KIND_ARTICULO, match_articulo),
+    (KIND_PARTE, match_parte),
+    (KIND_LIBRO, match_libro),
+    (KIND_SECCION, match_baldor_caso),
+    (KIND_SECCION, match_baldor_subseccion_romana),
     (KIND_SECCION, match_seccion),
     (KIND_CAPITULO, match_capitulo),
+    (KIND_CAPITULO, match_baldor_capitulo),
+    (KIND_BALDOR_TEMA, match_baldor_tema_mayusculas),
     (KIND_TITULO, match_titulo),
-    (KIND_LIBRO, match_libro),
-    (KIND_PARTE, match_parte),
     (KIND_ANEXO, match_anexo),
+    (KIND_EJERCICIO, match_ejercicio),
+    (KIND_MISCELANEA, match_miscelanea),
+    (KIND_RESPUESTAS, match_respuestas),
+    (KIND_BLOQUE, match_bloque),
+    (KIND_PARTE_TEMARIO, match_parte_temario),
+    (KIND_TEMA, match_tema),
 ]
 
 
@@ -76,6 +107,10 @@ class DocumentProfile:
         an extractor, its captured group is attached to the **closest open
         node** instead of being added as body text. Useful for DOF reform
         annotations alongside articles.
+    element_selector
+        Optional ``(elements, indices) -> (elements, indices)`` applied after the
+        drop filters: whatever it leaves out is excluded from the tree (see
+        :class:`~etl.hierarchy.temario.Temario`).
     """
 
     name: str
@@ -83,6 +118,7 @@ class DocumentProfile:
     drop_text_patterns: list[Pattern[str]] = field(default_factory=list)
     clean_text_patterns: list[tuple[Pattern[str], str]] = field(default_factory=list)
     metadata_extractors: dict[str, Pattern[str]] = field(default_factory=dict)
+    element_selector: Callable[[list[RawElement], list[int]], tuple[list[RawElement], list[int]]] | None = None
 
     @property
     def active_kinds(self) -> set[str]:
@@ -142,6 +178,7 @@ _MANUAL_PROFILE = DocumentProfile(
         KIND_CAPITULO: 1,
         KIND_SECCION: 2,
         KIND_SUBSECCION: 3,
+        KIND_ANEXO: 0,
     },
 )
 
@@ -152,11 +189,13 @@ _CODIGO_LEGAL_PROFILE = DocumentProfile(
         KIND_LIBRO: 0,
         KIND_TITULO: 1,
         KIND_CAPITULO: 2,
+        KIND_ARTICULO: 3,
     },
     drop_text_patterns=[
         re.compile(r"C[ÁA]MARA\s+DE\s+DIPUTADOS\s+DEL\s+H\.?\s+CONGRESO", re.IGNORECASE),
         re.compile(r"Secretar[íi]a\s+(?:General|de\s+Servicios\s+Parlamentarios)", re.IGNORECASE),
         re.compile(r"^\s*\d+\s+de\s+\d+\s*$"),
+        re.compile(r".*Reforma DOF.*", re.IGNORECASE),
     ],
     clean_text_patterns=[],
     metadata_extractors={
@@ -175,6 +214,7 @@ _LEY_ORGANICA_PROFILE = DocumentProfile(
     kind_to_depth={
         KIND_TITULO: 0,
         KIND_CAPITULO: 1,
+        KIND_ARTICULO: 2,
     },
     drop_text_patterns=_CODIGO_LEGAL_PROFILE.drop_text_patterns + [
         re.compile(r".*DOF.*", re.IGNORECASE),
@@ -185,10 +225,144 @@ _LEY_ORGANICA_PROFILE = DocumentProfile(
 )
 
 
+_LIBRO_TEXTO_PROFILE = DocumentProfile(
+    name="libro_texto",
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+        KIND_EJERCICIO: 1,
+    },
+)
+
+
+_BALDOR_PROFILE = DocumentProfile(
+    name="algebra_baldor",
+    # Un nodo por capítulo ("I. Suma" … "XXXII. Números complejos"). Casos,
+    # temas y reglas quedan en el cuerpo de su capítulo.
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+    },
+    drop_text_patterns=[
+        re.compile(r"^\s*Álgebra\s*$", re.IGNORECASE),
+        re.compile(r"^\s*Aurelio Baldor\s*$", re.IGNORECASE),
+    ],
+)
+
+
+
+# Recorte "Proceso_comunicativo_y_escritura.pdf" del Taller de Lectura y
+# Redacción 1 (Zarzar): solo el temario del examen, como Bloque › Parte.
+_TALLER_LECTURA_REDACCION_PROFILE = DocumentProfile(
+    name="taller_lectura_redaccion",
+    kind_to_depth={
+        KIND_BLOQUE: 0,
+        KIND_PARTE_TEMARIO: 1,
+    },
+    element_selector=Temario(
+        bloques={1: "Proceso comunicativo", 3: "Proceso de escritura"},
+        partes=frozenset({"1.1", "1.2", "3.1", "3.2", "3.3"}),
+    ).select,
+)
+
+
+# Recorte "Historia_Universal_Extracto.pdf" de Historia Universal (Rodríguez
+# Arvizu, Limusa, 3a. ed. 2017): el Capítulo 6 y sus cuatro temas del temario.
+# Los demás subtítulos quedan en el cuerpo de su tema.
+_HISTORIA_UNIVERSAL_PROFILE = DocumentProfile(
+    name="historia_universal",
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+        KIND_TEMA: 1,
+    },
+    element_selector=CapitulosConTemas(
+        capitulos={
+            6: (
+                "El Mundo Contemporáneo",
+                (
+                    "La Guerra Fría",
+                    "Las Grandes Organizaciones Internacionales",
+                    "Principales acontecimientos de nuestros días",
+                    "La llegada del Siglo XXI",
+                ),
+            ),
+        },
+    ).select,
+)
+
+
+# Recorte "Geografia_Moderna_de_Mexico_extraccion.pdf" de Geografía Moderna de
+# México (Tamayo, Trillas, 15a. ed. 2021): los capítulos y temas del temario;
+# Litorales e Islas entran completos. Los demás subtítulos quedan en el cuerpo.
+_GEOGRAFIA_MODERNA_MEXICO_PROFILE = DocumentProfile(
+    name="geografia_moderna_mexico",
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+        KIND_TEMA: 1,
+    },
+    element_selector=CapitulosConTemas(
+        capitulos={
+            1: (
+                "Generalidades",
+                ("Situación Geográfica", "Extensión", "División Política", "Representación Cartográfica"),
+            ),
+            3: ("Geomorfología de la República Mexicana", ("Unidades Orogénicas",)),
+            4: ("Litorales", ()),
+            5: ("Islas", ()),
+        },
+    ).select,
+)
+
+
+# Recorte "Calculo_Una_Variable_Caps_1_2_3.pdf" de Cálculo, una variable
+# (Thomas y Weir, Pearson, 13a. ed. 2015): los tres capítulos, completos. El PDF
+# no los numera ("FUNCIONES"), así que se reconocen por su título; secciones
+# ("1.1 …") y subtítulos quedan en el cuerpo del capítulo.
+_CALCULO_UNA_VARIABLE_PROFILE = DocumentProfile(
+    name="calculo_una_variable",
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+    },
+    element_selector=CapitulosConTemas(
+        capitulos={
+            1: ("Funciones", ()),
+            2: ("Límites y continuidad", ()),
+            3: ("Derivadas", ()),
+        },
+        por_titulo=True,
+    ).select,
+)
+
+
+# Recorte "Algebra_trigonometria_geometria_analitica_Caps_4_8_9_12.pdf" de
+# Álgebra, trigonometría y geometría analítica (Zill y Dewar, McGraw-Hill, 3a.
+# ed. 2012): cuatro capítulos completos, sin número en el PDF, como en Cálculo.
+_ALGEBRA_TRIGONOMETRIA_GEOMETRIA_ANALITICA_PROFILE = DocumentProfile(
+    name="algebra_trigonometria_geometria_analitica",
+    kind_to_depth={
+        KIND_CAPITULO: 0,
+    },
+    element_selector=CapitulosConTemas(
+        capitulos={
+            4: ("Sistema de Coordenadas Rectangulares y Gráficas", ()),
+            8: ("Trigonometría del Triángulo Rectángulo", ()),
+            9: ("Trigonometría del Círculo Unitario", ()),
+            12: ("Coordenadas Polares", ()),
+        },
+        por_titulo=True,
+    ).select,
+)
+
+
 PROFILES: dict[str, DocumentProfile] = {
     "manual": _MANUAL_PROFILE,
     "codigo_legal": _CODIGO_LEGAL_PROFILE,
     "ley_organica": _LEY_ORGANICA_PROFILE,
+    "libro_texto": _LIBRO_TEXTO_PROFILE,
+    "algebra_baldor": _BALDOR_PROFILE,
+    "taller_lectura_redaccion": _TALLER_LECTURA_REDACCION_PROFILE,
+    "historia_universal": _HISTORIA_UNIVERSAL_PROFILE,
+    "geografia_moderna_mexico": _GEOGRAFIA_MODERNA_MEXICO_PROFILE,
+    "calculo_una_variable": _CALCULO_UNA_VARIABLE_PROFILE,
+    "algebra_trigonometria_geometria_analitica": _ALGEBRA_TRIGONOMETRIA_GEOMETRIA_ANALITICA_PROFILE,
 }
 
 
@@ -229,7 +403,17 @@ def auto_detect_profile(elements: list, *, sample_chars: int = 4000) -> str:
     has_codigo = "código de" in sample or "codigo de" in sample
     has_parte = bool(re.search(r"\b(primera|segunda|tercera)\s+parte\b", sample))
     has_manual = "manual de" in sample
+    has_ejercicio = "ejercicio" in sample
+    has_baldor = "baldor" in sample
+    has_algebra = (
+        ("álgebra" in sample or "algebra" in sample)
+        and any(w in sample for w in ("monomio", "polinomio", "factoriz", "ecuaci", "descomposici"))
+    )
 
+    if has_baldor or has_algebra:
+        return "algebra_baldor"
+    if has_ejercicio and not has_articulo:
+        return "libro_texto"
     if has_libro and (has_titulo or has_articulo or has_codigo):
         return "codigo_legal"
     if has_titulo and has_articulo and not has_libro and not has_parte:

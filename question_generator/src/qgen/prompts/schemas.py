@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from collections import Counter
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
+
+from qgen.prompts.niveles import Nivel
 
 
 class OptionRole(StrEnum):
@@ -48,5 +51,59 @@ class GeneratedQuestion(BaseModel):
         return self
 
 
-class QuestionDraftList(BaseModel):
-    questions: list[str] = Field(min_length=1, max_length=5)
+# ─── Llamada por ventana (spec §6) ─────────────────────────────────────────
+
+MAX_PREGUNTAS_POR_VENTANA = 45
+LETRAS = ("A", "B", "C", "D")
+
+
+class QuestionType(StrEnum):
+    TEORIA = "teoria"
+    EJERCICIO_LIBRO = "ejercicio_libro"
+    EJERCICIO_NUEVO = "ejercicio_nuevo"
+
+
+class WindowOption(BaseModel):
+    rol: OptionRole
+    texto: str = Field(min_length=1, max_length=500)
+
+
+class WindowQuestion(BaseModel):
+    """Una pregunta completa tal como la devuelve la llamada por ventana."""
+
+    tipo: QuestionType
+    nivel: Nivel
+    pregunta: str = Field(min_length=1, max_length=1000)
+    opciones: list[WindowOption] = Field(min_length=4, max_length=4)
+    cita: str = Field(min_length=1, max_length=2000)
+    justificacion: str = Field(min_length=1, max_length=2000)
+    #: Artículo y fracción, o párrafo, de donde sale (solo lo pide la familia militar).
+    referencia: str | None = Field(default=None, max_length=200)
+
+    @model_validator(mode="after")
+    def _check(self) -> "WindowQuestion":
+        counts = Counter(o.rol.value for o in self.opciones)
+        for role, expected in REQUIRED_ROLE_COUNTS.items():
+            if counts.get(role, 0) != expected:
+                raise ValueError(f"reparto de roles inválido: {dict(counts)}")
+        textos = [" ".join(o.texto.split()).lower() for o in self.opciones]
+        if len(set(textos)) != len(textos):
+            raise ValueError("opciones con el mismo texto")
+        if not self.cita.strip():
+            raise ValueError("cita vacía")
+        # Un ejercicio del libro o nuevo siempre es de aplicación (spec de niveles §5).
+        if self.tipo != QuestionType.TEORIA and self.nivel != Nivel.APLICACION:
+            self.nivel = Nivel.APLICACION
+        return self
+
+
+class WindowResponse(BaseModel):
+    preguntas: list[WindowQuestion]
+
+
+class VerificationResult(BaseModel):
+    """Lo que devuelve la verificación de un ejercicio nuevo (spec §7)."""
+
+    razonamiento: str = Field(min_length=1, max_length=3000)
+    opcion: Literal["A", "B", "C", "D", "ninguna", "varias"]
+    dificultad: Literal["menor", "igual", "mayor"]

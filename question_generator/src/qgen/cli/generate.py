@@ -7,22 +7,30 @@ from rich.console import Console
 from rich.table import Table
 
 from qgen.db.migration import init_question_tables
-from qgen.gemini.client import MODEL_FLASH
+from qgen.gemini.client import MODEL_FLASH, resolve_model
 from qgen.pipeline import estimate_only, run_generation
+from qgen.prompts.niveles import NIVEL_LABEL, ORDEN, PROPORCION
 
 load_dotenv()
 app = typer.Typer(help="Generate questions for a manual.")
 console = Console()
 
 
+def _model_option(value: str) -> str:
+    try:
+        return resolve_model(value)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
 @app.command()
 def main(
     manual_id: int = typer.Argument(..., help="Manual id (see `etl-inspect manuals`)."),
-    model: str = typer.Option(MODEL_FLASH, help="flash | pro | full model name."),
+    model: str = typer.Option(MODEL_FLASH, callback=_model_option, help="flash | pro | full model name."),
     immediate: bool = typer.Option(True, "--immediate/--batch", help="Execution mode."),
-    limit: int | None = typer.Option(None, help="Process at most N nodes (dev/iteration)."),
-    node_id: int | None = typer.Option(None, "--node-id", help="Generate for a single node id."),
-    regenerate: bool = typer.Option(False, "--regenerate", help="Replace existing questions for selected nodes."),
+    limit: int | None = typer.Option(None, help="Process at most N windows (dev/iteration)."),
+    node_id: int | None = typer.Option(None, "--node-id", help="Generate only the windows of this node id."),
+    regenerate: bool = typer.Option(False, "--regenerate", help="Delete and redo the questions of the selected windows."),
     dry_run: bool = typer.Option(False, "--dry-run", help="Estimate cost only, do not call Gemini."),
 ) -> None:
     init_question_tables()
@@ -56,26 +64,31 @@ def main(
     _print_summary(summary)
 
 
-def _progress_cb(idx: int, total: int, node, question, error) -> None:
-    n_label = f"{node.level_label} {node.ordinal}".strip()
-    if question is None:
-        console.print(f"[red][{idx + 1}/{total}] {n_label}  ERROR: {error}[/]")
+def _progress_cb(idx: int, total: int, job, resumen: dict | None, error: str | None) -> None:
+    etiqueta = f"{job.node_label} [{job.window.key}]"
+    if error is not None:
+        console.print(f"[red][{idx + 1}/{total}] {etiqueta}  ERROR: {error}[/]")
     else:
-        console.print(f"[green][{idx + 1}/{total}] {n_label}  OK[/] {question.question[:90]}")
+        console.print(
+            f"[green][{idx + 1}/{total}] {etiqueta}  OK[/] {resumen['guardadas']} preguntas "
+            f"({resumen['revision']} a revisar, {resumen['descartes']} descartadas)"
+        )
 
 
-def _print_estimate(estimate, n_nodes: int, mode: str) -> None:
+def _print_estimate(estimate, n_windows: int, mode: str) -> None:
     table = Table(title=f"Cost estimate ({mode}, {estimate.model})")
     table.add_column("Field")
     table.add_column("Value", justify="right")
     rows = [
-        ("Nodes to process", str(n_nodes)),
+        ("Windows to process", str(n_windows)),
+        ("Window tokens", f"{estimate.window_tokens:,}"),
+        ("Questions (est.)", str(estimate.n_questions)),
+        ("Exercise verifications (est.)", str(estimate.verifications)),
         ("Doc tokens (cached)", f"{estimate.cache_tokens:,}"),
-        ("Tokens per Q (input variable)", str(estimate.input_tokens_per_q)),
-        ("Tokens per Q (output)", str(estimate.output_tokens_per_q)),
         ("Cache create (one-off)", f"${estimate.cache_create_usd:.4f}"),
         ("Cache storage (1h)", f"${estimate.cache_storage_usd:.4f}"),
-        ("Per-question", f"${estimate.per_question_usd:.6f}"),
+        ("Generation", f"${estimate.generation_usd:.4f}"),
+        ("Verification", f"${estimate.verification_usd:.4f}"),
         ("TOTAL", f"${estimate.total_usd:.4f}"),
     ]
     for k, v in rows:
@@ -91,9 +104,11 @@ def _print_summary(summary) -> None:
         ("Mode", summary.mode),
         ("Model", summary.model),
         ("Profile", summary.profile),
+        ("Windows", str(summary.windows_total)),
+        ("Windows failed", str(summary.windows_failed)),
+        ("Questions saved", str(summary.questions_saved)),
         ("Nodes total", str(summary.nodes_total)),
-        ("Completed", str(summary.nodes_completed)),
-        ("Failed", str(summary.nodes_failed)),
+        ("Nodes completed", str(summary.nodes_completed)),
         ("Actual cost (USD)", f"${summary.actual_cost_usd:.4f}"),
     ]
     if summary.batch_job_id:
@@ -101,6 +116,24 @@ def _print_summary(summary) -> None:
     for k, v in rows:
         table.add_row(k, v)
     console.print(table)
+    _print_niveles(summary)
+
+
+def _print_niveles(summary) -> None:
+    """Proporción real por nivel contra la meta (spec de niveles §6)."""
+    niveles = getattr(summary, "niveles", None) or {}
+    total = sum(niveles.values())
+    if not total:
+        return
+    table = Table(title="Proporción por nivel")
+    for col in ("Nivel", "Preguntas", "Real", "Meta"):
+        table.add_column(col, justify="left" if col == "Nivel" else "right")
+    for nivel in ORDEN:
+        n = niveles.get(nivel.value, 0)
+        table.add_row(NIVEL_LABEL[nivel.value], str(n), f"{100 * n / total:.0f}%", f"{PROPORCION[nivel]}%")
+    console.print(table)
+    if summary.ventanas_sin_algun_nivel:
+        console.print(f"[yellow]Ventanas sin algún nivel: {', '.join(summary.ventanas_sin_algun_nivel)}[/]")
 
 
 if __name__ == "__main__":

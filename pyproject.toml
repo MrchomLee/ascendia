@@ -19,3 +19,9 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.10",
 ]
+
+# Configuración de pytest para el workspace
+[tool.pytest.ini_options]
+testpaths = ["etl/tests", "question_generator/tests", "explorer/tests"]
+pythonpath = ["etl/src", "question_generator/src", "explorer/src"]
+norecursedirs = ["data", ".venv", "graphify-out", ".agents"]

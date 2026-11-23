@@ -111,3 +111,14 @@ def test_autodetect_manual():
 
 def test_autodetect_falls_back_to_manual_for_empty():
     assert auto_detect_profile([]) == "manual"
+
+
+def test_autodetect_algebra_baldor():
+    elements = [
+        _el("ÁLGEBRA"),
+        _el("Aurelio Baldor"),
+        _el("I. Suma"),
+        _el("Suma de monomios y polinomios"),
+    ]
+    assert auto_detect_profile(elements) == "algebra_baldor"
+

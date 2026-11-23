@@ -1,4 +1,4 @@
-"""Formato del bundle de contenido v1.
+"""Formato del bundle de contenido (v1 y v2).
 
 La especificación en prosa vive en los dos repos: `CONTRATO-BUNDLE.md` en el de
 contenido, `docs/06-contrato-bundle-de-contenido.md` en el de la webapp.
@@ -24,8 +24,8 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
-BUNDLE_VERSION = 1
-SUPPORTED_VERSIONS = frozenset({1})
+BUNDLE_VERSION = 3
+SUPPORTED_VERSIONS = frozenset({1, 2, 3})
 
 # Por encima de esto el bundle se escribe como `.json.gz`.
 GZIP_THRESHOLD_BYTES = 25 * 1024 * 1024
@@ -33,6 +33,12 @@ GZIP_THRESHOLD_BYTES = 25 * 1024 * 1024
 VALIDATION_STATUSES = frozenset({"pending", "valid", "needs_review", "rejected"})
 #: Solo estos dos se sirven a los alumnos; ver `questions.validation_status`.
 SERVED_STATUSES = frozenset({"pending", "valid"})
+
+#: Tipos de pregunta (v2).
+QUESTION_TYPES = frozenset({"teoria", "ejercicio_libro", "ejercicio_nuevo"})
+
+#: Niveles cognitivos (v3); `null` = pregunta anterior a los niveles, sin clasificar.
+COGNITIVE_LEVELS = frozenset({"conocimiento", "comprension", "analisis", "aplicacion"})
 
 RUN_MODES = frozenset({"immediate", "batch"})
 #: `running` queda fuera: una corrida a medias no se entrega.
@@ -57,6 +63,7 @@ MAX_LEN: dict[str, int] = {
     "node_ref": 64,
     "question_text": 1000,
     "justification": 2000,
+    "source_quote": 2000,
     "option_text": 500,
     "run_model": 64,
     "run_profile": 32,
@@ -494,8 +501,9 @@ def validate(bundle: Any) -> Report:
             report.warn(f"{where}: la corrida dejó {run['nodes_failed']} nodo(s) sin pregunta.")
 
     # (5, 7, 8, 9, 10) preguntas
-    seen_questions: set[tuple[str, str]] = set()
+    seen_questions: set[tuple[str, Any]] = set()
     by_status: dict[str, int] = {}
+    sin_nivel = 0
     for i, question in enumerate(questions):
         where = f"questions[{i}]"
         if not isinstance(question, dict):
@@ -508,8 +516,11 @@ def validate(bundle: Any) -> Report:
             report.error(f"{where}: `run_ref` {q_run!r} no está en `runs`.")
         if q_node is not None and q_node not in node_refs:
             report.error(f"{where}: `node_ref` {q_node!r} no está en `nodes`.")
-        if q_run is not None and q_node is not None:
-            key = (q_run, q_node)
+        q_order = _int(report, question, "generation_order", where, minimum=0)
+        # Identidad de la pregunta: (corrida, nodo) en v1; (corrida, orden) desde v2,
+        # que admite varias preguntas por nodo.
+        if version == 1 and q_run is not None and q_node is not None:
+            key: tuple[str, Any] = (q_run, q_node)
             if key in seen_questions:
                 report.error(
                     f"{where}: ya hay otra pregunta para la corrida {q_run} y el nodo "
@@ -517,10 +528,35 @@ def validate(bundle: Any) -> Report:
                     f"único de Postgres lo rechazaría."
                 )
             seen_questions.add(key)
+        elif version >= 2 and q_run is not None and q_order is not None:
+            key = (q_run, q_order)
+            if key in seen_questions:
+                report.error(
+                    f"{where}: ya hay otra pregunta con `generation_order` {q_order} en la "
+                    f"corrida {q_run}. Ese par es la identidad de la pregunta (v2) y el "
+                    f"índice único de Postgres lo rechazaría."
+                )
+            seen_questions.add(key)
 
-        _int(report, question, "generation_order", where, minimum=0)
         _text(report, question, "question_text", where, limit_key="question_text")
         _text(report, question, "justification", where, limit_key="justification")
+        if version >= 2:
+            q_type = question.get("question_type")
+            if q_type not in QUESTION_TYPES:
+                report.error(
+                    f"{where}: `question_type` = {q_type!r}; debe ser uno de {sorted(QUESTION_TYPES)}."
+                )
+            _text(report, question, "source_quote", where, limit_key="source_quote")
+        if version >= 3:
+            if "cognitive_level" not in question:
+                report.error(f"{where}: falta `cognitive_level` (v3); usa null si no está clasificada.")
+            elif question["cognitive_level"] is None:
+                sin_nivel += 1
+            elif question["cognitive_level"] not in COGNITIVE_LEVELS:
+                report.error(
+                    f"{where}: `cognitive_level` = {question['cognitive_level']!r}; debe ser uno de "
+                    f"{sorted(COGNITIVE_LEVELS)} o null."
+                )
         _stamp(report, question, "created_at", where)
         _stamp(report, question, "validated_at", where, required=False)
         _dict(report, question, "metadata", where)
@@ -604,6 +640,8 @@ def validate(bundle: Any) -> Report:
     for status in ("needs_review", "rejected"):
         if by_status.get(status):
             report.warn(f"{by_status[status]} pregunta(s) en `{status}`: no se sirven a los alumnos.")
+    if sin_nivel:
+        report.warn(f"{sin_nivel} pregunta(s) sin nivel cognitivo (`cognitive_level` null).")
 
     covered = {q.get("node_ref") for q in questions if isinstance(q, dict)}
     with_text = {

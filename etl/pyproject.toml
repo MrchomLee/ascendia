@@ -8,25 +8,26 @@ dependencies = [
     "pymupdf>=1.24",
     "pydantic>=2.7",
     "sqlalchemy>=2.0",
-    "alembic>=1.13",
-    "google-genai>=0.3",
+    "google-genai>=2.3.0",
     "typer>=0.12",
     "python-dotenv>=1.0",
     "rich>=13.0",
     "torch>=2.4",
     "torchvision>=0.19",
-    "psycopg[binary]>=3.2",
 ]
 
 [project.optional-dependencies]
 unstructured = [
     "unstructured[pdf]>=0.15",
 ]
+postgres = [
+    "psycopg[binary]>=3.2",
+]
 
 [project.scripts]
 etl-ingest = "etl.cli.ingest:app"
 etl-bakeoff = "etl.cli.bakeoff:app"
-etl-inspect = "etl.cli.inspect:app"
+etl-inspect = "etl.cli.inspect_cli:app"
 
 [build-system]
 requires = ["hatchling"]

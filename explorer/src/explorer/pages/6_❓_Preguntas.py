@@ -7,25 +7,34 @@ por rol y su justificación, más lo que falta por generar. Aquí se marca el
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import streamlit as st
 from dotenv import load_dotenv
 
+from etl.db.session import session_scope
 from explorer.components import kpi_row
 from explorer.data_access import get_manual, list_manuals
 from explorer.navigation import PAGE_NODE, get_int, link_to, set_params
 from explorer.questions_access import (
+    SIN_NIVEL,
     ROLE_COLOR,
     ROLE_LABEL,
     STATUS_LABEL,
     STATUSES,
+    TYPE_LABEL,
     QuestionView,
     get_question_kpis,
+    level_label,
     list_questions,
     list_runs,
     nodes_missing_questions,
     questions_available,
+    revision_label,
     set_validation_status,
 )
+from qgen.bundle.build import build_bundle, source_digest
+from qgen.prompts.niveles import NIVEL_LABEL, ORDEN, PROPORCION
+from qgen.bundle.spec import BUNDLE_VERSION, bundle_filename, dumps, validate
 
 load_dotenv()
 st.set_page_config(page_title="Preguntas", page_icon="❓", layout="wide")
@@ -96,10 +105,36 @@ if kpis.by_status:
         ]
     )
 
+if kpis.by_level:
+    total_niveles = sum(kpis.by_level.values())
+    kpi_row(
+        [
+            (
+                NIVEL_LABEL[n.value],
+                kpis.by_level.get(n.value, 0),
+                f"{100 * kpis.by_level.get(n.value, 0) / total_niveles:.0f}% (meta {PROPORCION[n]}%)",
+            )
+            for n in ORDEN
+        ]
+    )
+
 st.divider()
 
-tab_preguntas, tab_faltantes, tab_corridas = st.tabs(
-    ["Preguntas", f"Sin pregunta ({len(nodes_missing_questions(manual.id))})", "Corridas"]
+# Barra visual de progreso y auditoría de cobertura
+cobertura_val = min(max(kpis.coverage_pct / 100.0, 0.0), 1.0)
+st.progress(
+    cobertura_val,
+    text=f"Cobertura global: {kpis.coverage_pct:.1f}% ({kpis.nodes_with_question} de {kpis.nodes_with_text} nodos con texto cubiertos)",
+)
+
+runs = list_runs(manual.id)
+tab_preguntas, tab_faltantes, tab_corridas, tab_exportar = st.tabs(
+    [
+        "Preguntas",
+        f"Sin pregunta ({len(nodes_missing_questions(manual.id))})",
+        "Corridas",
+        "📦 Exportar Bundle",
+    ]
 )
 
 
@@ -120,6 +155,12 @@ def _render_question(question: QuestionView) -> None:
             )
 
         st.markdown(f"**{question.question_text}**")
+        st.caption(f"{TYPE_LABEL.get(question.question_type, question.question_type)} · {level_label(question)}")
+        if question.motivos:
+            st.warning("A revisar: " + "; ".join(question.motivos))
+        if question.revision:
+            aviso = st.error if question.revision.get("veredicto") == "rechazar" else st.info
+            aviso("🤖 " + revision_label(question.revision))
 
         for option in question.options:
             color = ROLE_COLOR.get(option.role, "gray")
@@ -130,6 +171,10 @@ def _render_question(question: QuestionView) -> None:
             )
 
         st.caption(f"💡 {question.justification}")
+        if question.source_quote:
+            with st.expander("Cita del texto"):
+                # Texto plano: en markdown, `*`, `_` o `$` de una fórmula se interpretarían.
+                st.text(question.source_quote)
 
         # Lo único que este explorador escribe. Marcar no borra: una pregunta
         # rechazada sigue ahí y viaja en el bundle, solo que sin llegar a un examen.
@@ -147,8 +192,7 @@ def _render_question(question: QuestionView) -> None:
 
 
 with tab_preguntas:
-    runs = list_runs(manual.id)
-    filtros = st.columns([0.3, 0.25, 0.45])
+    filtros = st.columns([0.25, 0.2, 0.2, 0.35])
     with filtros[0]:
         estados = st.multiselect(
             "Estado",
@@ -158,18 +202,27 @@ with tab_preguntas:
             placeholder="Todos",
         )
     with filtros[1]:
+        niveles = st.multiselect(
+            "Nivel",
+            options=[n.value for n in ORDEN] + [SIN_NIVEL],
+            default=[],
+            format_func=lambda n: NIVEL_LABEL.get(n, "sin nivel"),
+            placeholder="Todos",
+        )
+    with filtros[2]:
         run_ids = [r.id for r in runs]
         run_elegida = st.selectbox(
             "Corrida",
             options=[None, *run_ids],
             format_func=lambda i: "Todas" if i is None else f"#{i}",
         )
-    with filtros[2]:
+    with filtros[3]:
         busqueda = st.text_input("Buscar en el enunciado o la justificación", "")
 
     preguntas = list_questions(
         manual.id,
         statuses=tuple(estados) or None,
+        levels=tuple(niveles) or None,
         run_id=run_elegida,
         query=busqueda or None,
     )
@@ -233,3 +286,99 @@ with tab_corridas:
             "puede acumular varias: las preguntas que faltaban se llenan en las "
             "siguientes."
         )
+
+with tab_exportar:
+    st.subheader(f"📦 Exportación del Bundle de Contenido (v{BUNDLE_VERSION})")
+    st.caption(
+        "Genera el paquete canónico JSON listo para entregar o importar en la webapp de exámenes, "
+        "conforme a la especificación oficial de `CONTRATO-BUNDLE.md`."
+    )
+
+    col_cfg, col_preview = st.columns([0.48, 0.52])
+    with col_cfg:
+        st.markdown("#### Configuración de entrega")
+        filtro_corrida = st.selectbox(
+            "Corridas a incluir",
+            options=[None] + [r.id for r in runs],
+            format_func=lambda r: "Todas las corridas"
+            if r is None
+            else f"Corrida #{r} ({next(x.status for x in runs if x.id == r)})",
+            help="Permite empaquetar una corrida específica o todas las preguntas acumuladas.",
+        )
+
+        include_raw = st.checkbox(
+            "Incluir respuesta cruda del LLM (raw_response_json)",
+            value=False,
+            help="Incluye los metadatos completos y tokens crudos devueltos por Gemini (aumenta el tamaño del archivo).",
+        )
+
+        version_entrega = st.number_input(
+            "Número de versión de entrega",
+            min_value=1,
+            value=1,
+            step=1,
+            help="Número de entrega para el nombre del archivo (ej. v1, v2). No es la versión del bundle.",
+        )
+
+        # Construir y validar bundle en memoria
+        try:
+            with session_scope() as session:
+                bundle_data = build_bundle(
+                    session,
+                    manual_id=manual.id,
+                    run_ids=[filtro_corrida] if filtro_corrida else None,
+                    include_raw=include_raw,
+                )
+                source_path = bundle_data["manual"]["source_path"]
+                bundle_data["manual"]["source_sha256"] = source_digest(source_path)
+                reporte_val = validate(bundle_data)
+                json_str = dumps(bundle_data)
+
+            filename = bundle_filename(
+                manual.code, datetime.now(timezone.utc).date(), int(version_entrega)
+            )
+            file_bytes = json_str.encode("utf-8")
+
+            if reporte_val.ok:
+                st.success(
+                    f"✅ Bundle v{bundle_data['bundle_version']} validado con éxito contra el contrato."
+                )
+                st.download_button(
+                    label=f"📥 Descargar {filename} ({len(file_bytes) / 1024:.1f} KB)",
+                    data=file_bytes,
+                    file_name=filename,
+                    mime="application/json",
+                    use_container_width=True,
+                )
+            else:
+                # Igual que `qgen-export`: los errores bloquean la entrega; el
+                # importador de la webapp rechazaría el fichero.
+                st.error(
+                    f"El bundle no cumple el contrato ({len(reporte_val.errors)} error(es)); "
+                    "no se puede entregar:"
+                )
+                for err in reporte_val.errors:
+                    st.error(err)
+        except Exception as exc:
+            st.error(f"Error al generar bundle: {exc}")
+            json_str = "{}"
+            reporte_val = None
+
+    with col_preview:
+        st.markdown("#### Resumen del contenido a empaquetar")
+        if reporte_val:
+            counts = reporte_val.counts
+            c1, c2 = st.columns(2)
+            c1.metric("Preguntas en bundle", counts.get("questions", 0))
+            c2.metric("Preguntas servibles", counts.get("questions_served", 0))
+            c3, c4 = st.columns(2)
+            c3.metric("Nodos del manual", counts.get("nodes", 0))
+            c4.metric("Chunks de texto", counts.get("chunks", 0))
+
+            if reporte_val.warnings:
+                with st.expander("Observaciones del contrato"):
+                    for w in reporte_val.warnings:
+                        st.info(f"ℹ {w}")
+
+        with st.expander("Ver estructura preliminar (primeros 2 KB)"):
+            st.code(json_str[:2000] + ("..." if len(json_str) > 2000 else ""), language="json")

@@ -128,7 +128,7 @@ def run_pipeline(
         max_chars=2500,
         soft_target=2100,
         overlap=200,
-        merge_under_chars=0 if profile_obj.name in ("codigo_legal", "ley_organica") else 500
+        merge_under_chars=0 if profile_obj.name in ("codigo_legal", "ley_organica", "algebra_baldor") else 500
     ).consolidate(tree, extraction.elements)
 
     summary = PipelineResult(

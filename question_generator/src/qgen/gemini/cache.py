@@ -26,6 +26,7 @@ class DocumentCache:
     file_name: str       # Gemini file resource name, e.g. "files/abc-123"
     system_version: str
     expire_at_epoch: float
+    token_count: int = 0  # lo que ocupa el documento cacheado; base del costo de creación y almacenamiento
 
 
 def _wait_file_active(client, file_obj, *, poll_seconds: float = 2.0, timeout: float = 300):
@@ -82,12 +83,14 @@ def build_or_get_cache(
         config=types.CreateCachedContentConfig(**config_kwargs),
     )
 
+    usage = getattr(cache, "usage_metadata", None)
     return DocumentCache(
         name=cache.name,
         model=model,
         file_name=uploaded.name,
         system_version=system_version,
         expire_at_epoch=time.time() + ttl_seconds,
+        token_count=int(getattr(usage, "total_token_count", 0) or 0),
     )
 
 
