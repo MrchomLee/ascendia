@@ -876,6 +876,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+escaneo = [
+    { name = "pyspellchecker" },
+]
 postgres = [
     { name = "psycopg", extra = ["binary"] },
 ]
@@ -890,6 +893,7 @@ requires-dist = [
     { name = "psycopg", extras = ["binary"], marker = "extra == 'postgres'", specifier = ">=3.2" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "pymupdf", specifier = ">=1.24" },
+    { name = "pyspellchecker", marker = "extra == 'escaneo'", specifier = ">=0.8" },
     { name = "python-dotenv", specifier = ">=1.0" },
     { name = "rich", specifier = ">=13.0" },
     { name = "sqlalchemy", specifier = ">=2.0" },
@@ -898,7 +902,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.12" },
     { name = "unstructured", extras = ["pdf"], marker = "extra == 'unstructured'", specifier = ">=0.15" },
 ]
-provides-extras = ["unstructured", "postgres"]
+provides-extras = ["unstructured", "postgres", "escaneo"]
 
 [[package]]
 name = "explorer"
@@ -3102,6 +3106,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/11/7b/6ed4782e0d7a5278330598ce8c4b2df7255f4585a0b3d04520fa580d6507/pypdfium2-5.8.0-py3-none-win32.whl", hash = "sha256:3f25fd436920a907291462b41bdc0ab9f8235c3944b4c9c15398da595ffd1fed", size = 3636680, upload-time = "2026-05-04T17:39:38.49Z" },
     { url = "https://files.pythonhosted.org/packages/19/55/da7223d4202b2461f4f889b0baf10dddec3db7f88e6fd8c52db4a516eecd/pypdfium2-5.8.0-py3-none-win_amd64.whl", hash = "sha256:55592af0bddd2d62bed18e0053c546c9b72041430c5115e54870f7f6163125b0", size = 3754962, upload-time = "2026-05-04T17:39:40.13Z" },
     { url = "https://files.pythonhosted.org/packages/fc/7a/f3dcefe6ee7389aad3ca1488c177e8fbf978206de21c7a99ccf487ea38ab/pypdfium2-5.8.0-py3-none-win_arm64.whl", hash = "sha256:3f17ed97ae8a5a1705301ca93af256a5b02f9009dee4e99c5e175831d46ebd7c", size = 3548362, upload-time = "2026-05-04T17:39:42.304Z" },
+]
+
+[[package]]
+name = "pyspellchecker"
+version = "0.9.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/fa/95/d51ece11c06aeefac50dd64459ae1c565d2d43fe27f826bebc760ee950ed/pyspellchecker-0.9.1.tar.gz", hash = "sha256:786c21f082d4059b139bca922cd6db6c85c800374b904b59a8f61d75a0a62d7f", size = 7239938, upload-time = "2026-10-10T16:13:31.059Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7f/3b/558bc6def007152f0128ff0c8a6825708ac22bafdb295dc85cbec1f6ec22/pyspellchecker-0.9.1-py3-none-any.whl", hash = "sha256:c79b144b4bad20024bf489ad3ffd96b76f3f53439e9fa59ac607896352852f3d", size = 7237189, upload-time = "2026-10-10T16:13:29.045Z" },
 ]
 
 [[package]]

@@ -23,11 +23,15 @@ unstructured = [
 postgres = [
     "psycopg[binary]>=3.2",
 ]
+escaneo = [
+    "pyspellchecker>=0.8",
+]
 
 [project.scripts]
 etl-ingest = "etl.cli.ingest:app"
 etl-bakeoff = "etl.cli.bakeoff:app"
 etl-inspect = "etl.cli.inspect_cli:app"
+etl-escanear = "etl.cli.escanear:app"
 
 [build-system]
 requires = ["hatchling"]
