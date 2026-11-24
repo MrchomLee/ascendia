@@ -162,6 +162,17 @@ dos extractores:
 py -3.14 -m uv run etl-bakeoff data/raw_pdfs/mi_manual.pdf
 ```
 
+Si el PDF es un **escaneo sin capa de texto**, primero se lee con
+`etl-escanear`. Usa PaddleOCR-VL en la GPU y el OCR de Windows para contrastar,
+y deja un borrador en Markdown y una lista de palabras dudosas para revisar:
+
+```bash
+py -3.14 -m uv run etl-escanear todo data/raw_pdfs/mi_libro.pdf --paginas 15-40
+```
+
+Necesita Windows y una tarjeta NVIDIA. El detalle está en
+[etl/README.md](etl/README.md#libros-escaneados-sin-capa-de-texto).
+
 ### 3.2 Revisar el árbol ANTES de gastar tokens
 
 Lo cómodo es abrir el revisor visual y mirar el manual entero:
@@ -447,6 +458,7 @@ igual, con su `.sha256`; el importador lo lee comprimido.
 | Comando | Para qué |
 |---|---|
 | `etl-bakeoff <pdf>` | comparar extractores sobre un PDF nuevo |
+| `etl-escanear todo <pdf> [--paginas …]` | leer un libro escaneado y dejar el borrador para revisar |
 | `etl-ingest <pdf>` | ingestar el manual: jerarquía + chunks |
 | `etl-inspect manuals \| tree <id> \| node <id>` | revisar lo ingestado |
 | `qgen-generate <manual_id> --dry-run` | estimar el costo sin llamar a Gemini |
